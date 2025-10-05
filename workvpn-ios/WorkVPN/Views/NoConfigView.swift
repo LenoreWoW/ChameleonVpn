@@ -23,13 +23,13 @@ struct NoConfigView: View {
             // Title
             Text("No VPN Configuration")
                 .font(.system(size: 28, weight: .bold))
-                .foregroundColor(.white)
+                .foregroundColor(.cyanBlue)
                 .multilineTextAlignment(.center)
 
             // Description
             Text("Import an OpenVPN configuration file (.ovpn) to get started")
                 .font(.system(size: 16))
-                .foregroundColor(.white.opacity(0.9))
+                .foregroundColor(.white.opacity(0.6))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
 
@@ -39,17 +39,24 @@ struct NoConfigView: View {
             Button(action: {
                 showingImportConfig = true
             }) {
-                HStack {
-                    Image(systemName: "doc.badge.plus")
-                        .font(.system(size: 20))
-                    Text("Import .ovpn File")
-                        .font(.system(size: 18, weight: .semibold))
+                ZStack {
+                    LinearGradient(
+                        gradient: Gradient(colors: [.cyanBlue, .deepBlue]),
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                    .cornerRadius(15)
+
+                    HStack {
+                        Image(systemName: "doc.badge.plus")
+                            .font(.system(size: 20))
+                        Text("IMPORT .OVPN FILE")
+                            .font(.system(size: 18, weight: .semibold))
+                    }
+                    .foregroundColor(.white)
                 }
-                .foregroundColor(Color(red: 0.4, green: 0.49, blue: 0.92))
                 .frame(maxWidth: .infinity)
                 .frame(height: 60)
-                .background(.white)
-                .cornerRadius(15)
             }
             .padding(.horizontal, 30)
             .padding(.bottom, 40)

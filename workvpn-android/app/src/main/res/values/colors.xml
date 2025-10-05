@@ -1,9 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#667EEA</color>
-    <color name="purple">#667EEA</color>
-    <color name="dark_purple">#764BA2</color>
+    <!-- Blue Theme Colors -->
+    <color name="ic_launcher_background">#0A0E27</color>
+
+    <!-- Primary Blue Colors -->
+    <color name="cyan_blue">#00D4FF</color>
+    <color name="deep_blue">#0088FF</color>
+    <color name="medium_blue">#3399FF</color>
+
+    <!-- Background Colors -->
+    <color name="dark_bg">#0A0E27</color>
+    <color name="dark_bg_secondary">#1A2332</color>
+    <color name="dark_bg_tertiary">#0F1729</color>
+
+    <!-- Accent Colors -->
     <color name="green">#10B981</color>
+    <color name="green_dark">#059669</color>
     <color name="red">#EF4444</color>
+    <color name="red_dark">#DC2626</color>
     <color name="orange">#F59E0B</color>
+    <color name="orange_dark">#D97706</color>
+
+    <!-- UI Colors -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="gray_light">#64748B</color>
+    <color name="gray_dark">#475569</color>
+
+    <!-- Overlay Colors -->
+    <color name="overlay_dark">#80000000</color>
+    <color name="overlay_blue">#2000D4FF</color>
 </resources>

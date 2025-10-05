@@ -8,6 +8,9 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <!-- Three.js Background -->
+  <div id="three-canvas"></div>
+
   <div class="app">
     <!-- Title Bar -->
     <div class="title-bar">
@@ -16,19 +19,114 @@
 
     <!-- Main Content -->
     <div class="content">
-      <!-- No Config State -->
+      <!-- Step 1: Phone Number Entry -->
+      <div id="phone-entry-state" class="state" style="display: none;">
+        <div class="onboarding-container">
+          <div class="onboarding-icon">📱</div>
+          <h1 class="onboarding-title">Welcome to WorkVPN</h1>
+          <p class="onboarding-subtitle">Enter your phone number to get started with secure, private browsing</p>
+
+          <div class="form-group">
+            <label class="form-label">Phone Number</label>
+            <input type="tel" id="phone-input" class="form-input" placeholder="+1 (555) 123-4567" autocomplete="tel">
+          </div>
+
+          <button id="phone-submit-btn" class="btn btn-large">Continue</button>
+
+          <p class="link-text" style="margin-top: 24px;">Already have an account? <a href="#" id="login-link" class="link-text">Sign In</a></p>
+        </div>
+      </div>
+
+      <!-- Step 2: OTP Verification -->
+      <div id="otp-verification-state" class="state" style="display: none;">
+        <div class="onboarding-container">
+          <div class="onboarding-icon">🔐</div>
+          <h1 class="onboarding-title">Verify Your Number</h1>
+          <p class="onboarding-subtitle">We've sent a 6-digit code to <span id="phone-display"></span></p>
+
+          <div class="otp-input-group">
+            <input type="text" maxlength="1" class="otp-digit form-input" id="otp-1" autocomplete="off">
+            <input type="text" maxlength="1" class="otp-digit form-input" id="otp-2" autocomplete="off">
+            <input type="text" maxlength="1" class="otp-digit form-input" id="otp-3" autocomplete="off">
+            <input type="text" maxlength="1" class="otp-digit form-input" id="otp-4" autocomplete="off">
+            <input type="text" maxlength="1" class="otp-digit form-input" id="otp-5" autocomplete="off">
+            <input type="text" maxlength="1" class="otp-digit form-input" id="otp-6" autocomplete="off">
+          </div>
+
+          <div id="otp-error" class="error-message" style="display: none;">Invalid code. Please try again.</div>
+
+          <button id="otp-verify-btn" class="btn btn-large">Verify Code</button>
+
+          <p class="link-text" style="margin-top: 24px;">Didn't receive code? <a href="#" id="resend-otp-link" class="link-text">Resend</a></p>
+        </div>
+      </div>
+
+      <!-- Step 3: Password Creation -->
+      <div id="password-creation-state" class="state" style="display: none;">
+        <div class="onboarding-container">
+          <div class="onboarding-icon">🔒</div>
+          <h1 class="onboarding-title">Secure Your Account</h1>
+          <p class="onboarding-subtitle">Create a strong password to protect your VPN account</p>
+
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" id="password-input" class="form-input" placeholder="Enter password" autocomplete="new-password">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Confirm Password</label>
+            <input type="password" id="password-confirm-input" class="form-input" placeholder="Confirm password" autocomplete="new-password">
+          </div>
+
+          <div id="password-error" class="error-message" style="display: none;">Passwords don't match</div>
+
+          <button id="password-submit-btn" class="btn btn-large">Create Account</button>
+        </div>
+      </div>
+
+      <!-- Step 4: Login State (for returning users) -->
+      <div id="login-state" class="state" style="display: none;">
+        <div class="onboarding-container">
+          <div class="onboarding-icon">👋</div>
+          <h1 class="onboarding-title">Welcome Back</h1>
+          <p class="onboarding-subtitle">Sign in to access your secure VPN connection</p>
+
+          <div class="form-group">
+            <label class="form-label">Phone Number</label>
+            <input type="tel" id="login-phone-input" class="form-input" placeholder="+1 (555) 123-4567" autocomplete="tel">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" id="login-password-input" class="form-input" placeholder="Enter password" autocomplete="current-password">
+          </div>
+
+          <div id="login-error" class="error-message" style="display: none;">Invalid credentials</div>
+
+          <button id="login-submit-btn" class="btn btn-large">Sign In</button>
+
+          <p class="link-text" style="margin-top: 24px;">New user? <a href="#" id="signup-link" class="link-text">Create Account</a></p>
+        </div>
+      </div>
+
+      <!-- No Config State (after auth) -->
       <div id="no-config-state" class="state" style="display: none;">
-        <div class="icon">🔒</div>
-        <h2>No VPN Configuration</h2>
-        <p>Import an OpenVPN configuration file (.ovpn) to get started</p>
-        <button id="import-btn" class="btn btn-primary">Import .ovpn File</button>
+        <div class="onboarding-container">
+          <div class="onboarding-icon">🔒</div>
+          <h2 class="onboarding-title" style="font-size: 28px;">No VPN Configuration</h2>
+          <p class="onboarding-subtitle">Import an OpenVPN configuration file (.ovpn) to get started</p>
+          <button id="import-btn" class="btn btn-large">Import .ovpn File</button>
+          <button id="logout-btn" class="btn btn-text" style="margin-top: 16px;">Logout</button>
+        </div>
       </div>
 
       <!-- Connected/Disconnected State -->
       <div id="vpn-state" class="state" style="display: none;">
         <!-- Connection Status -->
         <div class="status-section">
-          <div id="status-icon" class="status-icon disconnected">●</div>
+          <div id="status-icon" class="status-icon disconnected">
+            <span style="font-size: 48px;">●</span>
+          </div>
           <div id="status-text" class="status-text">Disconnected</div>
         </div>
 
@@ -73,22 +171,27 @@
         <!-- Config Actions -->
         <div class="config-actions">
           <button id="delete-config-btn" class="btn btn-text">Delete Configuration</button>
+          <button id="vpn-logout-btn" class="btn btn-text">Logout</button>
         </div>
       </div>
 
       <!-- Connecting State -->
       <div id="connecting-state" class="state" style="display: none;">
-        <div class="loader"></div>
-        <h2>Connecting...</h2>
-        <p>Establishing secure connection to VPN server</p>
+        <div class="onboarding-container">
+          <div class="loader"></div>
+          <h2 class="onboarding-title" style="font-size: 28px;">Connecting...</h2>
+          <p class="onboarding-subtitle">Establishing secure connection to VPN server</p>
+        </div>
       </div>
 
       <!-- Error State -->
       <div id="error-state" class="state" style="display: none;">
-        <div class="icon error">⚠️</div>
-        <h2>Connection Error</h2>
-        <p id="error-message"></p>
-        <button id="retry-btn" class="btn btn-primary">Try Again</button>
+        <div class="onboarding-container">
+          <div class="onboarding-icon">⚠️</div>
+          <h2 class="onboarding-title" style="font-size: 28px;">Connection Error</h2>
+          <p class="error-message" id="error-message-text"></p>
+          <button id="retry-btn" class="btn btn-large">Try Again</button>
+        </div>
       </div>
     </div>
 
@@ -107,7 +210,7 @@
           <span>Launch at system startup</span>
         </label>
         <label class="checkbox-label">
-          <input type="checkbox" id="kill-switch-check">
+          <input type="checkbox" id="auto-start-check">
           <span>Kill switch (block internet when disconnected)</span>
         </label>
       </div>
@@ -115,5 +218,6 @@
   </div>
 
   <script src="app.js"></script>
+  <script src="three-scene.js"></script>
 </body>
 </html>

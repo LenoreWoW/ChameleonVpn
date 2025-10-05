@@ -131,6 +131,70 @@ const setupIPCHandlers = () => {
     return { success: true };
   });
 
+  // Authentication handlers
+  ipcMain.handle('auth-send-otp', async (_, phoneNumber: string) => {
+    try {
+      const { authService } = await import('./auth/service');
+      return await authService.sendOTP(phoneNumber);
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
+    }
+  });
+
+  ipcMain.handle('auth-verify-otp', async (_, phoneNumber: string, code: string) => {
+    try {
+      const { authService } = await import('./auth/service');
+      return await authService.verifyOTP(phoneNumber, code);
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
+    }
+  });
+
+  ipcMain.handle('auth-create-account', async (_, phoneNumber: string, password: string) => {
+    try {
+      const { authService } = await import('./auth/service');
+      return await authService.createAccount(phoneNumber, password);
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
+    }
+  });
+
+  ipcMain.handle('auth-login', async (_, phoneNumber: string, password: string) => {
+    try {
+      const { authService } = await import('./auth/service');
+      return await authService.login(phoneNumber, password);
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
+    }
+  });
+
+  ipcMain.handle('auth-logout', async () => {
+    try {
+      const { authService } = await import('./auth/service');
+      await authService.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  });
+
+  ipcMain.handle('auth-is-authenticated', async () => {
+    try {
+      const { authService } = await import('./auth/service');
+      return authService.isAuthenticated();
+    } catch (error) {
+      return false;
+    }
+  });
+
+  ipcMain.handle('auth-get-current-user', async () => {
+    try {
+      const { authService } = await import('./auth/service');
+      return authService.getCurrentUser();
+    } catch (error) {
+      return null;
+    }
+  });
+
   // VPN status updates
   vpnManager.on('status-changed', (status) => {
     mainWindow?.webContents.send('vpn-status-update', status);

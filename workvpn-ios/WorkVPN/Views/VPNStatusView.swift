@@ -43,7 +43,7 @@ struct VPNStatusView: View {
             // Status Text
             Text(statusText)
                 .font(.system(size: 32, weight: .bold))
-                .foregroundColor(.white)
+                .foregroundColor(.cyanBlue)
                 .textCase(.uppercase)
                 .tracking(2)
 
@@ -76,13 +76,29 @@ struct VPNStatusView: View {
                     vpnManager.connect()
                 }
             }) {
-                Text(buttonText)
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(buttonTextColor)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 60)
-                    .background(buttonBackgroundColor)
-                    .cornerRadius(15)
+                ZStack {
+                    if vpnManager.isConnected {
+                        LinearGradient(
+                            gradient: Gradient(colors: [.red, .redDark]),
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                        .cornerRadius(15)
+                    } else {
+                        LinearGradient(
+                            gradient: Gradient(colors: [.green, .greenDark]),
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                        .cornerRadius(15)
+                    }
+
+                    Text(buttonText)
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(.white)
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 60)
             }
             .disabled(vpnManager.isConnecting)
             .padding(.horizontal)
@@ -108,7 +124,7 @@ struct VPNStatusView: View {
         } else if vpnManager.isConnecting {
             return Color.orange
         } else {
-            return Color.red
+            return Color.grayLight
         }
     }
 
@@ -142,22 +158,6 @@ struct VPNStatusView: View {
         }
     }
 
-    private var buttonTextColor: Color {
-        if vpnManager.isConnected {
-            return .white
-        } else {
-            return Color(red: 0.4, green: 0.49, blue: 0.92)
-        }
-    }
-
-    private var buttonBackgroundColor: Color {
-        if vpnManager.isConnected {
-            return .red
-        } else {
-            return .white
-        }
-    }
-
     private var formattedDuration: String {
         let duration = vpnManager.connectionDuration
         let hours = duration / 3600
@@ -188,11 +188,12 @@ struct InfoRow: View {
     var body: some View {
         HStack {
             Text(label)
-                .foregroundColor(.white.opacity(0.8))
+                .foregroundColor(.white.opacity(0.6))
                 .font(.system(size: 14, weight: .medium))
+                .textCase(.uppercase)
             Spacer()
             Text(value)
-                .foregroundColor(.white)
+                .foregroundColor(.cyanBlue)
                 .font(.system(size: 14, weight: .semibold, design: .monospaced))
         }
     }
@@ -205,18 +206,18 @@ struct StatBox: View {
     var body: some View {
         VStack(spacing: 8) {
             Text(title)
-                .foregroundColor(.white.opacity(0.7))
+                .foregroundColor(.white.opacity(0.5))
                 .font(.system(size: 12, weight: .medium))
                 .textCase(.uppercase)
                 .tracking(1)
 
             Text(value)
-                .foregroundColor(.white)
+                .foregroundColor(.cyanBlue)
                 .font(.system(size: 20, weight: .bold, design: .monospaced))
         }
         .frame(maxWidth: .infinity)
         .padding()
-        .background(Color.white.opacity(0.1))
+        .background(Color.darkBgSecondary.opacity(0.5))
         .cornerRadius(10)
     }
 }
