@@ -1,0 +1,295 @@
+import { EventEmitter } from 'events';
+import { spawn, ChildProcess } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import { ConfigStore } from '../store/config';
+import { parseOVPNConfig } from './parser';
+
+export interface VPNStatus {
+  connected: boolean;
+  connecting: boolean;
+  error: string | null;
+  serverIp?: string;
+  localIp?: string;
+  connectedSince?: Date;
+}
+
+export interface VPNStats {
+  bytesIn: number;
+  bytesOut: number;
+  duration: number;
+}
+
+export class VPNManager extends EventEmitter {
+  private process: ChildProcess | null = null;
+  private status: VPNStatus;
+  private stats: VPNStats;
+  private statsInterval: NodeJS.Timeout | null = null;
+  private configStore: ConfigStore;
+
+  constructor(configStore: ConfigStore) {
+    super();
+    this.configStore = configStore;
+    this.status = {
+      connected: false,
+      connecting: false,
+      error: null
+    };
+    this.stats = {
+      bytesIn: 0,
+      bytesOut: 0,
+      duration: 0
+    };
+  }
+
+  async importConfig(filePath: string): Promise<void> {
+    // Read and parse config file
+    const configContent = fs.readFileSync(filePath, 'utf-8');
+
+    // Validate config
+    const parsed = parseOVPNConfig(configContent);
+
+    if (!parsed.remote || !parsed.remote.host) {
+      throw new Error('Invalid OpenVPN config: No remote server specified');
+    }
+
+    // Store config
+    const configName = path.basename(filePath, path.extname(filePath));
+    this.configStore.saveConfig(configName, configContent, parsed);
+
+    this.emit('config-imported', { name: configName });
+  }
+
+  async connect(): Promise<void> {
+    if (this.status.connected || this.status.connecting) {
+      throw new Error('Already connected or connecting');
+    }
+
+    const config = this.configStore.getActiveConfig();
+    if (!config) {
+      throw new Error('No configuration available');
+    }
+
+    this.updateStatus({ connecting: true, error: null });
+
+    try {
+      // Write config to temporary file
+      const tempConfigPath = path.join(
+        require('electron').app.getPath('temp'),
+        'workvpn-config.ovpn'
+      );
+
+      fs.writeFileSync(tempConfigPath, config.content);
+
+      // Start OpenVPN process
+      await this.startOpenVPN(tempConfigPath);
+
+      this.updateStatus({
+        connected: true,
+        connecting: false,
+        connectedSince: new Date(),
+        serverIp: config.parsed.remote?.host,
+      });
+
+      // Start stats collection
+      this.startStatsCollection();
+
+    } catch (error) {
+      this.updateStatus({
+        connected: false,
+        connecting: false,
+        error: (error as Error).message
+      });
+      throw error;
+    }
+  }
+
+  async disconnect(): Promise<void> {
+    if (this.process) {
+      this.process.kill('SIGTERM');
+      this.process = null;
+    }
+
+    this.stopStatsCollection();
+
+    this.updateStatus({
+      connected: false,
+      connecting: false,
+      connectedSince: undefined,
+      serverIp: undefined,
+      localIp: undefined,
+    });
+
+    this.resetStats();
+  }
+
+  private async startOpenVPN(configPath: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      // Determine OpenVPN binary path based on platform
+      let openvpnBinary: string;
+
+      if (process.platform === 'win32') {
+        // Windows: Use bundled OpenVPN or system installation
+        openvpnBinary = 'C:\\Program Files\\OpenVPN\\bin\\openvpn.exe';
+      } else if (process.platform === 'darwin') {
+        // macOS: Try multiple locations (Homebrew Intel, Homebrew ARM, manual install)
+        const possiblePaths = [
+          '/opt/homebrew/sbin/openvpn',  // Homebrew ARM (M1/M2 Macs)
+          '/usr/local/sbin/openvpn',      // Homebrew Intel
+          '/usr/local/bin/openvpn',       // Manual install
+          '/opt/homebrew/bin/openvpn'     // Alternative Homebrew location
+        ];
+
+        openvpnBinary = possiblePaths.find(p => fs.existsSync(p)) || possiblePaths[0];
+      } else {
+        // Linux
+        openvpnBinary = '/usr/sbin/openvpn';
+      }
+
+      // Check if binary exists
+      if (!fs.existsSync(openvpnBinary)) {
+        reject(new Error(`OpenVPN binary not found at ${openvpnBinary}. Please install OpenVPN.`));
+        return;
+      }
+
+      // Start OpenVPN process
+      this.process = spawn(openvpnBinary, [
+        '--config', configPath,
+        '--verb', '3'
+      ]);
+
+      let connected = false;
+
+      this.process.stdout?.on('data', (data) => {
+        const output = data.toString();
+        console.log('[OpenVPN]', output);
+
+        // Detect successful connection
+        if (output.includes('Initialization Sequence Completed') && !connected) {
+          connected = true;
+          resolve();
+        }
+
+        // Extract local IP
+        const ipMatch = output.match(/ifconfig\s+(\d+\.\d+\.\d+\.\d+)/);
+        if (ipMatch) {
+          this.status.localIp = ipMatch[1];
+          this.emit('status-changed', this.status);
+        }
+      });
+
+      this.process.stderr?.on('data', (data) => {
+        console.error('[OpenVPN Error]', data.toString());
+      });
+
+      this.process.on('error', (error) => {
+        if (!connected) {
+          reject(error);
+        }
+        this.handleDisconnect('Process error: ' + error.message);
+      });
+
+      this.process.on('exit', (code) => {
+        if (!connected && code !== 0) {
+          reject(new Error(`OpenVPN exited with code ${code}`));
+        }
+        this.handleDisconnect(`Process exited with code ${code}`);
+      });
+
+      // Timeout after 30 seconds
+      setTimeout(() => {
+        if (!connected) {
+          this.process?.kill();
+          reject(new Error('Connection timeout'));
+        }
+      }, 30000);
+    });
+  }
+
+  private handleDisconnect(reason: string): void {
+    if (this.status.connected || this.status.connecting) {
+      this.updateStatus({
+        connected: false,
+        connecting: false,
+        error: reason,
+        connectedSince: undefined,
+        serverIp: undefined,
+        localIp: undefined,
+      });
+
+      this.stopStatsCollection();
+      this.resetStats();
+    }
+  }
+
+  private startStatsCollection(): void {
+    // Update stats every second
+    this.statsInterval = setInterval(() => {
+      if (this.status.connected && this.status.connectedSince) {
+        this.stats.duration = Math.floor(
+          (Date.now() - this.status.connectedSince.getTime()) / 1000
+        );
+
+        // TODO: Get actual traffic stats from OpenVPN
+        // For now, simulated
+        this.stats.bytesIn += Math.random() * 1024;
+        this.stats.bytesOut += Math.random() * 512;
+
+        this.emit('stats-update', this.stats);
+      }
+    }, 1000);
+  }
+
+  private stopStatsCollection(): void {
+    if (this.statsInterval) {
+      clearInterval(this.statsInterval);
+      this.statsInterval = null;
+    }
+  }
+
+  private resetStats(): void {
+    this.stats = {
+      bytesIn: 0,
+      bytesOut: 0,
+      duration: 0
+    };
+    this.emit('stats-update', this.stats);
+  }
+
+  private updateStatus(update: Partial<VPNStatus>): void {
+    this.status = { ...this.status, ...update };
+    this.emit('status-changed', this.status);
+  }
+
+  getStatus(): VPNStatus {
+    return { ...this.status };
+  }
+
+  getStats(): VPNStats {
+    return { ...this.stats };
+  }
+
+  hasConfig(): boolean {
+    return this.configStore.hasActiveConfig();
+  }
+
+  getConfigInfo(): any {
+    const config = this.configStore.getActiveConfig();
+    if (!config) return null;
+
+    return {
+      name: config.name,
+      server: config.parsed.remote?.host,
+      port: config.parsed.remote?.port,
+      protocol: config.parsed.proto || 'udp',
+    };
+  }
+
+  async deleteConfig(): Promise<void> {
+    if (this.status.connected) {
+      await this.disconnect();
+    }
+    this.configStore.deleteActiveConfig();
+    this.emit('config-deleted');
+  }
+}

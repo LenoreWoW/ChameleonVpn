@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'">
+  <title>WorkVPN</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+    <!-- Title Bar -->
+    <div class="title-bar">
+      <div class="title">WorkVPN</div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+      <!-- No Config State -->
+      <div id="no-config-state" class="state" style="display: none;">
+        <div class="icon">🔒</div>
+        <h2>No VPN Configuration</h2>
+        <p>Import an OpenVPN configuration file (.ovpn) to get started</p>
+        <button id="import-btn" class="btn btn-primary">Import .ovpn File</button>
+      </div>
+
+      <!-- Connected/Disconnected State -->
+      <div id="vpn-state" class="state" style="display: none;">
+        <!-- Connection Status -->
+        <div class="status-section">
+          <div id="status-icon" class="status-icon disconnected">●</div>
+          <div id="status-text" class="status-text">Disconnected</div>
+        </div>
+
+        <!-- Server Info -->
+        <div id="server-info" class="info-section">
+          <div class="info-row">
+            <span class="label">Server:</span>
+            <span id="server-address" class="value">-</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Protocol:</span>
+            <span id="protocol" class="value">-</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Local IP:</span>
+            <span id="local-ip" class="value">-</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Duration:</span>
+            <span id="duration" class="value">-</span>
+          </div>
+        </div>
+
+        <!-- Traffic Stats -->
+        <div id="stats-section" class="stats-section">
+          <div class="stat">
+            <div class="stat-label">Download</div>
+            <div id="bytes-in" class="stat-value">0 MB</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Upload</div>
+            <div id="bytes-out" class="stat-value">0 MB</div>
+          </div>
+        </div>
+
+        <!-- Connect/Disconnect Button -->
+        <div class="action-section">
+          <button id="connect-btn" class="btn btn-large btn-success">Connect</button>
+          <button id="disconnect-btn" class="btn btn-large btn-danger" style="display: none;">Disconnect</button>
+        </div>
+
+        <!-- Config Actions -->
+        <div class="config-actions">
+          <button id="delete-config-btn" class="btn btn-text">Delete Configuration</button>
+        </div>
+      </div>
+
+      <!-- Connecting State -->
+      <div id="connecting-state" class="state" style="display: none;">
+        <div class="loader"></div>
+        <h2>Connecting...</h2>
+        <p>Establishing secure connection to VPN server</p>
+      </div>
+
+      <!-- Error State -->
+      <div id="error-state" class="state" style="display: none;">
+        <div class="icon error">⚠️</div>
+        <h2>Connection Error</h2>
+        <p id="error-message"></p>
+        <button id="retry-btn" class="btn btn-primary">Try Again</button>
+      </div>
+    </div>
+
+    <!-- Settings Section -->
+    <div class="settings-section">
+      <div class="settings-header">
+        <h3>Settings</h3>
+      </div>
+      <div class="settings-options">
+        <label class="checkbox-label">
+          <input type="checkbox" id="auto-connect-check">
+          <span>Auto-connect on startup</span>
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="auto-start-check">
+          <span>Launch at system startup</span>
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="kill-switch-check">
+          <span>Kill switch (block internet when disconnected)</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

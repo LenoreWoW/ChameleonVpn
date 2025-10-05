@@ -1,0 +1,24 @@
+# Podfile for WorkVPN iOS
+
+platform :ios, '15.0'
+use_frameworks!
+
+# Main app target
+target 'WorkVPN' do
+  pod 'OpenVPNAdapter', '~> 0.8.0'
+end
+
+# Network Extension target
+target 'WorkVPNTunnelExtension' do
+  pod 'OpenVPNAdapter', '~> 0.8.0'
+end
+
+# Post install hooks
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+      config.build_settings['ENABLE_BITCODE'] = 'NO'
+    end
+  end
+end

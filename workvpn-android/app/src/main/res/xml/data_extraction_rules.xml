@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="sharedpref" path="vpn_config.preferences_pb"/>
+    </cloud-backup>
+</data-extraction-rules>

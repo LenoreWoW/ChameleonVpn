@@ -1,0 +1,136 @@
+package com.workvpn.android.vpn
+
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Intent
+import android.net.VpnService
+import android.os.Build
+import androidx.core.app.NotificationCompat
+import com.workvpn.android.MainActivity
+import com.workvpn.android.R
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+
+/**
+ * VPN Service for WorkVPN
+ *
+ * NOTE: This is a stub implementation for building without ics-openvpn library.
+ * For actual VPN functionality, integrate ics-openvpn or OpenVPN library.
+ * See README.md for integration instructions.
+ */
+class OpenVPNService : VpnService() {
+
+    private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
+    private val _connectionState = MutableStateFlow("DISCONNECTED")
+    val connectionState: StateFlow<String> = _connectionState
+
+    private val _bytesIn = MutableStateFlow(0L)
+    val bytesIn: StateFlow<Long> = _bytesIn
+
+    private val _bytesOut = MutableStateFlow(0L)
+    val bytesOut: StateFlow<Long> = _bytesOut
+
+    override fun onCreate() {
+        super.onCreate()
+        createNotificationChannel()
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        when (intent?.action) {
+            ACTION_START_VPN -> {
+                val configContent = intent.getStringExtra(EXTRA_CONFIG_CONTENT)
+                if (configContent != null) {
+                    startVPN(configContent)
+                }
+            }
+            ACTION_STOP_VPN -> {
+                stopVPN()
+            }
+        }
+        return START_STICKY
+    }
+
+    private fun startVPN(configContent: String) {
+        _connectionState.value = "CONNECTING"
+
+        // Start foreground service
+        startForeground(NOTIFICATION_ID, createNotification("Connecting to VPN..."))
+
+        // TODO: Implement actual VPN connection using ics-openvpn or similar
+        // For now, just simulate connection
+        serviceScope.launch {
+            delay(2000)
+            _connectionState.value = "CONNECTED"
+            updateNotification("VPN Connected")
+        }
+    }
+
+    private fun stopVPN() {
+        _connectionState.value = "DISCONNECTING"
+
+        serviceScope.launch {
+            delay(1000)
+            _connectionState.value = "DISCONNECTED"
+            _bytesIn.value = 0
+            _bytesOut.value = 0
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf()
+        }
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                "VPN Service",
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = "WorkVPN connection status"
+            }
+
+            val notificationManager = getSystemService(NotificationManager::class.java)
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+    private fun createNotification(message: String): Notification {
+        val intent = Intent(this, MainActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            0,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE
+        )
+
+        return NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("WorkVPN")
+            .setContentText(message)
+            .setSmallIcon(R.drawable.ic_vpn_key)
+            .setContentIntent(pendingIntent)
+            .setOngoing(true)
+            .build()
+    }
+
+    private fun updateNotification(message: String) {
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        notificationManager.notify(NOTIFICATION_ID, createNotification(message))
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        serviceScope.cancel()
+    }
+
+    companion object {
+        const val ACTION_START_VPN = "com.workvpn.android.START_VPN"
+        const val ACTION_STOP_VPN = "com.workvpn.android.STOP_VPN"
+        const val EXTRA_CONFIG_CONTENT = "config_content"
+
+        private const val CHANNEL_ID = "vpn_service_channel"
+        private const val NOTIFICATION_ID = 1
+    }
+}
