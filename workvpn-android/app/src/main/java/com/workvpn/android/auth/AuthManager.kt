@@ -119,10 +119,15 @@ class AuthManager(private val context: Context) {
     }
 
     suspend fun isAuthenticated(): Boolean {
+        // For demo: Always start with login screen
+        // In production, uncomment the code below to persist sessions
+        /*
         val currentUser = context.authDataStore.data
             .map { prefs -> prefs[CURRENT_USER_KEY] }
             .first()
         return currentUser != null
+        */
+        return false
     }
 
     suspend fun getCurrentUser(): String? {
