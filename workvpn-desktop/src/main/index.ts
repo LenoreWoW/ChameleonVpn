@@ -41,24 +41,46 @@ const init = async () => {
 const setupIPCHandlers = () => {
   // Import .ovpn file
   ipcMain.handle('import-config', async () => {
-    const result = await dialog.showOpenDialog(mainWindow!, {
-      properties: ['openFile'],
-      filters: [
-        { name: 'OpenVPN Config', extensions: ['ovpn', 'conf'] }
-      ]
-    });
+    console.log('[Main] Import config requested');
 
-    if (!result.canceled && result.filePaths.length > 0) {
-      try {
-        const configPath = result.filePaths[0];
-        await vpnManager.importConfig(configPath);
-        return { success: true };
-      } catch (error) {
-        return { success: false, error: (error as Error).message };
-      }
+    if (!mainWindow) {
+      console.error('[Main] No main window available');
+      return { success: false, error: 'Application window not available' };
     }
 
-    return { success: false, error: 'No file selected' };
+    try {
+      const result = await dialog.showOpenDialog(mainWindow, {
+        title: 'Select OpenVPN Configuration File',
+        properties: ['openFile'],
+        filters: [
+          { name: 'OpenVPN Config', extensions: ['ovpn', 'conf'] },
+          { name: 'All Files', extensions: ['*'] }
+        ]
+      });
+
+      console.log('[Main] Dialog result:', result);
+
+      if (!result.canceled && result.filePaths.length > 0) {
+        try {
+          const configPath = result.filePaths[0];
+          console.log('[Main] Importing config from:', configPath);
+
+          await vpnManager.importConfig(configPath);
+          console.log('[Main] Config imported successfully');
+
+          return { success: true };
+        } catch (error) {
+          console.error('[Main] Import failed:', error);
+          return { success: false, error: (error as Error).message };
+        }
+      }
+
+      console.log('[Main] User cancelled dialog');
+      return { success: false, error: 'No file selected' };
+    } catch (error) {
+      console.error('[Main] Dialog error:', error);
+      return { success: false, error: (error as Error).message };
+    }
   });
 
   // Connect VPN

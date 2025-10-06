@@ -490,16 +490,36 @@ function animateValue(element: HTMLElement, newValue: string) {
 }
 
 async function handleImport() {
+  importBtn.disabled = true;
+  importBtn.textContent = 'Importing...';
+
   try {
+    console.log('[Import] Opening file dialog...');
     const result = await window.vpn.importConfig();
+    console.log('[Import] Result:', result);
+
     if (result.success) {
+      console.log('[Import] Success! Loading config...');
       await loadConfig();
       updateUI();
+
+      // Show success animation
+      gsap.from('.status-section', {
+        scale: 0.95,
+        opacity: 0,
+        duration: 0.5,
+        ease: 'back.out(1.7)'
+      });
     } else {
-      alert(`Failed to import config: ${result.error || 'Unknown error'}`);
+      console.error('[Import] Failed:', result.error);
+      alert(`Failed to import config: ${result.error || 'No file selected or invalid configuration'}`);
     }
   } catch (error) {
+    console.error('[Import] Exception:', error);
     alert(`Import error: ${(error as Error).message}`);
+  } finally {
+    importBtn.disabled = false;
+    importBtn.textContent = 'Import .ovpn File';
   }
 }
 
