@@ -168,20 +168,27 @@ function formatPhoneNumber(phone: string): string {
 
 // Step 1: Phone Number Entry
 async function handlePhoneSubmit() {
+  console.log('[Phone] Submit button clicked');
   const phone = phoneInput.value.trim();
+  console.log('[Phone] Phone number entered:', phone);
 
   if (!phone) {
+    console.log('[Phone] No phone number provided');
     alert('Please enter your phone number');
     return;
   }
 
+  console.log('[Phone] Disabling button and sending OTP...');
   phoneSubmitBtn.disabled = true;
   phoneSubmitBtn.textContent = 'Sending...';
 
   try {
+    console.log('[Phone] Calling window.vpn.sendOTP...');
     const result = await window.vpn.sendOTP(phone);
+    console.log('[Phone] sendOTP result:', result);
 
     if (result.success) {
+      console.log('[Phone] OTP sent successfully! Showing verification screen...');
       currentPhoneNumber = phone;
       phoneDisplay.textContent = formatPhoneNumber(phone);
       showState(otpVerificationState);
@@ -198,6 +205,7 @@ async function handlePhoneSubmit() {
         ease: 'back.out(1.7)'
       });
     } else {
+      console.error('[Phone] sendOTP failed:', result.error);
       alert(result.error || 'Failed to send OTP. Please try again.');
     }
   } catch (error) {
@@ -611,26 +619,41 @@ async function loadSettings() {
 }
 
 async function checkAuthAndShowUI() {
-  const isAuth = await window.vpn.isAuthenticated();
+  try {
+    console.log('[Auth] Checking authentication status...');
+    const isAuth = await window.vpn.isAuthenticated();
+    console.log('[Auth] Is authenticated:', isAuth);
 
-  if (isAuth) {
-    await loadConfig();
-    await loadStatus();
-    await loadStats();
-    await loadSettings();
-    updateUI();
-  } else {
+    if (isAuth) {
+      console.log('[Auth] User is authenticated, loading VPN UI...');
+      await loadConfig();
+      await loadStatus();
+      await loadStats();
+      await loadSettings();
+      updateUI();
+    } else {
+      console.log('[Auth] User not authenticated, showing phone entry screen...');
+      showState(phoneEntryState);
+    }
+  } catch (error) {
+    console.error('[Auth] Error in checkAuthAndShowUI:', error);
+    // Show phone entry as fallback
     showState(phoneEntryState);
   }
 }
 
 // ===== Initialization =====
 async function initialize() {
-  // Initialize Three.js scene
-  initThreeScene();
+  console.log('[App] Initializing WorkVPN Desktop...');
 
-  // Setup OTP inputs
-  setupOTPInputs();
+  try {
+    // Initialize Three.js scene
+    console.log('[App] Initializing Three.js scene...');
+    initThreeScene();
+
+    // Setup OTP inputs
+    console.log('[App] Setting up OTP inputs...');
+    setupOTPInputs();
 
   // Event listeners for onboarding
   phoneSubmitBtn.addEventListener('click', handlePhoneSubmit);
@@ -701,7 +724,9 @@ async function initialize() {
   });
 
   // Check auth status and show appropriate UI
+  console.log('[App] Checking authentication and showing UI...');
   await checkAuthAndShowUI();
+  console.log('[App] UI displayed');
 
   // Animate title bar
   gsap.from('.title-bar', {
@@ -719,6 +744,13 @@ async function initialize() {
     delay: 0.2,
     ease: 'power3.out'
   });
+
+  console.log('[App] Initialization complete!');
+  } catch (error) {
+    console.error('[App] Fatal error during initialization:', error);
+    // Fallback: show phone entry screen
+    showState(phoneEntryState);
+  }
 }
 
 // Initialize when DOM is ready
