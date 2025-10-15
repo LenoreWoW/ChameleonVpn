@@ -216,12 +216,12 @@ class VPNManager: ObservableObject {
 
         connectionDuration = Int(Date().timeIntervalSince(startTime))
 
-        // Get traffic statistics from tunnel
-        // Note: This requires implementing data counters in the tunnel extension
-        // For now, simulated for UI demonstration
-        if isConnected {
-            bytesIn += UInt64.random(in: 1000...5000)
-            bytesOut += UInt64.random(in: 500...2000)
-        }
+        // Get traffic statistics from NetworkExtension tunnel
+        // TODO: Implement actual traffic counting in PacketTunnelProvider
+        // Real implementation requires:
+        // 1. Track bytes in PacketTunnelProvider.readPackets()
+        // 2. Send stats via NEPacketTunnelProvider.setTunnelNetworkSettings()
+        // 3. Read stats here via NEVPNConnection
+        // For now, stats remain at 0 until backend integration is complete
     }
 }

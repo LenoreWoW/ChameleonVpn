@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { ConfigStore } from '../store/config';
 import { parseOVPNConfig } from './parser';
+import { OpenVPNManagementInterface } from './management-interface';
 
 export interface VPNStatus {
   connected: boolean;
@@ -26,6 +27,7 @@ export class VPNManager extends EventEmitter {
   private stats: VPNStats;
   private statsInterval: NodeJS.Timeout | null = null;
   private configStore: ConfigStore;
+  private managementInterface: OpenVPNManagementInterface | null = null;
 
   constructor(configStore: ConfigStore) {
     super();
@@ -105,6 +107,9 @@ export class VPNManager extends EventEmitter {
   }
 
   async disconnect(): Promise<void> {
+    // Disconnect management interface first
+    this.disconnectManagementInterface();
+
     if (this.process) {
       this.process.kill('SIGTERM');
       this.process = null;
@@ -121,6 +126,38 @@ export class VPNManager extends EventEmitter {
     });
 
     this.resetStats();
+  }
+
+  private async connectManagementInterface(): Promise<void> {
+    try {
+      this.managementInterface = new OpenVPNManagementInterface({
+        host: '127.0.0.1',
+        port: 7505
+      });
+
+      await this.managementInterface.connect();
+
+      this.managementInterface.on('disconnected', () => {
+        console.log('[VPN] Management interface disconnected');
+        this.managementInterface = null;
+      });
+
+      this.managementInterface.on('error', (error) => {
+        console.error('[VPN] Management interface error:', error);
+      });
+
+      console.log('[VPN] Management interface connected - real stats available');
+    } catch (error) {
+      console.error('[VPN] Failed to connect to management interface:', error);
+      this.managementInterface = null;
+    }
+  }
+
+  private disconnectManagementInterface(): void {
+    if (this.managementInterface) {
+      this.managementInterface.disconnect();
+      this.managementInterface = null;
+    }
   }
 
   private async startOpenVPN(configPath: string): Promise<void> {
@@ -152,10 +189,14 @@ export class VPNManager extends EventEmitter {
         return;
       }
 
-      // Start OpenVPN process
+      // Start OpenVPN process with management interface enabled
+      const managementPort = 7505;
       this.process = spawn(openvpnBinary, [
         '--config', configPath,
-        '--verb', '3'
+        '--verb', '3',
+        '--management', '127.0.0.1', String(managementPort),
+        '--management-query-passwords',
+        '--management-hold'
       ]);
 
       let connected = false;
@@ -167,6 +208,10 @@ export class VPNManager extends EventEmitter {
         // Detect successful connection
         if (output.includes('Initialization Sequence Completed') && !connected) {
           connected = true;
+
+          // Connect to management interface for real stats
+          this.connectManagementInterface();
+
           resolve();
         }
 
@@ -230,14 +275,28 @@ export class VPNManager extends EventEmitter {
           (Date.now() - this.status.connectedSince.getTime()) / 1000
         );
 
-        // TODO: Get actual traffic stats from OpenVPN
-        // For now, simulated
-        this.stats.bytesIn += Math.random() * 1024;
-        this.stats.bytesOut += Math.random() * 512;
+        // Get actual traffic stats from OpenVPN management interface
+        this.updateTrafficStats();
 
         this.emit('stats-update', this.stats);
       }
     }, 1000);
+  }
+
+  private async updateTrafficStats(): Promise<void> {
+    // ✅ Integrated OpenVPN management interface for real stats
+    if (!this.managementInterface) {
+      return;
+    }
+
+    try {
+      const stats = await this.managementInterface.getStatistics();
+      this.stats.bytesIn = stats.bytesIn;
+      this.stats.bytesOut = stats.bytesOut;
+    } catch (error) {
+      console.error('[VPN] Failed to get stats from management interface:', error);
+      // Stats remain at last known values
+    }
   }
 
   private stopStatsCollection(): void {

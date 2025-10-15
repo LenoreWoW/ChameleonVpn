@@ -1,0 +1,165 @@
+MIT License
+
+Copyright (c) 2025 WorkVPN Contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+Third-Party Licenses
+
+This software uses the following third-party libraries and components:
+
+## Android
+
+### ics-openvpn (OpenVPN implementation)
+- License: GPLv2
+- Source: https://github.com/schwabe/ics-openvpn
+- Used for OpenVPN functionality on Android
+
+### WireGuard Android
+- License: Apache License 2.0
+- Source: https://git.zx2c4.com/wireguard-android
+- Used for WireGuard functionality on Android
+
+### Spring Security Crypto (BCrypt)
+- License: Apache License 2.0
+- Source: https://github.com/spring-projects/spring-security
+- Used for password hashing
+
+### OkHttp
+- License: Apache License 2.0
+- Source: https://github.com/square/okhttp
+- Used for HTTP networking and certificate pinning
+
+### Jetpack Compose
+- License: Apache License 2.0
+- Source: https://developer.android.com/jetpack/compose
+- Used for UI development
+
+## iOS
+
+### OpenVPNAdapter
+- License: AGPLv3
+- Source: https://github.com/ss-abramchuk/OpenVPNAdapter
+- Used for OpenVPN functionality on iOS
+
+## Desktop
+
+### Electron
+- License: MIT
+- Source: https://github.com/electron/electron
+- Used for cross-platform desktop application framework
+
+### bcrypt (Node.js)
+- License: MIT
+- Source: https://github.com/kelektiv/node.bcrypt.js
+- Used for password hashing
+
+### electron-store
+- License: MIT
+- Source: https://github.com/sindresorhus/electron-store
+- Used for persistent configuration storage
+
+## All Platforms
+
+### Material Design Icons / SF Symbols
+- Respective licenses from Google/Apple
+- Used for UI icons
+
+---
+
+IMPORTANT LICENSING NOTES:
+
+1. **ics-openvpn (GPLv2)**:
+   - This library is used in the Android application
+   - GPLv2 is a copyleft license requiring source code disclosure
+   - If you distribute the Android app, you must:
+     * Make source code available
+     * License derivative works under GPLv2
+     * Include copyright and license notices
+
+2. **OpenVPNAdapter (AGPLv3)**:
+   - This library is used in the iOS application
+   - AGPLv3 is a copyleft license requiring source code disclosure
+   - Network use constitutes distribution under AGPLv3
+   - If you distribute the iOS app or offer it as a service, you must:
+     * Make source code available
+     * License derivative works under AGPLv3
+     * Include copyright and license notices
+
+3. **Compatibility Notice**:
+   - The core WorkVPN code (excluding VPN libraries) is MIT licensed
+   - ics-openvpn (GPLv2) and OpenVPNAdapter (AGPLv3) impose additional requirements
+   - Distributing Android/iOS apps requires compliance with GPL/AGPL terms
+   - Desktop app (using OpenVPN binary, not library) is MIT licensed
+
+4. **Commercial Use**:
+   - MIT license allows commercial use of core code
+   - GPL/AGPL libraries require source disclosure even for commercial apps
+   - Consider commercial OpenVPN licenses if source disclosure is not acceptable
+   - Alternative: Use WireGuard (Apache 2.0) on Android, which is permissive
+
+5. **Recommended Approach**:
+   - For open-source distribution: Current setup works well (GPL/AGPL compatible)
+   - For closed-source commercial: Replace OpenVPN libraries with:
+     * Commercial OpenVPN licenses, OR
+     * WireGuard (permissive Apache 2.0 license)
+
+---
+
+Full License Texts
+
+For complete license texts of third-party components:
+
+- GPLv2: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+- AGPLv3: https://www.gnu.org/licenses/agpl-3.0.html
+- Apache 2.0: https://www.apache.org/licenses/LICENSE-2.0
+- MIT: https://opensource.org/licenses/MIT
+
+---
+
+Disclaimer
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED. USE AT YOUR OWN RISK. THE AUTHORS ARE NOT RESPONSIBLE FOR ANY
+DATA LOSS, SECURITY BREACHES, OR OTHER DAMAGES ARISING FROM USE OF THIS
+SOFTWARE.
+
+For VPN applications, security is critical. Users are responsible for:
+- Proper configuration and deployment
+- Security audits and penetration testing
+- Compliance with local laws and regulations
+- Backend server security and maintenance
+
+---
+
+OpenVPN Trademark Notice
+
+OpenVPN is a registered trademark of OpenVPN Inc. This project is not
+affiliated with, endorsed by, or sponsored by OpenVPN Inc.
+
+WireGuard Trademark Notice
+
+WireGuard is a registered trademark of Jason A. Donenfeld. This project
+is not affiliated with, endorsed by, or sponsored by the WireGuard project.
+
+---
+
+For questions about licensing, contact: license@workvpn.com

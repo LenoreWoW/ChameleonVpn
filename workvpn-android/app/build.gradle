@@ -25,10 +25,29 @@ android {
     buildTypes {
         release {
             minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+            // Code obfuscation
+            debuggable false
+
+            // Version name suffix
+            versionNameSuffix ""
+
+            // BuildConfig fields
+            buildConfigField "boolean", "ENABLE_LOGGING", "false"
+
+            // Signing config (configure in local.properties or CI/CD)
+            // signingConfig signingConfigs.release
         }
         debug {
             minifyEnabled false
+            debuggable true
+            applicationIdSuffix ".debug"
+            versionNameSuffix "-debug"
+
+            // BuildConfig fields
+            buildConfigField "boolean", "ENABLE_LOGGING", "true"
         }
     }
 
@@ -76,10 +95,11 @@ dependencies {
     // Navigation
     implementation 'androidx.navigation:navigation-compose:2.7.5'
 
-    // OpenVPN - ics-openvpn (latest stable version)
-    // NOTE: ics-openvpn requires manual integration. See README for instructions.
-    // Temporarily commented out to allow build without complex VPN library setup.
-    // implementation 'com.github.schwabe:ics-openvpn:0.7.47'
+    // VPN Protocol Support - Both OpenVPN and WireGuard
+    // OpenVPN - Compatible with your colleague's backend
+    implementation 'de.blinkt.openvpn:openvpn-api:0.7.47'
+    // WireGuard - Modern alternative (faster, simpler)
+    implementation 'com.wireguard.android:tunnel:1.0.20230706'
 
     // Coroutines
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
@@ -96,6 +116,13 @@ dependencies {
 
     // Biometric
     implementation 'androidx.biometric:biometric-ktx:1.2.0-alpha05'
+
+    // Security - Password Hashing
+    implementation 'org.springframework.security:spring-security-crypto:6.1.5'
+    implementation 'commons-logging:commons-logging:1.2'
+
+    // OkHttp for certificate pinning
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
 
     // Testing
     testImplementation 'junit:junit:4.13.2'

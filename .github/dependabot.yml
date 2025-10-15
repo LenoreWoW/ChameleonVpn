@@ -1,0 +1,69 @@
+version: 2
+updates:
+  # Android dependencies
+  - package-ecosystem: "gradle"
+    directory: "/workvpn-android"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "yourusername"
+    labels:
+      - "dependencies"
+      - "android"
+    commit-message:
+      prefix: "chore(android)"
+
+  # Desktop (npm) dependencies
+  - package-ecosystem: "npm"
+    directory: "/workvpn-desktop"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "yourusername"
+    labels:
+      - "dependencies"
+      - "desktop"
+    commit-message:
+      prefix: "chore(desktop)"
+    ignore:
+      # Ignore major version updates for core dependencies (manual review needed)
+      - dependency-name: "electron"
+        update-types: ["version-update:semver-major"]
+
+  # iOS CocoaPods dependencies
+  - package-ecosystem: "cocoapods"
+    directory: "/workvpn-ios"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "yourusername"
+    labels:
+      - "dependencies"
+      - "ios"
+    commit-message:
+      prefix: "chore(ios)"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "yourusername"
+    labels:
+      - "dependencies"
+      - "ci"
+    commit-message:
+      prefix: "chore(ci)"

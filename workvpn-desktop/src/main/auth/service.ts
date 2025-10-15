@@ -1,4 +1,7 @@
 import Store from 'electron-store';
+import bcrypt from 'bcrypt';
+
+const BCRYPT_ROUNDS = 12;
 
 interface User {
   phoneNumber: string;
@@ -56,12 +59,19 @@ class AuthService {
         otpExpiry
       });
 
-      // In production, send SMS via Twilio/similar
-      console.log(`[AUTH] OTP for ${phoneNumber}: ${otpCode}`);
+      // BACKEND INTEGRATION: Your colleague's backend will handle SMS delivery
+      // The backend should implement POST /auth/otp/send to:
+      // - Generate OTP server-side
+      // - Send SMS via Twilio/AWS SNS
+      // - Return success to client
+      // For development only:
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`[AUTH] DEBUG ONLY - OTP for ${phoneNumber}: ${otpCode}`);
+      }
 
-      // For demo, show OTP in console
       return { success: true };
     } catch (error) {
+      console.error('[AUTH] Failed to send OTP:', error);
       return { success: false, error: (error as Error).message };
     }
   }
@@ -92,12 +102,17 @@ class AuthService {
 
   async createAccount(phoneNumber: string, password: string): Promise<{ success: boolean; error?: string }> {
     try {
+      // Validate password strength
+      if (password.length < 8) {
+        return { success: false, error: 'Password must be at least 8 characters' };
+      }
+
       if (this.users.has(phoneNumber)) {
         return { success: false, error: 'Account already exists' };
       }
 
-      // In production, hash password with bcrypt
-      const passwordHash = Buffer.from(password).toString('base64');
+      // Hash password with BCrypt (12 rounds)
+      const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
 
       this.users.set(phoneNumber, {
         phoneNumber,
@@ -115,28 +130,34 @@ class AuthService {
 
       return { success: true };
     } catch (error) {
+      console.error('[AUTH] Failed to create account:', error);
       return { success: false, error: (error as Error).message };
     }
   }
 
   async login(phoneNumber: string, password: string): Promise<{ success: boolean; error?: string }> {
-    const user = this.users.get(phoneNumber);
+    try {
+      const user = this.users.get(phoneNumber);
 
-    if (!user) {
-      return { success: false, error: 'Account not found' };
+      if (!user) {
+        return { success: false, error: 'Account not found' };
+      }
+
+      // Verify password using BCrypt
+      const isValid = await bcrypt.compare(password, user.passwordHash);
+
+      if (!isValid) {
+        return { success: false, error: 'Invalid password' };
+      }
+
+      this.currentUser = phoneNumber;
+      this.store.set('currentUser', phoneNumber);
+
+      return { success: true };
+    } catch (error) {
+      console.error('[AUTH] Login failed:', error);
+      return { success: false, error: (error as Error).message };
     }
-
-    // In production, compare hashed passwords
-    const passwordHash = Buffer.from(password).toString('base64');
-
-    if (user.passwordHash !== passwordHash) {
-      return { success: false, error: 'Invalid password' };
-    }
-
-    this.currentUser = phoneNumber;
-    this.store.set('currentUser', phoneNumber);
-
-    return { success: true };
   }
 
   async logout(): Promise<void> {

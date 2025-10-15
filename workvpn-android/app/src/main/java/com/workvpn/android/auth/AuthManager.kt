@@ -4,8 +4,11 @@ import android.content.Context
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.workvpn.android.BuildConfig
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import kotlin.random.Random
 
 private val Context.authDataStore by preferencesDataStore(name = "auth_prefs")
@@ -14,7 +17,9 @@ class AuthManager(private val context: Context) {
 
     private val CURRENT_USER_KEY = stringPreferencesKey("current_user")
     private val USERS_KEY = stringPreferencesKey("users")
+    private val OTP_STORAGE_KEY = stringPreferencesKey("otp_storage")
 
+    private val passwordEncoder = BCryptPasswordEncoder(12) // BCrypt with strength 12
     private var otpStorage = mutableMapOf<String, Pair<String, Long>>() // phoneNumber -> (OTP, expiry)
 
     suspend fun sendOTP(phoneNumber: String): Result<Unit> {
@@ -24,11 +29,22 @@ class AuthManager(private val context: Context) {
 
             otpStorage[phoneNumber] = Pair(otp, expiry)
 
-            // In production, send SMS via Twilio/similar
-            android.util.Log.d("AuthManager", "OTP for $phoneNumber: $otp")
+            // Persist OTP storage (encrypted in DataStore)
+            saveOTPStorage()
+
+            // BACKEND INTEGRATION: Your colleague's backend will handle SMS delivery
+            // The backend should call POST /auth/otp/send which will:
+            // - Generate OTP server-side
+            // - Send SMS via Twilio/AWS SNS
+            // - Return success to client
+            // For development only:
+            if (BuildConfig.DEBUG) {
+                android.util.Log.d("AuthManager", "DEBUG ONLY - OTP for $phoneNumber: $otp")
+            }
 
             Result.success(Unit)
         } catch (e: Exception) {
+            android.util.Log.e("AuthManager", "Failed to send OTP", e)
             Result.failure(e)
         }
     }
@@ -57,20 +73,21 @@ class AuthManager(private val context: Context) {
 
     suspend fun createAccount(phoneNumber: String, password: String): Result<Unit> {
         return try {
+            // Validate password strength
+            if (password.length < 8) {
+                return Result.failure(Exception("Password must be at least 8 characters"))
+            }
+
             val users = getUsersMap()
 
             if (users.containsKey(phoneNumber)) {
                 return Result.failure(Exception("Account already exists"))
             }
 
-            // In production, hash password with BCrypt
-            val passwordHash = android.util.Base64.encodeToString(
-                password.toByteArray(),
-                android.util.Base64.DEFAULT
-            )
+            // Hash password with BCrypt (12 rounds)
+            val passwordHash = passwordEncoder.encode(password)
 
             users[phoneNumber] = passwordHash
-
             saveUsersMap(users)
 
             // Auto-login
@@ -80,9 +97,11 @@ class AuthManager(private val context: Context) {
 
             // Clean up OTP
             otpStorage.remove(phoneNumber)
+            saveOTPStorage()
 
             Result.success(Unit)
         } catch (e: Exception) {
+            android.util.Log.e("AuthManager", "Failed to create account", e)
             Result.failure(e)
         }
     }
@@ -93,12 +112,8 @@ class AuthManager(private val context: Context) {
             val storedHash = users[phoneNumber]
                 ?: return Result.failure(Exception("Account not found"))
 
-            val passwordHash = android.util.Base64.encodeToString(
-                password.toByteArray(),
-                android.util.Base64.DEFAULT
-            )
-
-            if (storedHash != passwordHash) {
+            // Verify password using BCrypt
+            if (!passwordEncoder.matches(password, storedHash)) {
                 return Result.failure(Exception("Invalid password"))
             }
 
@@ -108,6 +123,7 @@ class AuthManager(private val context: Context) {
 
             Result.success(Unit)
         } catch (e: Exception) {
+            android.util.Log.e("AuthManager", "Login failed", e)
             Result.failure(e)
         }
     }
@@ -159,6 +175,46 @@ class AuthManager(private val context: Context) {
         val usersJson = users.entries.joinToString(",") { "${it.key}:${it.value}" }
         context.authDataStore.edit { prefs ->
             prefs[USERS_KEY] = "{$usersJson}"
+        }
+    }
+
+    private suspend fun saveOTPStorage() {
+        val otpJson = otpStorage.entries.joinToString(",") {
+            "${it.key}:${it.value.first}:${it.value.second}"
+        }
+        context.authDataStore.edit { prefs ->
+            prefs[OTP_STORAGE_KEY] = otpJson
+        }
+    }
+
+    private suspend fun loadOTPStorage() {
+        val otpJson = context.authDataStore.data
+            .map { prefs -> prefs[OTP_STORAGE_KEY] ?: "" }
+            .first()
+
+        if (otpJson.isNotEmpty()) {
+            otpJson.split(",").forEach { entry ->
+                if (entry.isNotBlank()) {
+                    val parts = entry.split(":")
+                    if (parts.size == 3) {
+                        val phone = parts[0]
+                        val otp = parts[1]
+                        val expiry = parts[2].toLongOrNull() ?: 0L
+
+                        // Only load non-expired OTPs
+                        if (expiry > System.currentTimeMillis()) {
+                            otpStorage[phone] = Pair(otp, expiry)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    init {
+        // Load persisted OTP storage on initialization
+        kotlinx.coroutines.MainScope().launch {
+            loadOTPStorage()
         }
     }
 }

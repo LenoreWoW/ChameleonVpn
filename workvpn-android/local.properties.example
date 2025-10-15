@@ -1,0 +1,184 @@
+# WorkVPN Android - Local Configuration
+# Copy this file to local.properties and fill in your values
+#
+# IMPORTANT: local.properties is in .gitignore - never commit it!
+
+# ================================================================
+# Required: Android SDK Location
+# ================================================================
+sdk.dir=/Users/yourname/Library/Android/sdk
+# Windows: C\:\\Users\\YourName\\AppData\\Local\\Android\\Sdk
+# Linux: /home/yourname/Android/Sdk
+
+# ================================================================
+# Optional: NDK Location (for native libraries)
+# ================================================================
+# ndk.dir=/Users/yourname/Library/Android/sdk/ndk/25.2.9519653
+
+# ================================================================
+# API Configuration
+# ================================================================
+# Backend API endpoint
+api.endpoint=https://your-vpn-backend.com/api
+
+# API timeout (milliseconds)
+api.timeout=30000
+
+# ================================================================
+# Feature Flags
+# ================================================================
+# Enable OpenVPN protocol
+feature.openvpn.enabled=true
+
+# Enable WireGuard protocol
+feature.wireguard.enabled=true
+
+# Enable kill switch
+feature.killswitch.enabled=true
+
+# Enable certificate pinning
+feature.certpinning.enabled=true
+
+# ================================================================
+# Security Configuration
+# ================================================================
+# Certificate pins (SHA-256 hashes)
+# Get pins with: openssl s_client -connect your-backend.com:443 | openssl x509 -pubkey -noout | openssl pkey -pubin -outform der | openssl dgst -sha256 -binary | base64
+cert.pin.primary=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+cert.pin.backup=BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=
+
+# ================================================================
+# Release Signing Configuration
+# ================================================================
+# Keystore file path (absolute or relative to project root)
+keystore.file=workvpn-release.keystore
+# Windows: C\:\\path\\to\\keystore.jks
+
+# Keystore password
+keystore.password=your_keystore_password
+
+# Key alias
+key.alias=workvpn
+
+# Key password
+key.password=your_key_password
+
+# ================================================================
+# Build Configuration
+# ================================================================
+# Build type (debug or release)
+build.type=debug
+
+# Enable ProGuard/R8 obfuscation
+build.minify=false
+
+# Enable resource shrinking
+build.shrinkResources=false
+
+# ================================================================
+# VPN Configuration
+# ================================================================
+# Default VPN protocol (openvpn or wireguard)
+vpn.default.protocol=openvpn
+
+# VPN connection timeout (seconds)
+vpn.connection.timeout=30
+
+# VPN reconnect attempts
+vpn.reconnect.attempts=5
+
+# VPN reconnect delay (milliseconds)
+vpn.reconnect.delay=5000
+
+# DNS servers (comma-separated)
+vpn.dns.servers=1.1.1.1,8.8.8.8
+
+# ================================================================
+# Logging Configuration
+# ================================================================
+# Log level (ERROR, WARN, INFO, DEBUG, VERBOSE)
+log.level=INFO
+
+# Enable file logging
+log.file.enabled=false
+
+# Log file path
+log.file.path=/data/data/com.workvpn.android/files/logs/workvpn.log
+
+# ================================================================
+# Development Settings
+# ================================================================
+# Enable debug mode
+debug.enabled=false
+
+# Skip SSL verification (WARNING: Only for local testing!)
+debug.skipSslVerification=false
+
+# Mock VPN connection (for UI testing without real VPN)
+debug.mockVpn=false
+
+# ================================================================
+# Analytics & Crash Reporting (Optional)
+# ================================================================
+# Enable analytics
+# analytics.enabled=false
+
+# Google Analytics ID
+# analytics.google.id=UA-XXXXXXXXX-X
+
+# Firebase Analytics
+# firebase.analytics.enabled=false
+
+# Sentry DSN for crash reporting
+# sentry.dsn=https://your-sentry-dsn@sentry.io/project-id
+
+# ================================================================
+# Gradle Configuration
+# ================================================================
+# Gradle daemon memory
+org.gradle.jvmargs=-Xmx4096m -XX:MaxPermSize=512m -XX:+HeapDumpOnOutOfMemoryError
+
+# Enable Gradle daemon
+org.gradle.daemon=true
+
+# Enable parallel builds
+org.gradle.parallel=true
+
+# Enable configuration cache
+org.gradle.configuration-cache=true
+
+# Enable build cache
+org.gradle.caching=true
+
+# ================================================================
+# Android Build Configuration
+# ================================================================
+# Use AndroidX
+android.useAndroidX=true
+
+# Enable Jetifier (legacy library support)
+android.enableJetifier=true
+
+# Enable R8 full mode
+android.enableR8.fullMode=false
+
+# ================================================================
+# Platform-Specific Settings
+# ================================================================
+# Minimum SDK version
+# android.minSdk=26
+
+# Target SDK version
+# android.targetSdk=34
+
+# Compile SDK version
+# android.compileSdk=34
+
+# ================================================================
+# Notes
+# ================================================================
+# 1. This file is for local development configuration only
+# 2. Never commit local.properties to version control
+# 3. Use environment variables in CI/CD instead
+# 4. For production, use build.gradle to set release configs
+# 5. Keep sensitive data (passwords, API keys) out of code

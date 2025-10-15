@@ -3,6 +3,8 @@
 .AppleDouble
 .LSOverride
 ._*
+.Spotlight-V100
+.Trashes
 
 # Windows
 Thumbs.db
@@ -11,18 +13,80 @@ Desktop.ini
 $RECYCLE.BIN/
 *.lnk
 
+# Linux
+*~
+.directory
+
 # VPN configuration files (don't commit personal configs)
 *.ovpn
 *.conf
+*.key
+*.crt
+*.pem
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-*~
+*.iml
 
 # Temporary files
 *.tmp
 *.temp
 *.bak
+*.log
+
+# Android
+workvpn-android/local.properties
+workvpn-android/.gradle/
+workvpn-android/build/
+workvpn-android/captures/
+workvpn-android/.externalNativeBuild/
+workvpn-android/.cxx/
+workvpn-android/app/build/
+workvpn-android/*.apk
+workvpn-android/*.aab
+workvpn-android/*.keystore
+workvpn-android/*.jks
+
+# iOS
+workvpn-ios/Pods/
+workvpn-ios/Podfile.lock
+workvpn-ios/*.xcworkspace/xcuserdata/
+workvpn-ios/*.xcodeproj/xcuserdata/
+workvpn-ios/*.xcodeproj/project.xcworkspace/xcuserdata/
+workvpn-ios/build/
+workvpn-ios/DerivedData/
+workvpn-ios/*.ipa
+workvpn-ios/*.dSYM.zip
+workvpn-ios/*.dSYM
+
+# Desktop
+workvpn-desktop/node_modules/
+workvpn-desktop/.env
+workvpn-desktop/dist/
+workvpn-desktop/out/
+workvpn-desktop/*.log
+workvpn-desktop/package-lock.json
+
+# Secrets and credentials
+*.env
+.env.local
+.env.production
+secrets.json
+credentials.json
+api-keys.json
+
+# Build artifacts
+*.dmg
+*.exe
+*.deb
+*.rpm
+*.zip
+*.tar.gz
+
+# Test results
+coverage/
+test-results/
+*.lcov
