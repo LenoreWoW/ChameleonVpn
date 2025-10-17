@@ -1,5 +1,5 @@
-import gsap from 'gsap';
-import { ThreeScene } from './three-scene';
+// @ts-nocheck
+// GSAP and THREE.js are loaded from CDN in index.html
 
 // TypeScript declarations for window.vpn
 interface VPNApi {
@@ -39,6 +39,7 @@ let currentStats: any = null;
 let currentConfig: any = null;
 let currentPhoneNumber: string = '';
 let threeScene: ThreeScene | null = null;
+let isLoadingSettings: boolean = false;
 
 // UI States
 const phoneEntryState = document.getElementById('phone-entry-state')!;
@@ -103,11 +104,30 @@ const vpnLogoutBtn = document.getElementById('vpn-logout-btn') as HTMLButtonElem
 
 const autoConnectCheck = document.getElementById('auto-connect-check') as HTMLInputElement;
 const autoStartCheck = document.getElementById('auto-start-check') as HTMLInputElement;
+const killSwitchCheck = document.getElementById('kill-switch-check') as HTMLInputElement;
 
 // ===== Three.js Scene Setup =====
 function initThreeScene() {
-  const container = document.getElementById('three-canvas')!;
-  threeScene = new ThreeScene(container);
+  try {
+    const container = document.getElementById('three-canvas');
+    if (!container) {
+      console.error('[ThreeScene] Container #three-canvas not found');
+      return;
+    }
+    if (typeof THREE === 'undefined') {
+      console.error('[ThreeScene] THREE.js not loaded');
+      return;
+    }
+    if (typeof ThreeScene === 'undefined') {
+      console.error('[ThreeScene] ThreeScene class not defined');
+      return;
+    }
+    console.log('[ThreeScene] Initializing scene...');
+    threeScene = new ThreeScene(container);
+    console.log('[ThreeScene] Scene initialized successfully');
+  } catch (error) {
+    console.error('[ThreeScene] Error initializing:', error);
+  }
 }
 
 // ===== Utility Functions =====
@@ -123,16 +143,37 @@ function hideAllStates() {
 }
 
 function showState(state: HTMLElement) {
+  console.log('[UI] showState called for:', state.id);
   hideAllStates();
+  console.log('[UI] All states hidden, now showing:', state.id);
   state.style.display = 'block';
+  state.style.opacity = '1';
+  state.style.visibility = 'visible';
+  console.log('[UI] State display set to block, opacity: 1, visibility: visible');
 
   // GSAP animation
-  gsap.from(state, {
-    opacity: 0,
-    y: 30,
-    duration: 0.6,
-    ease: 'power3.out'
-  });
+  try {
+    if (typeof gsap !== 'undefined') {
+      gsap.fromTo(state,
+        {
+          opacity: 0,
+          y: 30
+        },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.6,
+          ease: 'power3.out',
+          clearProps: 'all'
+        }
+      );
+      console.log('[UI] GSAP animation applied');
+    } else {
+      console.error('[UI] GSAP is not defined!');
+    }
+  } catch (error) {
+    console.error('[UI] Error applying GSAP animation:', error);
+  }
 }
 
 function formatBytes(bytes: number): string {
@@ -340,24 +381,30 @@ async function handlePasswordSubmit() {
   passwordSubmitBtn.textContent = 'Creating...';
 
   try {
+    console.log('[Password] Creating account for:', currentPhoneNumber);
     const result = await window.vpn.createAccount(currentPhoneNumber, password);
+    console.log('[Password] createAccount result:', result);
 
     if (result.success) {
+      console.log('[Password] Account created successfully! Transitioning to main app...');
       // Account created! Show success animation then go to main app
       gsap.to(passwordCreationState, {
         scale: 0.95,
         opacity: 0,
         duration: 0.4,
         onComplete: () => {
+          console.log('[Password] Animation complete, calling checkAuthAndShowUI()');
           checkAuthAndShowUI();
         }
       });
     } else {
+      console.error('[Password] Failed to create account:', result.error);
       passwordError.textContent = result.error || 'Failed to create account';
       passwordError.style.display = 'block';
       gsap.from(passwordError, { x: -10, duration: 0.1, repeat: 5, yoyo: true });
     }
   } catch (error) {
+    console.error('[Password] Exception during account creation:', error);
     passwordError.textContent = 'Error creating account';
     passwordError.style.display = 'block';
   } finally {
@@ -425,22 +472,28 @@ async function handleLogout() {
 
 // ===== VPN Functions =====
 async function updateUI() {
+  console.log('[UI] updateUI called, currentConfig:', currentConfig);
+
   if (!currentConfig) {
+    console.log('[UI] No config, showing noConfigState (import screen)');
     showState(noConfigState);
     return;
   }
 
   if (currentStatus?.error && !currentStatus.connected && !currentStatus.connecting) {
+    console.log('[UI] Error state, showing error screen');
     errorMessageText.textContent = currentStatus.error;
     showState(errorState);
     return;
   }
 
   if (currentStatus?.connecting) {
+    console.log('[UI] Connecting state, showing connecting screen');
     showState(connectingState);
     return;
   }
 
+  console.log('[UI] Showing VPN state screen');
   showState(vpnState);
 
   // Update status with GSAP animation
@@ -584,10 +637,16 @@ async function handleRetry() {
 }
 
 async function handleSettingsChange() {
+  // Prevent triggering during initial load
+  if (isLoadingSettings) {
+    return;
+  }
+
   try {
     await window.vpn.updateSettings({
-      autoConnect: autoConnectCheck.checked,
-      autoStart: autoStartCheck.checked,
+      autoConnect: autoConnectCheck.checked || false,
+      autoStart: autoStartCheck.checked || false,
+      killSwitch: killSwitchCheck.checked || false,
     });
   } catch (error) {
     console.error('Settings update error:', error);
@@ -613,9 +672,15 @@ async function loadStats() {
 }
 
 async function loadSettings() {
-  const settings = await window.vpn.getSettings();
-  autoConnectCheck.checked = settings.autoConnect || false;
-  autoStartCheck.checked = settings.autoStart || false;
+  isLoadingSettings = true;
+  try {
+    const settings = await window.vpn.getSettings();
+    autoConnectCheck.checked = settings.autoConnect || false;
+    autoStartCheck.checked = settings.autoStart || false;
+    killSwitchCheck.checked = settings.killSwitch || false;
+  } finally {
+    isLoadingSettings = false;
+  }
 }
 
 async function checkAuthAndShowUI() {
@@ -626,10 +691,19 @@ async function checkAuthAndShowUI() {
 
     if (isAuth) {
       console.log('[Auth] User is authenticated, loading VPN UI...');
+      console.log('[Auth] Loading config...');
       await loadConfig();
+      console.log('[Auth] Config loaded:', currentConfig);
+      console.log('[Auth] Loading status...');
       await loadStatus();
+      console.log('[Auth] Status loaded:', currentStatus);
+      console.log('[Auth] Loading stats...');
       await loadStats();
+      console.log('[Auth] Stats loaded:', currentStats);
+      console.log('[Auth] Loading settings...');
       await loadSettings();
+      console.log('[Auth] Settings loaded');
+      console.log('[Auth] Calling updateUI()...');
       updateUI();
     } else {
       console.log('[Auth] User not authenticated, showing phone entry screen...');
@@ -655,97 +729,98 @@ async function initialize() {
     console.log('[App] Setting up OTP inputs...');
     setupOTPInputs();
 
-  // Event listeners for onboarding
-  phoneSubmitBtn.addEventListener('click', handlePhoneSubmit);
-  phoneInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') handlePhoneSubmit();
-  });
-  loginLink.addEventListener('click', (e) => {
-    e.preventDefault();
-    showState(loginState);
-  });
+    // Event listeners for onboarding
+    phoneSubmitBtn.addEventListener('click', handlePhoneSubmit);
+    phoneInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handlePhoneSubmit();
+    });
+    loginLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      showState(loginState);
+    });
 
-  otpVerifyBtn.addEventListener('click', handleOTPVerify);
-  resendOtpLink.addEventListener('click', (e) => {
-    e.preventDefault();
-    handleResendOTP();
-  });
+    otpVerifyBtn.addEventListener('click', handleOTPVerify);
+    resendOtpLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      handleResendOTP();
+    });
 
-  passwordSubmitBtn.addEventListener('click', handlePasswordSubmit);
-  passwordConfirmInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') handlePasswordSubmit();
-  });
+    passwordSubmitBtn.addEventListener('click', handlePasswordSubmit);
+    passwordConfirmInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handlePasswordSubmit();
+    });
 
-  loginSubmitBtn.addEventListener('click', handleLogin);
-  loginPasswordInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') handleLogin();
-  });
-  signupLink.addEventListener('click', (e) => {
-    e.preventDefault();
-    showState(phoneEntryState);
-  });
+    loginSubmitBtn.addEventListener('click', handleLogin);
+    loginPasswordInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleLogin();
+    });
+    signupLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      showState(phoneEntryState);
+    });
 
-  logoutBtn.addEventListener('click', handleLogout);
-  vpnLogoutBtn.addEventListener('click', handleLogout);
+    logoutBtn.addEventListener('click', handleLogout);
+    vpnLogoutBtn.addEventListener('click', handleLogout);
 
-  // Event listeners for VPN
-  importBtn.addEventListener('click', handleImport);
-  connectBtn.addEventListener('click', handleConnect);
-  disconnectBtn.addEventListener('click', handleDisconnect);
-  deleteConfigBtn.addEventListener('click', handleDeleteConfig);
-  retryBtn.addEventListener('click', handleRetry);
+    // Event listeners for VPN
+    importBtn.addEventListener('click', handleImport);
+    connectBtn.addEventListener('click', handleConnect);
+    disconnectBtn.addEventListener('click', handleDisconnect);
+    deleteConfigBtn.addEventListener('click', handleDeleteConfig);
+    retryBtn.addEventListener('click', handleRetry);
 
-  autoConnectCheck.addEventListener('change', handleSettingsChange);
-  autoStartCheck.addEventListener('change', handleSettingsChange);
+    autoConnectCheck.addEventListener('change', handleSettingsChange);
+    autoStartCheck.addEventListener('change', handleSettingsChange);
+    killSwitchCheck.addEventListener('change', handleSettingsChange);
 
-  // Listen for status changes
-  window.vpn.onStatusChanged((status) => {
-    currentStatus = status;
-    updateUI();
-  });
+    // Listen for status changes
+    window.vpn.onStatusChanged((status) => {
+      currentStatus = status;
+      updateUI();
+    });
 
-  // Listen for stats updates
-  window.vpn.onStatsUpdate((stats) => {
-    currentStats = stats;
-    updateUI();
-  });
+    // Listen for stats updates
+    window.vpn.onStatsUpdate((stats) => {
+      currentStats = stats;
+      updateUI();
+    });
 
-  // Listen for config deletion
-  window.vpn.onConfigDeleted(() => {
-    currentConfig = null;
-    currentStatus = null;
-    currentStats = null;
-    updateUI();
-  });
+    // Listen for config deletion
+    window.vpn.onConfigDeleted(() => {
+      currentConfig = null;
+      currentStatus = null;
+      currentStats = null;
+      updateUI();
+    });
 
-  // Listen for import dialog trigger from tray
-  window.vpn.onShowImportDialog(() => {
-    handleImport();
-  });
+    // Listen for import dialog trigger from tray
+    window.vpn.onShowImportDialog(() => {
+      handleImport();
+    });
 
-  // Check auth status and show appropriate UI
-  console.log('[App] Checking authentication and showing UI...');
-  await checkAuthAndShowUI();
-  console.log('[App] UI displayed');
+    // Check auth status and show appropriate UI
+    console.log('[App] Checking authentication and showing UI...');
+    await checkAuthAndShowUI();
+    console.log('[App] UI displayed');
 
-  // Animate title bar
-  gsap.from('.title-bar', {
-    y: -40,
-    opacity: 0,
-    duration: 0.8,
-    ease: 'power3.out'
-  });
+    // Animate title bar
+    gsap.from('.title-bar', {
+      y: -40,
+      opacity: 0,
+      duration: 0.8,
+      ease: 'power3.out'
+    });
 
-  // Animate settings
-  gsap.from('.settings-section', {
-    y: 40,
-    opacity: 0,
-    duration: 0.8,
-    delay: 0.2,
-    ease: 'power3.out'
-  });
+    // Animate settings
+    gsap.from('.settings-section', {
+      y: 40,
+      opacity: 0,
+      duration: 0.8,
+      delay: 0.2,
+      ease: 'power3.out'
+    });
 
-  console.log('[App] Initialization complete!');
+    console.log('[App] Initialization complete!');
   } catch (error) {
     console.error('[App] Fatal error during initialization:', error);
     // Fallback: show phone entry screen
@@ -759,6 +834,3 @@ if (document.readyState === 'loading') {
 } else {
   initialize();
 }
-
-// Export for module
-export {};

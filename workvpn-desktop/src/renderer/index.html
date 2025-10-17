@@ -3,9 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' https://cdnjs.cloudflare.com">
   <title>WorkVPN</title>
   <link rel="stylesheet" href="styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 </head>
 <body>
   <!-- Three.js Background -->
@@ -210,7 +212,7 @@
           <span>Launch at system startup</span>
         </label>
         <label class="checkbox-label">
-          <input type="checkbox" id="auto-start-check">
+          <input type="checkbox" id="kill-switch-check">
           <span>Kill switch (block internet when disconnected)</span>
         </label>
       </div>

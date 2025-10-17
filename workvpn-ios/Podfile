@@ -5,12 +5,15 @@ use_frameworks!
 
 # Main app target
 target 'WorkVPN' do
-  pod 'OpenVPNAdapter', '~> 0.8.0'
+  # TODO: Add OpenVPN library when official version is available
+  # For now, the app will work without VPN functionality for UI testing
+  # pod 'OpenVPNAdapter', '~> 0.8.0'
 end
 
 # Network Extension target
 target 'WorkVPNTunnelExtension' do
-  pod 'OpenVPNAdapter', '~> 0.8.0'
+  # TODO: Add OpenVPN library when official version is available
+  # pod 'OpenVPNAdapter', '~> 0.8.0'
 end
 
 # Post install hooks

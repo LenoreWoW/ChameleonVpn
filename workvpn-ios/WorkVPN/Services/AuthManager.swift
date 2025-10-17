@@ -25,14 +25,9 @@ class AuthManager: ObservableObject {
     }
 
     private func loadAuthState() {
-        // For demo: Always start with login screen
-        // In production, uncomment the code below to persist sessions
-        /*
+        // Load persisted authentication state
         currentUser = userDefaults.string(forKey: currentUserKey)
         isAuthenticated = currentUser != nil
-        */
-        currentUser = nil
-        isAuthenticated = false
     }
 
     func sendOTP(phoneNumber: String, completion: @escaping (Result<Void, Error>) -> Void) {

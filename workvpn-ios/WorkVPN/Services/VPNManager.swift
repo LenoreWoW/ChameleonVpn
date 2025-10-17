@@ -101,7 +101,7 @@ class VPNManager: ObservableObject {
 
         // Configure provider
         let providerProtocol = NETunnelProviderProtocol()
-        providerProtocol.providerBundleIdentifier = "com.workvpn.ios.TunnelExtension"
+        providerProtocol.providerBundleIdentifier = "com.workvpn.ios.WorkVPNTunnelExtension"
         providerProtocol.serverAddress = config.serverAddress
 
         // Pass configuration to tunnel extension

@@ -1,10 +1,11 @@
-import * as THREE from 'three';
+// @ts-nocheck
+// THREE.js is loaded from CDN in index.html
 
 /**
  * Three.js Animated Background Scene
  * Creates a stunning 3D particle network with blue theme
  */
-export class ThreeScene {
+class ThreeScene {
   private scene: THREE.Scene;
   private camera: THREE.PerspectiveCamera;
   private renderer: THREE.WebGLRenderer;

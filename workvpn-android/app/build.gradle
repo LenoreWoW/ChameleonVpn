@@ -52,12 +52,12 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 
     kotlinOptions {
-        jvmTarget = '17'
+        jvmTarget = '1.8'
     }
 
     buildFeatures {
@@ -69,7 +69,7 @@ android {
         kotlinCompilerExtensionVersion compose_compiler_version
     }
 
-    packaging {
+    packagingOptions {
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
         }
@@ -97,9 +97,11 @@ dependencies {
 
     // VPN Protocol Support - Both OpenVPN and WireGuard
     // OpenVPN - Compatible with your colleague's backend
-    implementation 'de.blinkt.openvpn:openvpn-api:0.7.47'
+    // TODO: Fix OpenVPN dependency - 401 Unauthorized from JitPack
+    // implementation 'de.blinkt.openvpn:openvpn-api:0.7.47'
     // WireGuard - Modern alternative (faster, simpler)
-    implementation 'com.wireguard.android:tunnel:1.0.20230706'
+    // TODO: Fix WireGuard dependency - DEX issues
+    // implementation 'com.wireguard.android:tunnel:1.0.20230706'
 
     // Coroutines
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
@@ -127,6 +129,11 @@ dependencies {
     // Testing
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3'
+    testImplementation 'org.robolectric:robolectric:4.11.1'
+    testImplementation 'androidx.test:core:1.5.0'
+    testImplementation 'androidx.test.ext:junit:1.1.5'
+    testImplementation 'androidx.test.ext:truth:1.5.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     androidTestImplementation platform('androidx.compose:compose-bom:2023.10.01')

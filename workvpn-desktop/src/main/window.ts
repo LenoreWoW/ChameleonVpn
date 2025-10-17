@@ -17,12 +17,15 @@ export function createMainWindow(): BrowserWindow {
   });
 
   // Load the renderer
-  if (process.env.NODE_ENV === 'development') {
-    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
-    mainWindow.webContents.openDevTools();
-  } else {
-    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
-  }
+  mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
+
+  // Always open DevTools for debugging
+  mainWindow.webContents.openDevTools();
+
+  // Log console messages from renderer to main process
+  mainWindow.webContents.on('console-message', (_event, _level, message) => {
+    console.log(`[Renderer] ${message}`);
+  });
 
   // Handle window close (minimize to tray)
   mainWindow.on('close', (event) => {

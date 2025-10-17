@@ -33,10 +33,8 @@ class AuthService {
       this.users.set(phone, user);
     });
 
-    // For demo: Start fresh each time (don't persist login session)
-    // In production, uncomment the line below to persist sessions
-    // this.currentUser = this.store.get('currentUser', null) as string | null;
-    this.currentUser = null;
+    // Load persisted login session
+    this.currentUser = this.store.get('currentUser', null) as string | null;
   }
 
   private saveUsers() {

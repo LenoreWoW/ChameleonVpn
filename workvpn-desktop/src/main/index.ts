@@ -1,5 +1,4 @@
 import { app, BrowserWindow, Tray, Menu, ipcMain, dialog } from 'electron';
-import path from 'path';
 import { VPNManager } from './vpn/manager';
 import { ConfigStore } from './store/config';
 import { createTray } from './tray';
@@ -104,8 +103,18 @@ const setupIPCHandlers = () => {
   });
 
   // Get VPN status
-  ipcMain.handle('vpn-status', async () => {
+  ipcMain.handle('vpn-get-status', async () => {
     return vpnManager.getStatus();
+  });
+
+  // Get VPN stats
+  ipcMain.handle('vpn-get-stats', async () => {
+    return vpnManager.getStats();
+  });
+
+  // Check if config exists
+  ipcMain.handle('has-config', async () => {
+    return configStore.hasActiveConfig();
   });
 
   // Get config info
@@ -133,7 +142,7 @@ const setupIPCHandlers = () => {
   });
 
   // Save settings
-  ipcMain.handle('save-settings', (_, settings) => {
+  ipcMain.handle('update-settings', (_, settings) => {
     configStore.set('autoConnect', settings.autoConnect);
     configStore.set('autoStart', settings.autoStart);
     configStore.set('killSwitch', settings.killSwitch);
@@ -219,7 +228,7 @@ const setupIPCHandlers = () => {
 
   // VPN status updates
   vpnManager.on('status-changed', (status) => {
-    mainWindow?.webContents.send('vpn-status-update', status);
+    mainWindow?.webContents.send('vpn-status-changed', status);
     updateTrayMenu(status);
   });
 
