@@ -418,12 +418,15 @@ xcodebuild -workspace WorkVPN.xcworkspace -scheme WorkVPN
 - **[CHANGELOG.md](CHANGELOG.md)** - Version history and updates
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Development guidelines
 
-### **🚀 Quick Verification**
+### **🚀 Quick Testing (For Your Colleague)**
 ```bash
-# Test all platforms work
-./verify_all_builds.sh
+# Test all functionality without backend
+./test_for_colleague.sh
 
-# Expected result: 3/3 platforms success
+# Or follow step-by-step guide
+cat QUICK_TEST_CHECKLIST.md
+
+# Expected result: All clients working perfectly
 ```
 
 ---
