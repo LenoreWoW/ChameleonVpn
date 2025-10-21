@@ -11,6 +11,7 @@ interface VPNApi {
   disconnect: () => Promise<void>;
   getStatus: () => Promise<any>;
   getStats: () => Promise<any>;
+  setCredentials: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
   getSettings: () => Promise<any>;
   updateSettings: (settings: any) => Promise<void>;
   onStatusChanged: (callback: (status: any) => void) => void;
@@ -47,6 +48,7 @@ const otpVerificationState = document.getElementById('otp-verification-state')!;
 const passwordCreationState = document.getElementById('password-creation-state')!;
 const loginState = document.getElementById('login-state')!;
 const noConfigState = document.getElementById('no-config-state')!;
+const vpnCredentialsState = document.getElementById('vpn-credentials-state')!;
 const vpnState = document.getElementById('vpn-state')!;
 const connectingState = document.getElementById('connecting-state')!;
 const errorState = document.getElementById('error-state')!;
@@ -82,6 +84,13 @@ const loginPasswordInput = document.getElementById('login-password-input') as HT
 const loginSubmitBtn = document.getElementById('login-submit-btn') as HTMLButtonElement;
 const loginError = document.getElementById('login-error')!;
 const signupLink = document.getElementById('signup-link')!;
+
+// VPN Credentials Elements
+const vpnUsernameInput = document.getElementById('vpn-username-input') as HTMLInputElement;
+const vpnPasswordInput = document.getElementById('vpn-password-input') as HTMLInputElement;
+const vpnCredentialsSubmitBtn = document.getElementById('vpn-credentials-submit-btn') as HTMLButtonElement;
+const vpnCredentialsBackBtn = document.getElementById('vpn-credentials-back-btn') as HTMLButtonElement;
+const vpnCredentialsError = document.getElementById('vpn-credentials-error')!;
 
 // VPN Elements
 const statusIcon = document.getElementById('status-icon')!;
@@ -137,6 +146,7 @@ function hideAllStates() {
   passwordCreationState.style.display = 'none';
   loginState.style.display = 'none';
   noConfigState.style.display = 'none';
+  vpnCredentialsState.style.display = 'none';
   vpnState.style.display = 'none';
   connectingState.style.display = 'none';
   errorState.style.display = 'none';
@@ -288,8 +298,11 @@ async function handleOTPVerify() {
   const code = otpDigits.map(d => d.value).join('');
 
   if (code.length !== 6) {
+    otpError.textContent = 'Please enter all 6 digits';
     otpError.style.display = 'block';
-    gsap.from(otpError, { x: -10, duration: 0.1, repeat: 5, yoyo: true });
+    if (typeof gsap !== 'undefined') {
+      gsap.from(otpError, { x: -10, duration: 0.1, repeat: 5, yoyo: true });
+    }
     return;
   }
 
@@ -298,30 +311,75 @@ async function handleOTPVerify() {
   otpVerifyBtn.textContent = 'Verifying...';
 
   try {
+    console.log('[OTP] Verifying code for phone:', currentPhoneNumber);
     const result = await window.vpn.verifyOTP(currentPhoneNumber, code);
+    console.log('[OTP] Verification result:', { success: result.success, hasError: !!result.error });
 
     if (result.success) {
-      showState(passwordCreationState);
+      console.log('[OTP] Verification successful, transitioning to password creation...');
 
-      // Animate password inputs
-      gsap.from('.form-group', {
-        opacity: 0,
-        y: 20,
-        duration: 0.5,
-        stagger: 0.2,
-        ease: 'power2.out'
-      });
+      try {
+        // Ensure password creation state exists
+        if (!passwordCreationState) {
+          throw new Error('Password creation state element not found');
+        }
+
+        // Show password creation state
+        console.log('[OTP] Showing password creation state...');
+        showState(passwordCreationState);
+
+        // Animate password inputs if GSAP is available
+        if (typeof gsap !== 'undefined') {
+          try {
+            gsap.from('.form-group', {
+              opacity: 0,
+              y: 20,
+              duration: 0.5,
+              stagger: 0.2,
+              ease: 'power2.out'
+            });
+          } catch (animError) {
+            console.warn('[OTP] GSAP animation failed, but state transition succeeded:', animError);
+          }
+        }
+
+        console.log('[OTP] Password creation state shown successfully');
+
+        // Focus first password input after animation
+        setTimeout(() => {
+          passwordInput?.focus();
+        }, 600);
+
+      } catch (stateError) {
+        console.error('[OTP] Critical error during state transition:', stateError);
+        otpError.textContent = 'UI error occurred. Please refresh and try again.';
+        otpError.style.display = 'block';
+
+        // Fallback: try showing password state without animation
+        try {
+          passwordCreationState.style.display = 'block';
+          hideAllStates();
+          passwordCreationState.style.display = 'block';
+        } catch (fallbackError) {
+          console.error('[OTP] Fallback also failed:', fallbackError);
+        }
+      }
     } else {
+      console.log('[OTP] Verification failed:', result.error);
       otpError.textContent = result.error || 'Invalid code. Please try again.';
       otpError.style.display = 'block';
-      gsap.from(otpError, { x: -10, duration: 0.1, repeat: 5, yoyo: true });
+
+      if (typeof gsap !== 'undefined') {
+        gsap.from(otpError, { x: -10, duration: 0.1, repeat: 5, yoyo: true });
+      }
 
       // Clear inputs
       otpDigits.forEach(d => d.value = '');
       otpDigits[0].focus();
     }
   } catch (error) {
-    otpError.textContent = 'Error verifying code. Please try again.';
+    console.error('[OTP] Exception during verification:', error);
+    otpError.textContent = 'Network error. Please check connection and try again.';
     otpError.style.display = 'block';
   } finally {
     otpVerifyBtn.disabled = false;
@@ -455,6 +513,59 @@ async function handleLogin() {
   }
 }
 
+// VPN Credentials Handler
+async function handleVPNCredentialsSubmit() {
+  const username = vpnUsernameInput.value.trim();
+  const password = vpnPasswordInput.value;
+
+  if (!username || !password) {
+    vpnCredentialsError.textContent = 'Please enter both username and password';
+    vpnCredentialsError.style.display = 'block';
+    gsap.from(vpnCredentialsError, { x: -10, duration: 0.1, repeat: 5, yoyo: true });
+    return;
+  }
+
+  vpnCredentialsError.style.display = 'none';
+  vpnCredentialsSubmitBtn.disabled = true;
+  vpnCredentialsSubmitBtn.textContent = 'Connecting...';
+
+  try {
+    // Store credentials for VPN connection
+    const credentialsResult = await window.vpn.setCredentials(username, password);
+    if (!credentialsResult.success) {
+      vpnCredentialsError.textContent = credentialsResult.error || 'Failed to save credentials';
+      vpnCredentialsError.style.display = 'block';
+      gsap.from(vpnCredentialsError, { x: -10, duration: 0.1, repeat: 5, yoyo: true });
+      return;
+    }
+
+    // Attempt VPN connection with credentials
+    const result = await window.vpn.connect();
+
+    if (result.success) {
+      // Connection successful - show VPN interface
+      gsap.to(vpnCredentialsState, {
+        scale: 0.95,
+        opacity: 0,
+        duration: 0.4,
+        onComplete: () => {
+          updateUI();
+        }
+      });
+    } else {
+      vpnCredentialsError.textContent = result.error || 'Failed to connect with provided credentials';
+      vpnCredentialsError.style.display = 'block';
+      gsap.from(vpnCredentialsError, { x: -10, duration: 0.1, repeat: 5, yoyo: true });
+    }
+  } catch (error) {
+    vpnCredentialsError.textContent = 'Connection error. Please check your credentials and try again.';
+    vpnCredentialsError.style.display = 'block';
+  } finally {
+    vpnCredentialsSubmitBtn.disabled = false;
+    vpnCredentialsSubmitBtn.textContent = 'Connect to VPN';
+  }
+}
+
 async function handleLogout() {
   const confirmed = confirm('Are you sure you want to logout?');
   if (confirmed) {
@@ -477,6 +588,14 @@ async function updateUI() {
   if (!currentConfig) {
     console.log('[UI] No config, showing noConfigState (import screen)');
     showState(noConfigState);
+    return;
+  }
+
+  // Check if VPN requires authentication and we don't have credentials yet
+  if (currentConfig.parsed?.requiresAuth && 
+      (!currentConfig.parsed.username || !currentConfig.parsed.password)) {
+    console.log('[UI] VPN requires authentication, showing credentials state');
+    showState(vpnCredentialsState);
     return;
   }
 
@@ -757,6 +876,16 @@ async function initialize() {
     signupLink.addEventListener('click', (e) => {
       e.preventDefault();
       showState(phoneEntryState);
+    });
+
+    // VPN Credentials event listeners
+    vpnCredentialsSubmitBtn.addEventListener('click', handleVPNCredentialsSubmit);
+    vpnCredentialsBackBtn.addEventListener('click', (e) => {
+      e.preventDefault();  
+      showState(noConfigState);
+    });
+    vpnPasswordInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleVPNCredentialsSubmit();
     });
 
     logoutBtn.addEventListener('click', handleLogout);

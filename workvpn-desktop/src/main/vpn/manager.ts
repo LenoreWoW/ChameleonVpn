@@ -28,6 +28,8 @@ export class VPNManager extends EventEmitter {
   private statsInterval: NodeJS.Timeout | null = null;
   private configStore: ConfigStore;
   private managementInterface: OpenVPNManagementInterface | null = null;
+  private authFilePath: string | null = null;
+  private tempConfigPath: string | null = null;
 
   constructor(configStore: ConfigStore) {
     super();
@@ -62,6 +64,31 @@ export class VPNManager extends EventEmitter {
     this.emit('config-imported', { name: configName });
   }
 
+  async setCredentials(username: string, password: string): Promise<void> {
+    // Validate credentials
+    if (!username || !password) {
+      throw new Error('Username and password are required');
+    }
+
+    if (username.trim() === '' || password.trim() === '') {
+      throw new Error('Username and password cannot be empty');
+    }
+
+    const config = this.configStore.getActiveConfig();
+    if (!config) {
+      throw new Error('No configuration available');
+    }
+
+    // Update the parsed config with credentials
+    config.parsed.username = username.trim();
+    config.parsed.password = password;
+
+    // Save updated config using the correct method
+    this.configStore.updateActiveConfig(config);
+
+    console.log('[VPN] Credentials saved securely for config:', config.name);
+  }
+
   async connect(): Promise<void> {
     if (this.status.connected || this.status.connecting) {
       throw new Error('Already connected or connecting');
@@ -76,15 +103,37 @@ export class VPNManager extends EventEmitter {
 
     try {
       // Write config to temporary file
-      const tempConfigPath = path.join(
+      this.tempConfigPath = path.join(
         require('electron').app.getPath('temp'),
         'workvpn-config.ovpn'
       );
 
-      fs.writeFileSync(tempConfigPath, config.content);
+      let configContent = config.content;
+
+      // If config requires auth and we have credentials, create auth file
+      if (config.parsed.requiresAuth && config.parsed.username && config.parsed.password) {
+        this.authFilePath = path.join(
+          require('electron').app.getPath('temp'),
+          'workvpn-auth.txt'
+        );
+
+        // Write username and password to auth file
+        fs.writeFileSync(this.authFilePath, `${config.parsed.username}\n${config.parsed.password}\n`);
+        console.log('[VPN] Created auth file for OpenVPN authentication');
+
+        // Modify config to use auth file
+        if (!configContent.includes('auth-user-pass')) {
+          configContent += '\nauth-user-pass "' + this.authFilePath + '"\n';
+        } else {
+          // Replace existing auth-user-pass line
+          configContent = configContent.replace(/auth-user-pass.*$/gm, `auth-user-pass "${this.authFilePath}"`);
+        }
+      }
+
+      fs.writeFileSync(this.tempConfigPath, configContent);
 
       // Start OpenVPN process
-      await this.startOpenVPN(tempConfigPath);
+      await this.startOpenVPN(this.tempConfigPath);
 
       this.updateStatus({
         connected: true,
@@ -96,7 +145,26 @@ export class VPNManager extends EventEmitter {
       // Start stats collection
       this.startStatsCollection();
 
+      // Cleanup auth file after successful connection (OpenVPN has read it)
+      // We delay this slightly to ensure OpenVPN has time to read the file
+      if (this.authFilePath) {
+        setTimeout(() => {
+          if (this.authFilePath && fs.existsSync(this.authFilePath)) {
+            try {
+              fs.unlinkSync(this.authFilePath);
+              console.log('[VPN] Auth file cleaned up after connection (security measure)');
+              this.authFilePath = null;
+            } catch (err) {
+              console.error('[VPN] Failed to cleanup auth file:', err);
+            }
+          }
+        }, 5000); // 5 seconds should be enough for OpenVPN to read it
+      }
+
     } catch (error) {
+      // Cleanup temp files on error for security
+      this.cleanupTempFiles();
+
       this.updateStatus({
         connected: false,
         connecting: false,
@@ -117,6 +185,9 @@ export class VPNManager extends EventEmitter {
 
     this.stopStatsCollection();
 
+    // Cleanup temporary files for security
+    this.cleanupTempFiles();
+
     this.updateStatus({
       connected: false,
       connecting: false,
@@ -126,6 +197,27 @@ export class VPNManager extends EventEmitter {
     });
 
     this.resetStats();
+  }
+
+  private cleanupTempFiles(): void {
+    try {
+      // Delete auth file (contains plaintext credentials)
+      if (this.authFilePath && fs.existsSync(this.authFilePath)) {
+        fs.unlinkSync(this.authFilePath);
+        console.log('[VPN] Cleaned up auth file for security');
+        this.authFilePath = null;
+      }
+
+      // Delete temp config file
+      if (this.tempConfigPath && fs.existsSync(this.tempConfigPath)) {
+        fs.unlinkSync(this.tempConfigPath);
+        console.log('[VPN] Cleaned up temp config file');
+        this.tempConfigPath = null;
+      }
+    } catch (error) {
+      console.error('[VPN] Error cleaning up temp files:', error);
+      // Don't throw - cleanup is best-effort for security
+    }
   }
 
   private async connectManagementInterface(): Promise<void> {
@@ -253,6 +345,9 @@ export class VPNManager extends EventEmitter {
 
   private handleDisconnect(reason: string): void {
     if (this.status.connected || this.status.connecting) {
+      // Cleanup temp files for security
+      this.cleanupTempFiles();
+
       this.updateStatus({
         connected: false,
         connecting: false,

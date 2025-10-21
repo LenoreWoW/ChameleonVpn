@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('vpn', {
   disconnect: () => ipcRenderer.invoke('vpn-disconnect'),
   getStatus: () => ipcRenderer.invoke('vpn-get-status'),
   getStats: () => ipcRenderer.invoke('vpn-get-stats'),
+  setCredentials: (username: string, password: string) => ipcRenderer.invoke('vpn-set-credentials', username, password),
 
   // Settings
   getSettings: () => ipcRenderer.invoke('get-settings'),

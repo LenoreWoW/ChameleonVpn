@@ -85,6 +85,16 @@ export class ConfigStore {
     return false;
   }
 
+  updateActiveConfig(config: StoredConfig): void {
+    // Update the active config directly (used for credential updates)
+    this.store.set('activeConfig', config);
+
+    // Also update in configs map to keep them in sync
+    const configs = this.store.get('configs');
+    configs[config.name] = config;
+    this.store.set('configs', configs);
+  }
+
   get<K extends keyof StoreSchema>(key: K): StoreSchema[K] {
     return this.store.get(key);
   }

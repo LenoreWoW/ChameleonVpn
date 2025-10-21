@@ -112,6 +112,16 @@ const setupIPCHandlers = () => {
     return vpnManager.getStats();
   });
 
+  // Set VPN credentials
+  ipcMain.handle('vpn-set-credentials', async (_, username: string, password: string) => {
+    try {
+      await vpnManager.setCredentials(username, password);
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
+    }
+  });
+
   // Check if config exists
   ipcMain.handle('has-config', async () => {
     return configStore.hasActiveConfig();

@@ -12,6 +12,11 @@ export interface ParsedOVPNConfig {
   cipher?: string;
   auth?: string;
   keyDirection?: number;
+  authUserPass?: boolean;
+  authUserPassFile?: string;
+  username?: string;
+  password?: string;
+  requiresAuth?: boolean;
   [key: string]: any;
 }
 
@@ -90,6 +95,15 @@ export function parseOVPNConfig(content: string): ParsedOVPNConfig {
 
       case 'key-direction':
         config.keyDirection = parseInt(values[0]);
+        break;
+
+      case 'auth-user-pass':
+        config.authUserPass = true;
+        config.requiresAuth = true;
+        // If a file is specified, it contains username/password
+        if (values[0]) {
+          config.authUserPassFile = values[0];
+        }
         break;
 
       default:
