@@ -121,12 +121,19 @@ export class VPNManager extends EventEmitter {
         fs.writeFileSync(this.authFilePath, `${config.parsed.username}\n${config.parsed.password}\n`);
         console.log('[VPN] Created auth file for OpenVPN authentication');
 
+        // Windows-compatible path handling: Use forward slashes and escape backslashes
+        let authFilePathForConfig = this.authFilePath;
+        if (process.platform === 'win32') {
+          // Convert backslashes to forward slashes (OpenVPN supports this on Windows)
+          authFilePathForConfig = authFilePathForConfig.replace(/\\/g, '/');
+        }
+
         // Modify config to use auth file
         if (!configContent.includes('auth-user-pass')) {
-          configContent += '\nauth-user-pass "' + this.authFilePath + '"\n';
+          configContent += `\nauth-user-pass "${authFilePathForConfig}"\n`;
         } else {
           // Replace existing auth-user-pass line
-          configContent = configContent.replace(/auth-user-pass.*$/gm, `auth-user-pass "${this.authFilePath}"`);
+          configContent = configContent.replace(/auth-user-pass.*$/gm, `auth-user-pass "${authFilePathForConfig}"`);
         }
       }
 
@@ -179,7 +186,26 @@ export class VPNManager extends EventEmitter {
     this.disconnectManagementInterface();
 
     if (this.process) {
-      this.process.kill('SIGTERM');
+      // Windows doesn't support UNIX signals like SIGTERM
+      // Use platform-appropriate termination
+      if (process.platform === 'win32') {
+        // Windows: Use taskkill for graceful termination
+        try {
+          const { exec } = require('child_process');
+          exec(`taskkill /PID ${this.process.pid} /T /F`, (error: any) => {
+            if (error) {
+              console.error('[VPN] Failed to kill OpenVPN process:', error);
+            }
+          });
+        } catch (error) {
+          console.error('[VPN] Error terminating OpenVPN:', error);
+          // Fallback to basic kill
+          this.process.kill();
+        }
+      } else {
+        // macOS/Linux: Use SIGTERM
+        this.process.kill('SIGTERM');
+      }
       this.process = null;
     }
 
@@ -258,8 +284,23 @@ export class VPNManager extends EventEmitter {
       let openvpnBinary: string;
 
       if (process.platform === 'win32') {
-        // Windows: Use bundled OpenVPN or system installation
-        openvpnBinary = 'C:\\Program Files\\OpenVPN\\bin\\openvpn.exe';
+        // Windows: Try multiple possible installation locations
+        const possiblePaths = [
+          'C:\\Program Files\\OpenVPN\\bin\\openvpn.exe',           // Default 64-bit
+          'C:\\Program Files (x86)\\OpenVPN\\bin\\openvpn.exe',    // Default 32-bit
+          path.join(process.env.ProgramFiles || 'C:\\Program Files', 'OpenVPN', 'bin', 'openvpn.exe'),
+          path.join(process.env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)', 'OpenVPN', 'bin', 'openvpn.exe'),
+        ];
+
+        const foundPath = possiblePaths.find(p => fs.existsSync(p));
+        if (!foundPath) {
+          reject(new Error(
+            'OpenVPN not found. Please install OpenVPN from https://openvpn.net/community-downloads/\n' +
+            'Searched locations:\n' + possiblePaths.join('\n')
+          ));
+          return;
+        }
+        openvpnBinary = foundPath;
       } else if (process.platform === 'darwin') {
         // macOS: Try multiple locations (Homebrew Intel, Homebrew ARM, manual install)
         const possiblePaths = [
@@ -269,27 +310,54 @@ export class VPNManager extends EventEmitter {
           '/opt/homebrew/bin/openvpn'     // Alternative Homebrew location
         ];
 
-        openvpnBinary = possiblePaths.find(p => fs.existsSync(p)) || possiblePaths[0];
+        const foundPath = possiblePaths.find(p => fs.existsSync(p));
+        if (!foundPath) {
+          reject(new Error(
+            'OpenVPN not found. Please install with: brew install openvpn\n' +
+            'Searched locations:\n' + possiblePaths.join('\n')
+          ));
+          return;
+        }
+        openvpnBinary = foundPath;
       } else {
-        // Linux
-        openvpnBinary = '/usr/sbin/openvpn';
+        // Linux: Try common locations
+        const possiblePaths = [
+          '/usr/sbin/openvpn',
+          '/usr/bin/openvpn',
+          '/usr/local/sbin/openvpn'
+        ];
+
+        const foundPath = possiblePaths.find(p => fs.existsSync(p));
+        if (!foundPath) {
+          reject(new Error(
+            'OpenVPN not found. Please install with: sudo apt-get install openvpn\n' +
+            'Searched locations:\n' + possiblePaths.join('\n')
+          ));
+          return;
+        }
+        openvpnBinary = foundPath;
       }
 
-      // Check if binary exists
-      if (!fs.existsSync(openvpnBinary)) {
-        reject(new Error(`OpenVPN binary not found at ${openvpnBinary}. Please install OpenVPN.`));
-        return;
-      }
+      console.log('[VPN] Using OpenVPN binary:', openvpnBinary);
 
       // Start OpenVPN process with management interface enabled
       const managementPort = 7505;
-      this.process = spawn(openvpnBinary, [
+      const openvpnArgs = [
         '--config', configPath,
         '--verb', '3',
         '--management', '127.0.0.1', String(managementPort),
         '--management-query-passwords',
         '--management-hold'
-      ]);
+      ];
+
+      // Windows-specific: OpenVPN requires admin privileges
+      // We'll spawn the process and check for permission errors
+      if (process.platform === 'win32') {
+        console.log('[VPN] Windows detected - OpenVPN may require administrator privileges');
+        console.log('[VPN] If connection fails, try running the app as Administrator');
+      }
+
+      this.process = spawn(openvpnBinary, openvpnArgs);
 
       let connected = false;
 
