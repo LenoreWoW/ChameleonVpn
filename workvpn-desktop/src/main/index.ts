@@ -4,6 +4,22 @@ import { ConfigStore } from './store/config';
 import { createTray } from './tray';
 import { createMainWindow } from './window';
 
+// API Configuration
+// Set API_BASE_URL environment variable for production deployment
+// Default: http://localhost:8080
+const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:8080';
+
+// Validate API URL format
+try {
+  new URL(API_BASE_URL);
+} catch (error) {
+  console.error('[Main] Invalid API_BASE_URL:', API_BASE_URL);
+  console.error('[Main] Falling back to http://localhost:8080');
+  process.env.API_BASE_URL = 'http://localhost:8080';
+}
+
+console.log('[Main] API Base URL:', API_BASE_URL);
+
 // Handle creating/removing shortcuts on Windows when installing/uninstalling
 if (require('electron-squirrel-startup')) {
   app.quit();
@@ -37,7 +53,40 @@ const init = async () => {
   }
 };
 
+// Helper function to wrap IPC handlers with error handling
+const handleIPCError = (handler: (...args: any[]) => Promise<any>) => {
+  return async (...args: any[]) => {
+    try {
+      return await handler(...args);
+    } catch (error) {
+      console.error('[Main] IPC Handler Error:', error);
+
+      // Check if it's a backend connection error
+      if (error instanceof Error && error.message.includes('fetch')) {
+        return {
+          success: false,
+          error: 'Unable to connect to backend server. Please check if the server is running.',
+          isNetworkError: true
+        };
+      }
+
+      return {
+        success: false,
+        error: (error as Error).message || 'An unexpected error occurred'
+      };
+    }
+  };
+};
+
 const setupIPCHandlers = () => {
+  // Get API configuration
+  ipcMain.handle('get-api-config', () => {
+    return {
+      apiBaseUrl: API_BASE_URL,
+      isProduction: process.env.NODE_ENV === 'production'
+    };
+  });
+
   // Import .ovpn file
   ipcMain.handle('import-config', async () => {
     console.log('[Main] Import config requested');
@@ -172,69 +221,42 @@ const setupIPCHandlers = () => {
     return { success: true };
   });
 
-  // Authentication handlers
-  ipcMain.handle('auth-send-otp', async (_, phoneNumber: string) => {
-    try {
-      const { authService } = await import('./auth/service');
-      return await authService.sendOTP(phoneNumber);
-    } catch (error) {
-      return { success: false, error: (error as Error).message };
-    }
-  });
+  // Authentication handlers with error handling
+  ipcMain.handle('auth-send-otp', handleIPCError(async (_, phoneNumber: string) => {
+    const { authService } = await import('./auth/service');
+    return await authService.sendOTP(phoneNumber);
+  }));
 
-  ipcMain.handle('auth-verify-otp', async (_, phoneNumber: string, code: string) => {
-    try {
-      const { authService } = await import('./auth/service');
-      return await authService.verifyOTP(phoneNumber, code);
-    } catch (error) {
-      return { success: false, error: (error as Error).message };
-    }
-  });
+  ipcMain.handle('auth-verify-otp', handleIPCError(async (_, phoneNumber: string, code: string) => {
+    const { authService } = await import('./auth/service');
+    return await authService.verifyOTP(phoneNumber, code);
+  }));
 
-  ipcMain.handle('auth-create-account', async (_, phoneNumber: string, password: string) => {
-    try {
-      const { authService } = await import('./auth/service');
-      return await authService.createAccount(phoneNumber, password);
-    } catch (error) {
-      return { success: false, error: (error as Error).message };
-    }
-  });
+  ipcMain.handle('auth-create-account', handleIPCError(async (_, phoneNumber: string, password: string) => {
+    const { authService } = await import('./auth/service');
+    return await authService.createAccount(phoneNumber, password);
+  }));
 
-  ipcMain.handle('auth-login', async (_, phoneNumber: string, password: string) => {
-    try {
-      const { authService } = await import('./auth/service');
-      return await authService.login(phoneNumber, password);
-    } catch (error) {
-      return { success: false, error: (error as Error).message };
-    }
-  });
+  ipcMain.handle('auth-login', handleIPCError(async (_, phoneNumber: string, password: string) => {
+    const { authService } = await import('./auth/service');
+    return await authService.login(phoneNumber, password);
+  }));
 
-  ipcMain.handle('auth-logout', async () => {
-    try {
-      const { authService } = await import('./auth/service');
-      await authService.logout();
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  });
+  ipcMain.handle('auth-logout', handleIPCError(async () => {
+    const { authService } = await import('./auth/service');
+    await authService.logout();
+    return { success: true };
+  }));
 
-  ipcMain.handle('auth-is-authenticated', async () => {
-    try {
-      const { authService } = await import('./auth/service');
-      return authService.isAuthenticated();
-    } catch (error) {
-      return false;
-    }
-  });
+  ipcMain.handle('auth-is-authenticated', handleIPCError(async () => {
+    const { authService } = await import('./auth/service');
+    return authService.isAuthenticated();
+  }));
 
-  ipcMain.handle('auth-get-current-user', async () => {
-    try {
-      const { authService } = await import('./auth/service');
-      return authService.getCurrentUser();
-    } catch (error) {
-      return null;
-    }
-  });
+  ipcMain.handle('auth-get-current-user', handleIPCError(async () => {
+    const { authService } = await import('./auth/service');
+    return authService.getCurrentUser();
+  }));
 
   // VPN status updates
   vpnManager.on('status-changed', (status) => {

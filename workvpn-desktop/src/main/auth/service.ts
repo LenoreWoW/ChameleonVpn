@@ -1,70 +1,206 @@
 import Store from 'electron-store';
-import bcrypt from 'bcrypt';
-
-const BCRYPT_ROUNDS = 12;
 
 interface User {
+  id: string;
   phoneNumber: string;
-  passwordHash: string;
+}
+
+interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  tokenIssuedAt: number;
 }
 
 interface AuthSession {
   phoneNumber: string;
-  otpCode?: string;
-  otpExpiry?: number;
+  sessionId?: string;
+  verificationToken?: string;
 }
 
-// Simple in-memory store for demo
-// In production, this would connect to a backend API
+// API-integrated auth service
+// Connects to backend API for authentication
 class AuthService {
   private store: Store;
-  private users: Map<string, User>;
   private sessions: Map<string, AuthSession>;
-  private currentUser: string | null = null;
+  private apiBaseUrl: string;
+  private tokenRefreshTimer: NodeJS.Timeout | null = null;
 
   constructor() {
     this.store = new Store({ name: 'auth' });
-    this.users = new Map();
     this.sessions = new Map();
 
-    // Load users from store
-    const storedUsers = this.store.get('users', {}) as Record<string, User>;
-    Object.entries(storedUsers).forEach(([phone, user]) => {
-      this.users.set(phone, user);
-    });
+    // API base URL from environment variable or default to localhost
+    this.apiBaseUrl = process.env.API_BASE_URL || 'http://localhost:8080';
 
-    // Load persisted login session
-    this.currentUser = this.store.get('currentUser', null) as string | null;
+    // Start token refresh timer if user is authenticated
+    if (this.isAuthenticated()) {
+      this.scheduleTokenRefresh();
+    }
   }
 
-  private saveUsers() {
-    const usersObj: Record<string, User> = {};
-    this.users.forEach((user, phone) => {
-      usersObj[phone] = user;
+  private getAuthHeaders(): HeadersInit {
+    const tokens = this.getTokens();
+    if (tokens?.accessToken) {
+      return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${tokens.accessToken}`
+      };
+    }
+    return {
+      'Content-Type': 'application/json'
+    };
+  }
+
+  private getTokens(): AuthTokens | null {
+    return this.store.get('tokens', null) as AuthTokens | null;
+  }
+
+  private saveTokens(tokens: AuthTokens): void {
+    this.store.set('tokens', {
+      ...tokens,
+      tokenIssuedAt: Date.now()
     });
-    this.store.set('users', usersObj);
+    this.scheduleTokenRefresh();
+  }
+
+  private clearTokens(): void {
+    this.store.delete('tokens');
+    this.store.delete('currentUser');
+    if (this.tokenRefreshTimer) {
+      clearTimeout(this.tokenRefreshTimer);
+      this.tokenRefreshTimer = null;
+    }
+  }
+
+  private scheduleTokenRefresh(): void {
+    const tokens = this.getTokens();
+    if (!tokens) return;
+
+    // Clear existing timer
+    if (this.tokenRefreshTimer) {
+      clearTimeout(this.tokenRefreshTimer);
+    }
+
+    // Calculate when to refresh (5 minutes before expiry)
+    const expiresInMs = tokens.expiresIn * 1000;
+    const refreshAt = tokens.tokenIssuedAt + expiresInMs - (5 * 60 * 1000);
+    const timeUntilRefresh = refreshAt - Date.now();
+
+    if (timeUntilRefresh > 0) {
+      this.tokenRefreshTimer = setTimeout(async () => {
+        await this.refreshAccessToken();
+      }, timeUntilRefresh);
+    } else {
+      // Token already expired or about to expire, refresh now
+      this.refreshAccessToken();
+    }
+  }
+
+  private async refreshAccessToken(): Promise<boolean> {
+    try {
+      const tokens = this.getTokens();
+      if (!tokens?.refreshToken) {
+        return false;
+      }
+
+      const response = await fetch(`${this.apiBaseUrl}/v1/auth/refresh`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          refreshToken: tokens.refreshToken
+        })
+      });
+
+      if (!response.ok) {
+        // Refresh token invalid, clear session
+        this.clearTokens();
+        return false;
+      }
+
+      const data = await response.json();
+
+      if (data.success && data.accessToken) {
+        this.saveTokens({
+          accessToken: data.accessToken,
+          refreshToken: tokens.refreshToken,
+          expiresIn: data.expiresIn,
+          tokenIssuedAt: Date.now()
+        });
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('[AUTH] Failed to refresh token:', error);
+      return false;
+    }
+  }
+
+  private async apiCall<T = any>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<{ success: boolean; data?: T; error?: string }> {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}${endpoint}`, {
+        ...options,
+        headers: this.getAuthHeaders()
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: data.message || data.error || `HTTP ${response.status}`
+        };
+      }
+
+      return {
+        success: true,
+        data
+      };
+    } catch (error) {
+      // Network error - graceful degradation
+      console.error(`[AUTH] API call failed for ${endpoint}:`, error);
+
+      // Check if it's a network error
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        return {
+          success: false,
+          error: 'Backend server is not available. Please check your connection or try again later.'
+        };
+      }
+
+      return {
+        success: false,
+        error: (error as Error).message || 'Unknown error occurred'
+      };
+    }
   }
 
   async sendOTP(phoneNumber: string): Promise<{ success: boolean; error?: string }> {
     try {
-      // Generate 6-digit OTP
-      const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-      const otpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes
-
-      this.sessions.set(phoneNumber, {
-        phoneNumber,
-        otpCode,
-        otpExpiry
+      const result = await this.apiCall('/v1/auth/otp/send', {
+        method: 'POST',
+        body: JSON.stringify({
+          phoneNumber,
+          countryCode: 'US' // TODO: Extract from phone number or make configurable
+        })
       });
 
-      // BACKEND INTEGRATION: Your colleague's backend will handle SMS delivery
-      // The backend should implement POST /auth/otp/send to:
-      // - Generate OTP server-side
-      // - Send SMS via Twilio/AWS SNS
-      // - Return success to client
-      // For development only:
-      if (process.env.NODE_ENV !== 'production') {
-        console.log(`[AUTH] DEBUG ONLY - OTP for ${phoneNumber}: ${otpCode}`);
+      if (!result.success) {
+        return { success: false, error: result.error };
+      }
+
+      // Save session ID for verification
+      if (result.data?.sessionId) {
+        this.sessions.set(phoneNumber, {
+          phoneNumber,
+          sessionId: result.data.sessionId
+        });
       }
 
       return { success: true };
@@ -75,27 +211,36 @@ class AuthService {
   }
 
   async verifyOTP(phoneNumber: string, code: string): Promise<{ success: boolean; error?: string }> {
-    const session = this.sessions.get(phoneNumber);
+    try {
+      const session = this.sessions.get(phoneNumber);
 
-    if (!session) {
-      return { success: false, error: 'No OTP session found' };
+      const result = await this.apiCall('/v1/auth/otp/verify', {
+        method: 'POST',
+        body: JSON.stringify({
+          phoneNumber,
+          otp: code,
+          sessionId: session?.sessionId
+        })
+      });
+
+      if (!result.success) {
+        return { success: false, error: result.error };
+      }
+
+      // Save verification token for account creation
+      if (result.data?.verificationToken) {
+        this.sessions.set(phoneNumber, {
+          phoneNumber,
+          sessionId: session?.sessionId,
+          verificationToken: result.data.verificationToken
+        });
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('[AUTH] Failed to verify OTP:', error);
+      return { success: false, error: (error as Error).message };
     }
-
-    if (!session.otpCode || !session.otpExpiry) {
-      return { success: false, error: 'Invalid session' };
-    }
-
-    if (Date.now() > session.otpExpiry) {
-      this.sessions.delete(phoneNumber);
-      return { success: false, error: 'OTP expired' };
-    }
-
-    if (session.otpCode !== code) {
-      return { success: false, error: 'Invalid OTP code' };
-    }
-
-    // OTP verified successfully
-    return { success: true };
   }
 
   async createAccount(phoneNumber: string, password: string): Promise<{ success: boolean; error?: string }> {
@@ -105,23 +250,38 @@ class AuthService {
         return { success: false, error: 'Password must be at least 8 characters' };
       }
 
-      if (this.users.has(phoneNumber)) {
-        return { success: false, error: 'Account already exists' };
+      const session = this.sessions.get(phoneNumber);
+      if (!session?.verificationToken) {
+        return { success: false, error: 'Phone number not verified. Please verify OTP first.' };
       }
 
-      // Hash password with BCrypt (12 rounds)
-      const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
-
-      this.users.set(phoneNumber, {
-        phoneNumber,
-        passwordHash
+      const result = await this.apiCall('/v1/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({
+          phoneNumber,
+          password,
+          verificationToken: session.verificationToken
+        })
       });
 
-      this.saveUsers();
+      if (!result.success) {
+        return { success: false, error: result.error };
+      }
 
-      // Auto-login after account creation
-      this.currentUser = phoneNumber;
-      this.store.set('currentUser', phoneNumber);
+      // Save tokens and user info
+      if (result.data?.accessToken && result.data?.refreshToken) {
+        this.saveTokens({
+          accessToken: result.data.accessToken,
+          refreshToken: result.data.refreshToken,
+          expiresIn: result.data.expiresIn || 3600,
+          tokenIssuedAt: Date.now()
+        });
+
+        this.store.set('currentUser', {
+          id: result.data.user?.id,
+          phoneNumber: result.data.user?.phoneNumber || phoneNumber
+        });
+      }
 
       // Clean up session
       this.sessions.delete(phoneNumber);
@@ -135,21 +295,32 @@ class AuthService {
 
   async login(phoneNumber: string, password: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const user = this.users.get(phoneNumber);
+      const result = await this.apiCall('/v1/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({
+          phoneNumber,
+          password
+        })
+      });
 
-      if (!user) {
-        return { success: false, error: 'Account not found' };
+      if (!result.success) {
+        return { success: false, error: result.error };
       }
 
-      // Verify password using BCrypt
-      const isValid = await bcrypt.compare(password, user.passwordHash);
+      // Save tokens and user info
+      if (result.data?.accessToken && result.data?.refreshToken) {
+        this.saveTokens({
+          accessToken: result.data.accessToken,
+          refreshToken: result.data.refreshToken,
+          expiresIn: result.data.expiresIn || 3600,
+          tokenIssuedAt: Date.now()
+        });
 
-      if (!isValid) {
-        return { success: false, error: 'Invalid password' };
+        this.store.set('currentUser', {
+          id: result.data.user?.id,
+          phoneNumber: result.data.user?.phoneNumber || phoneNumber
+        });
       }
-
-      this.currentUser = phoneNumber;
-      this.store.set('currentUser', phoneNumber);
 
       return { success: true };
     } catch (error) {
@@ -159,20 +330,47 @@ class AuthService {
   }
 
   async logout(): Promise<void> {
-    this.currentUser = null;
-    this.store.delete('currentUser');
+    try {
+      // Call backend logout endpoint
+      await this.apiCall('/v1/auth/logout', {
+        method: 'POST'
+      });
+    } catch (error) {
+      console.error('[AUTH] Logout API call failed:', error);
+      // Continue with local cleanup even if API call fails
+    }
+
+    // Clear local session
+    this.clearTokens();
   }
 
   isAuthenticated(): boolean {
-    return this.currentUser !== null;
+    const tokens = this.getTokens();
+    if (!tokens) {
+      return false;
+    }
+
+    // Check if token is expired
+    const expiresAt = tokens.tokenIssuedAt + (tokens.expiresIn * 1000);
+    if (Date.now() >= expiresAt) {
+      // Token expired, try to refresh
+      this.refreshAccessToken();
+      return false;
+    }
+
+    return true;
   }
 
-  getCurrentUser(): { phoneNumber: string } | null {
-    if (!this.currentUser) {
+  getCurrentUser(): User | null {
+    if (!this.isAuthenticated()) {
       return null;
     }
 
-    return { phoneNumber: this.currentUser };
+    return this.store.get('currentUser', null) as User | null;
+  }
+
+  getApiBaseUrl(): string {
+    return this.apiBaseUrl;
   }
 }
 

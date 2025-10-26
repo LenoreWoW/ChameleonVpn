@@ -2,6 +2,9 @@ import { contextBridge, ipcRenderer } from 'electron';
 
 // Expose safe IPC methods to renderer
 contextBridge.exposeInMainWorld('vpn', {
+  // API Configuration
+  getApiConfig: () => ipcRenderer.invoke('get-api-config'),
+
   // Config management
   importConfig: () => ipcRenderer.invoke('import-config'),
   hasConfig: () => ipcRenderer.invoke('has-config'),
