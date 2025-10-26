@@ -1,4 +1,4 @@
-package com.workvpn.android.model
+package com.barqnet.android.model
 
 import kotlinx.serialization.Serializable
 import java.util.Date

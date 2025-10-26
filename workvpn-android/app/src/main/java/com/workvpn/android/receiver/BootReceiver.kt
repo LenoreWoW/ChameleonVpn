@@ -1,4 +1,4 @@
-package com.workvpn.android.receiver
+package com.barqnet.android.receiver
 
 import android.content.BroadcastReceiver
 import android.content.Context

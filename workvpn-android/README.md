@@ -1,4 +1,4 @@
-# WorkVPN - Android Client
+# BarqNet - Android Client
 
 **Status**: ✅ Production-Ready (100%)
 **Protocols**: OpenVPN + WireGuard
@@ -54,7 +54,7 @@ Native Android VPN client with **dual-protocol support**:
 ./gradlew installDebug
 
 # Or run directly from Android Studio
-# 1. Open workvpn-android in Android Studio
+# 1. Open barqnet-android in Android Studio
 # 2. Click Run (▶️) or Shift+F10
 ```
 
@@ -71,10 +71,10 @@ Native Android VPN client with **dual-protocol support**:
 ## 📦 Project Structure
 
 ```
-workvpn-android/
-├── app/src/main/java/com/workvpn/android/
+barqnet-android/
+├── app/src/main/java/com/barqnet/android/
 │   ├── MainActivity.kt                    # App entry point
-│   ├── WorkVPNApplication.kt              # Application class
+│   ├── BarqNetApplication.kt              # Application class
 │   │
 │   ├── auth/
 │   │   └── AuthManager.kt                 # BCrypt authentication
@@ -131,7 +131,7 @@ workvpn-android/
 
 **Compatible with your colleague's OpenVPN backend server.**
 
-**File**: `app/src/main/java/com/workvpn/android/vpn/OpenVPNVPNService.kt`
+**File**: `app/src/main/java/com/barqnet/android/vpn/OpenVPNVPNService.kt`
 
 **Features**:
 - ics-openvpn library v0.7.47 (same as OpenVPN Connect)
@@ -165,7 +165,7 @@ context.startService(intent)
 
 Modern alternative protocol (faster than OpenVPN).
 
-**File**: `app/src/main/java/com/workvpn/android/vpn/WireGuardVPNService.kt`
+**File**: `app/src/main/java/com/barqnet/android/vpn/WireGuardVPNService.kt`
 
 **Features**:
 - Official WireGuard Android library v1.0.20230706
@@ -224,7 +224,7 @@ Located in `app/src/test/`:
 
 **Features**:
 - Debug logging enabled
-- Application ID: `com.workvpn.android.debug`
+- Application ID: `com.barqnet.android.debug`
 - No code obfuscation
 - Debuggable
 
@@ -325,9 +325,9 @@ sdk.dir=/Users/yourname/Library/Android/sdk
 api.endpoint=https://your-vpn-backend.com/api
 
 # Optional: Keystore for release signing
-keystore.file=/path/to/workvpn-release.keystore
+keystore.file=/path/to/barqnet-release.keystore
 keystore.password=your_keystore_password
-key.alias=workvpn
+key.alias=barqnet
 key.password=your_key_password
 ```
 
@@ -364,8 +364,8 @@ Already configured (no changes needed):
 
 ```bash
 # Generate keystore (first time only)
-keytool -genkey -v -keystore workvpn-release.keystore \
-  -alias workvpn -keyalg RSA -keysize 2048 -validity 10000
+keytool -genkey -v -keystore barqnet-release.keystore \
+  -alias barqnet -keyalg RSA -keysize 2048 -validity 10000
 
 # Build signed app bundle
 ./gradlew bundleRelease
@@ -377,9 +377,9 @@ keytool -genkey -v -keystore workvpn-release.keystore \
 android {
     signingConfigs {
         release {
-            storeFile file('workvpn-release.keystore')
+            storeFile file('barqnet-release.keystore')
             storePassword System.getenv("KEYSTORE_PASSWORD") ?: ''
-            keyAlias 'workvpn'
+            keyAlias 'barqnet'
             keyPassword System.getenv("KEY_PASSWORD") ?: ''
         }
     }
@@ -436,7 +436,7 @@ Located in `proguard-rules.pro`:
 
 ```proguard
 # Keep VPN service classes
--keep class com.workvpn.android.vpn.** { *; }
+-keep class com.barqnet.android.vpn.** { *; }
 
 # Keep OpenVPN library
 -keep class de.blinkt.openvpn.** { *; }

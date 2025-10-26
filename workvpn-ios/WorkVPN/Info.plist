@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>WorkVPN</string>
+	<string>BarqNet</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -58,7 +58,7 @@
 			<key>UTTypeDescription</key>
 			<string>OpenVPN Configuration</string>
 			<key>UTTypeIdentifier</key>
-			<string>com.workvpn.ovpn</string>
+			<string>com.barqnet.ovpn</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>public.filename-extension</key>
@@ -69,6 +69,6 @@
 		</dict>
 	</array>
 	<key>NSFaceIDUsageDescription</key>
-	<string>WorkVPN uses Face ID to quickly connect to your VPN</string>
+	<string>BarqNet uses Face ID to quickly connect to your VPN</string>
 </dict>
 </plist>

@@ -1,4 +1,4 @@
-# 🚀 ChameleonVPN - Quick Start Card
+# 🚀 BarqNet - Quick Start Card
 
 **For Your Colleague** - Everything they need on one page!
 
@@ -8,7 +8,7 @@
 
 ### **1. Launch App**:
 ```bash
-cd /Users/hassanalsahli/Desktop/ChameleonVpn/workvpn-desktop
+cd /Users/hassanalsahli/Desktop/ChameleonVpn/barqnet-desktop
 npm start
 ```
 **Wait**: 20 seconds for app to open
@@ -30,7 +30,7 @@ npm start
 
 ### **3. Import VPN Config**:
 - **Click**: "Import .ovpn File"
-- **Select**: `/Users/hassanalsahli/Desktop/ChameleonVpn/workvpn-desktop/test-config.ovpn`
+- **Select**: `/Users/hassanalsahli/Desktop/ChameleonVpn/barqnet-desktop/test-config.ovpn`
 - **Click**: "Open"
 
 **Result**: ✅ VPN interface appears!
@@ -71,8 +71,8 @@ npm start
 - **Password**: Any 8+ characters (e.g., `testpass123`)
 
 ### **Test Files**:
-- **Config**: `workvpn-desktop/test-config.ovpn`
-- **Server**: `demo.chameleonvpn.com:1194` (fake server for testing)
+- **Config**: `barqnet-desktop/test-config.ovpn`
+- **Server**: `demo.barqnet.com:1194` (fake server for testing)
 
 ### **Expected Behavior**:
 - ✅ Authentication works smoothly

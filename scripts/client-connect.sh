@@ -127,7 +127,7 @@ logger -t vpnmanager "User $USERNAME connected from $CLIENT_IP (VPN IP: $VPN_IP)
 # Optional: Log to database (if database integration is set up)
 # This would require additional setup with database credentials
 # Example (commented out):
-# psql -h localhost -U vpnmanager -d chameleonvpn -c \
+# psql -h localhost -U vpnmanager -d barqnet -c \
 #   "INSERT INTO vpn_connections (username, client_ip, vpn_ip, connected_at) \
 #    VALUES ('$USERNAME', '$CLIENT_IP', '$VPN_IP', NOW())" 2>&1 >> "$LOG_DIR/db.log"
 

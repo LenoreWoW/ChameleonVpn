@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2025 WorkVPN Contributors
+Copyright (c) 2025 BarqNet Contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -105,7 +105,7 @@ IMPORTANT LICENSING NOTES:
      * Include copyright and license notices
 
 3. **Compatibility Notice**:
-   - The core WorkVPN code (excluding VPN libraries) is MIT licensed
+   - The core BarqNet code (excluding VPN libraries) is MIT licensed
    - ics-openvpn (GPLv2) and OpenVPNAdapter (AGPLv3) impose additional requirements
    - Distributing Android/iOS apps requires compliance with GPL/AGPL terms
    - Desktop app (using OpenVPN binary, not library) is MIT licensed
@@ -162,4 +162,4 @@ is not affiliated with, endorsed by, or sponsored by the WireGuard project.
 
 ---
 
-For questions about licensing, contact: license@workvpn.com
+For questions about licensing, contact: license@barqnet.com

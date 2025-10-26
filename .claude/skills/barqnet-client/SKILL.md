@@ -1,11 +1,11 @@
 ---
-name: chameleon-client
-description: Specialized agent for ChameleonVPN client application development across Desktop (Electron/TypeScript), iOS (Swift), and Android (Kotlin). Handles UI/UX implementation, OpenVPN integration, platform-specific features, secure storage, and native API usage. Use when developing client-side features, fixing UI bugs, or implementing platform-specific functionality.
+name: barqnet-client
+description: Specialized agent for BarqNet client application development across Desktop (Electron/TypeScript), iOS (Swift), and Android (Kotlin). Handles UI/UX implementation, OpenVPN integration, platform-specific features, secure storage, and native API usage. Use when developing client-side features, fixing UI bugs, or implementing platform-specific functionality.
 ---
 
-# ChameleonVPN Client Development Agent
+# BarqNet Client Development Agent
 
-You are a specialized client development agent for the ChameleonVPN project. Your primary focus is on building native applications for Desktop, iOS, and Android platforms.
+You are a specialized client development agent for the BarqNet project. Your primary focus is on building native applications for Desktop, iOS, and Android platforms.
 
 ## Core Responsibilities
 
@@ -46,7 +46,7 @@ You are a specialized client development agent for the ChameleonVPN project. You
 
 ### Desktop (Electron + TypeScript)
 
-**Location:** `/Users/hassanalsahli/Desktop/ChameleonVpn/workvpn-desktop/`
+**Location:** `/Users/hassanalsahli/Desktop/ChameleonVpn/barqnet-desktop/`
 
 **Tech Stack:**
 - Electron 25+ (main/renderer process architecture)
@@ -57,7 +57,7 @@ You are a specialized client development agent for the ChameleonVPN project. You
 
 **Project Structure:**
 ```
-workvpn-desktop/
+barqnet-desktop/
 ├── src/
 │   ├── main/              # Main process (Node.js)
 │   │   ├── index.ts       # App entry point
@@ -184,7 +184,7 @@ npm run make -- --platform=linux
 
 ### iOS (Swift + SwiftUI)
 
-**Location:** `/Users/hassanalsahli/Desktop/ChameleonVpn/WorkVPN/`
+**Location:** `/Users/hassanalsahli/Desktop/ChameleonVpn/BarqNet/`
 
 **Tech Stack:**
 - Swift 5+
@@ -195,9 +195,9 @@ npm run make -- --platform=linux
 
 **Project Structure:**
 ```
-WorkVPN/
-├── WorkVPN/
-│   ├── WorkVPNApp.swift      # App entry point
+BarqNet/
+├── BarqNet/
+│   ├── BarqNetApp.swift      # App entry point
 │   ├── Views/                # SwiftUI views
 │   │   ├── LoginView.swift
 │   │   ├── DashboardView.swift
@@ -214,7 +214,7 @@ WorkVPN/
 │       └── VPNConfig.swift
 ├── VPNExtension/             # Network Extension target
 │   └── PacketTunnelProvider.swift
-└── WorkVPN.xcodeproj
+└── BarqNet.xcodeproj
 ```
 
 **VPN Integration (NetworkExtension):**
@@ -372,22 +372,22 @@ struct ConnectionView: View {
 **Build & Deploy:**
 ```bash
 # Build for simulator
-xcodebuild -scheme WorkVPN -sdk iphonesimulator
+xcodebuild -scheme BarqNet -sdk iphonesimulator
 
 # Build for device
-xcodebuild -scheme WorkVPN -sdk iphoneos -configuration Release
+xcodebuild -scheme BarqNet -sdk iphoneos -configuration Release
 
 # Archive for App Store
-xcodebuild -scheme WorkVPN -archivePath build/WorkVPN.xcarchive archive
+xcodebuild -scheme BarqNet -archivePath build/BarqNet.xcarchive archive
 
 # Export IPA
-xcodebuild -exportArchive -archivePath build/WorkVPN.xcarchive \
+xcodebuild -exportArchive -archivePath build/BarqNet.xcarchive \
   -exportPath build/ -exportOptionsPlist ExportOptions.plist
 ```
 
 ### Android (Kotlin + Jetpack Compose)
 
-**Location:** `/Users/hassanalsahli/Desktop/ChameleonVpn/WorkVPNApp/`
+**Location:** `/Users/hassanalsahli/Desktop/ChameleonVpn/BarqNetApp/`
 
 **Tech Stack:**
 - Kotlin 1.9+
@@ -400,9 +400,9 @@ xcodebuild -exportArchive -archivePath build/WorkVPN.xcarchive \
 
 **Project Structure:**
 ```
-WorkVPNApp/
+BarqNetApp/
 ├── app/src/main/
-│   ├── java/com/chameleon/workvpn/
+│   ├── java/com/chameleon/barqnet/
 │   │   ├── MainActivity.kt
 │   │   ├── ui/                   # Compose UI
 │   │   │   ├── screens/
@@ -452,7 +452,7 @@ class VPNService : VpnService() {
 
     private fun connect(configPath: String) {
         val builder = Builder()
-            .setSession("ChameleonVPN")
+            .setSession("BarqNet")
             .addAddress("10.8.0.2", 24)
             .addRoute("0.0.0.0", 0)
             .addDnsServer("8.8.8.8")
@@ -698,7 +698,7 @@ Color(uiColor: .systemBackground)
 ```kotlin
 // Material3 theme in theme/Theme.kt
 @Composable
-fun WorkVPNTheme(
+fun BarqNetTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
@@ -785,10 +785,10 @@ npm run dev
 ### iOS
 ```bash
 # Unit tests
-xcodebuild test -scheme WorkVPN -destination 'platform=iOS Simulator,name=iPhone 15'
+xcodebuild test -scheme BarqNet -destination 'platform=iOS Simulator,name=iPhone 15'
 
 # UI tests
-xcodebuild test -scheme WorkVPNUITests
+xcodebuild test -scheme BarqNetUITests
 ```
 
 ### Android
@@ -834,10 +834,10 @@ xcodebuild test -scheme WorkVPNUITests
 - Building cross-platform features
 
 ❌ **Don't use this skill for:**
-- Backend API development (use chameleon-backend)
-- API integration (use chameleon-integration)
-- Documentation (use chameleon-documentation)
-- Security audits (use chameleon-audit)
+- Backend API development (use barqnet-backend)
+- API integration (use barqnet-integration)
+- Documentation (use barqnet-documentation)
+- Security audits (use barqnet-audit)
 
 ## Success Criteria
 

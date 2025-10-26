@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Build All Platforms - WorkVPN
+# Build All Platforms - BarqNet
 # Builds Android, Desktop, and iOS (if Xcode configured)
 #
 
@@ -14,7 +14,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${BLUE}  WorkVPN - Build All Platforms${NC}"
+echo -e "${BLUE}  BarqNet - Build All Platforms${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 
@@ -51,8 +51,8 @@ info() {
 #######################################
 section "Building Android"
 
-if [ -d "$PROJECT_ROOT/workvpn-android" ]; then
-    cd "$PROJECT_ROOT/workvpn-android"
+if [ -d "$PROJECT_ROOT/barqnet-android" ]; then
+    cd "$PROJECT_ROOT/barqnet-android"
 
     info "Building Android Debug APK..."
     if ./gradlew clean assembleDebug; then
@@ -77,8 +77,8 @@ fi
 #######################################
 section "Building Desktop"
 
-if [ -d "$PROJECT_ROOT/workvpn-desktop" ]; then
-    cd "$PROJECT_ROOT/workvpn-desktop"
+if [ -d "$PROJECT_ROOT/barqnet-desktop" ]; then
+    cd "$PROJECT_ROOT/barqnet-desktop"
 
     # Check if OpenVPN is installed
     if command -v openvpn &> /dev/null; then
@@ -116,18 +116,18 @@ fi
 #######################################
 section "Building iOS"
 
-if [ -d "$PROJECT_ROOT/workvpn-ios" ]; then
-    cd "$PROJECT_ROOT/workvpn-ios"
+if [ -d "$PROJECT_ROOT/barqnet-ios" ]; then
+    cd "$PROJECT_ROOT/barqnet-ios"
 
     # Check if xcworkspace exists
-    if [ -f "WorkVPN.xcworkspace/contents.xcworkspacedata" ]; then
+    if [ -f "BarqNet.xcworkspace/contents.xcworkspacedata" ]; then
         info "Xcode workspace found"
 
         # Check if xcodebuild is available
         if command -v xcodebuild &> /dev/null; then
             info "Building iOS app..."
-            if xcodebuild -workspace WorkVPN.xcworkspace \
-                          -scheme WorkVPN \
+            if xcodebuild -workspace BarqNet.xcworkspace \
+                          -scheme BarqNet \
                           -configuration Debug \
                           -sdk iphoneos \
                           CODE_SIGNING_ALLOWED=NO; then
@@ -140,8 +140,8 @@ if [ -d "$PROJECT_ROOT/workvpn-ios" ]; then
         fi
     else
         info "iOS Xcode workspace not found"
-        info "Run: cd workvpn-ios && pod install"
-        info "Then open WorkVPN.xcworkspace in Xcode"
+        info "Run: cd barqnet-ios && pod install"
+        info "Then open BarqNet.xcworkspace in Xcode"
     fi
 else
     error "iOS directory not found"

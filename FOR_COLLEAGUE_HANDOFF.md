@@ -1,4 +1,4 @@
-# 👋 ChameleonVPN - Ready for Your Testing!
+# 👋 BarqNet - Ready for Your Testing!
 
 **Hi Colleague!**
 
@@ -24,7 +24,7 @@ Hassan has prepared a complete, working VPN application for you to test. Everyth
 
 The desktop app is already running on the machine. You should see:
 - Blue gradient window
-- "Welcome to WorkVPN" title
+- "Welcome to BarqNet" title
 - Phone number input field
 - Animated 3D background
 
@@ -59,7 +59,7 @@ The desktop app is already running on the machine. You should see:
 
 **Select file**:
 ```
-/Users/hassanalsahli/Desktop/ChameleonVpn/workvpn-desktop/test-config.ovpn
+/Users/hassanalsahli/Desktop/ChameleonVpn/barqnet-desktop/test-config.ovpn
 ```
 
 **Click**: "Open"

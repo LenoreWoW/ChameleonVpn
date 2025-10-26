@@ -1,6 +1,6 @@
 //
 //  LoginView.swift
-//  WorkVPN
+//  BarqNet
 //
 //  Login view for returning users
 //

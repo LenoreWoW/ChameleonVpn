@@ -1,8 +1,8 @@
-# Testing Backend Integration - ChameleonVPN Desktop
+# Testing Backend Integration - BarqNet Desktop
 
 ## Overview
 
-This guide provides instructions for testing the newly integrated backend API with the ChameleonVPN Desktop client.
+This guide provides instructions for testing the newly integrated backend API with the BarqNet Desktop client.
 
 ## Prerequisites
 
@@ -12,7 +12,7 @@ This guide provides instructions for testing the newly integrated backend API wi
 
 2. **Dependencies Installed**
    ```bash
-   cd /Users/hassanalsahli/Desktop/ChameleonVpn/workvpn-desktop
+   cd /Users/hassanalsahli/Desktop/ChameleonVpn/barqnet-desktop
    npm install
    ```
 
@@ -141,13 +141,13 @@ window.vpn.getApiConfig().then(config => console.log(config));
 Tokens are stored in electron-store:
 ```bash
 # macOS
-cat ~/Library/Application\ Support/workvpn-desktop/auth.json
+cat ~/Library/Application\ Support/barqnet-desktop/auth.json
 
 # Windows
-type %APPDATA%\workvpn-desktop\auth.json
+type %APPDATA%\barqnet-desktop\auth.json
 
 # Linux
-cat ~/.config/workvpn-desktop/auth.json
+cat ~/.config/barqnet-desktop/auth.json
 ```
 
 ### Enable Verbose Logging

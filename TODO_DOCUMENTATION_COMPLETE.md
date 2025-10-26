@@ -22,7 +22,7 @@ All remaining todo items from the production readiness assessment have been docu
 
 ### 1. Android Kill Switch ✅
 
-**File:** `workvpn-android/app/src/main/java/com/workvpn/android/util/KillSwitch.kt`
+**File:** `barqnet-android/app/src/main/java/com/barqnet/android/util/KillSwitch.kt`
 
 **Status:** Feature advertised in UI but NOT implemented - only logs, doesn't block traffic
 
@@ -40,7 +40,7 @@ All remaining todo items from the production readiness assessment have been docu
 
 ### 2. iOS Keychain Migration ✅
 
-**File:** `workvpn-ios/WorkVPN/Services/VPNManager.swift`
+**File:** `barqnet-ios/BarqNet/Services/VPNManager.swift`
 
 **Status:** VPN configs stored in plaintext UserDefaults instead of encrypted Keychain
 
@@ -58,7 +58,7 @@ All remaining todo items from the production readiness assessment have been docu
 
 ### 3. Android Password Hashing ✅
 
-**File:** `workvpn-android/app/src/main/java/com/workvpn/android/auth/AuthManager.kt`
+**File:** `barqnet-android/app/src/main/java/com/barqnet/android/auth/AuthManager.kt`
 
 **Status:** ✅ **ALREADY PROPERLY IMPLEMENTED** - Using BCrypt with 12 rounds
 
@@ -77,7 +77,7 @@ All remaining todo items from the production readiness assessment have been docu
 
 ### 4. iOS Password Hashing ✅
 
-**File:** `workvpn-ios/WorkVPN/Services/AuthManager.swift`
+**File:** `barqnet-ios/BarqNet/Services/AuthManager.swift`
 
 **Status:** ❌ **CRITICAL SECURITY ISSUE** - Using Base64 encoding (NOT hashing!)
 
@@ -126,17 +126,17 @@ All remaining todo items from the production readiness assessment have been docu
 These items remain as **future work** (documented but not implemented):
 
 1. **Desktop Certificate Pinning** (2-3 hours)
-   - Already documented in: `workvpn-desktop/CERTIFICATE_PINNING_TODO.md`
+   - Already documented in: `barqnet-desktop/CERTIFICATE_PINNING_TODO.md`
    - Code exists but not integrated
    - Clear implementation path provided
 
 2. **Android OpenVPN Integration** (20-30 hours)
-   - Already documented in: `workvpn-android/OPENVPN_INTEGRATION_REQUIRED.md`
+   - Already documented in: `barqnet-android/OPENVPN_INTEGRATION_REQUIRED.md`
    - NO real VPN encryption - loopback only
    - Complete implementation guide provided
 
 3. **iOS OpenVPN Integration** (4-6 hours)
-   - Already documented in: `workvpn-ios/OPENVPN_LIBRARY_INTEGRATION.md`
+   - Already documented in: `barqnet-ios/OPENVPN_LIBRARY_INTEGRATION.md`
    - Stub classes only - no real functionality
    - Complete implementation guide provided
 
@@ -160,22 +160,22 @@ These items remain as **future work** (documented but not implemented):
 
 ## Files Modified in This Session
 
-1. **workvpn-android/app/src/main/java/com/workvpn/android/util/KillSwitch.kt**
+1. **barqnet-android/app/src/main/java/com/barqnet/android/util/KillSwitch.kt**
    - Added TODO documentation (lines 56-84)
    - Explained kill switch is not implemented
    - Provided VpnService integration code
 
-2. **workvpn-ios/WorkVPN/Services/VPNManager.swift**
+2. **barqnet-ios/BarqNet/Services/VPNManager.swift**
    - Added TODO documentation (lines 57-143)
    - Explained Keychain migration needed
    - Provided complete KeychainHelper implementation
 
-3. **workvpn-android/app/src/main/java/com/workvpn/android/auth/AuthManager.kt**
+3. **barqnet-android/app/src/main/java/com/barqnet/android/auth/AuthManager.kt**
    - Added confirmation comment (lines 22-41)
    - Confirmed BCrypt implementation is correct
    - No changes needed
 
-4. **workvpn-ios/WorkVPN/Services/AuthManager.swift**
+4. **barqnet-ios/BarqNet/Services/AuthManager.swift**
    - Added TODO documentation for createAccount() (lines 70-209)
    - Added TODO for login() verification (line 247)
    - Explained Base64 security issue

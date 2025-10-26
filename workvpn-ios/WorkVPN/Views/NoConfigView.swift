@@ -1,6 +1,6 @@
 //
 //  NoConfigView.swift
-//  WorkVPN
+//  BarqNet
 //
 //  View shown when no VPN configuration is imported
 //

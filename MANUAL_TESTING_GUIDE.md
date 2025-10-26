@@ -1,4 +1,4 @@
-# ChameleonVPN - Manual Testing Guide
+# BarqNet - Manual Testing Guide
 ## Complete Testing Protocol for All Platforms
 
 **Date:** 2025-10-26
@@ -54,7 +54,7 @@
 
 **Test 1.1: Launch Application**
 ```bash
-cd /Users/hassanalsahli/Desktop/ChameleonVpn/workvpn-desktop
+cd /Users/hassanalsahli/Desktop/ChameleonVpn/barqnet-desktop
 npm start
 ```
 
@@ -238,7 +238,7 @@ dev tun
 ```
 [VPN] Starting OpenVPN connection...
 [VPN] OpenVPN binary found at: /usr/local/bin/openvpn
-[VPN] Config file: /tmp/workvpn-xxxxx.ovpn
+[VPN] Config file: /tmp/barqnet-xxxxx.ovpn
 [VPN] Starting process...
 ```
 
@@ -351,8 +351,8 @@ dev tun
 **Test 1.1: Build and Install**
 
 ```bash
-cd /Users/hassanalsahli/Desktop/ChameleonVpn/workvpn-ios
-open WorkVPN.xcworkspace
+cd /Users/hassanalsahli/Desktop/ChameleonVpn/barqnet-ios
+open BarqNet.xcworkspace
 ```
 
 **In Xcode:**
@@ -490,7 +490,7 @@ App launched successfully
 2. iOS VPN permission dialog should appear
 
 **Expected:**
-- ✅ iOS system dialog: "WorkVPN Would Like to Add VPN Configurations"
+- ✅ iOS system dialog: "BarqNet Would Like to Add VPN Configurations"
 - ✅ Tap "Allow"
 - ✅ VPN profile installed
 
@@ -528,7 +528,7 @@ App launched successfully
 
 1. While connected, press Home button
 2. Open other apps
-3. Return to WorkVPN
+3. Return to BarqNet
 
 **Expected:**
 - ✅ VPN stays connected in background
@@ -610,7 +610,7 @@ openjdk version "11.0.x" or higher
 **Test 1.1: Build APK**
 
 ```bash
-cd /Users/hassanalsahli/Desktop/ChameleonVpn/workvpn-android
+cd /Users/hassanalsahli/Desktop/ChameleonVpn/barqnet-android
 ./gradlew clean assembleDebug
 ```
 
@@ -704,7 +704,7 @@ adb install app/build/outputs/apk/debug/app-debug.apk
 
 **Expected:**
 - ✅ Dialog: "Connection request"
-- ✅ App info: WorkVPN
+- ✅ App info: BarqNet
 - ✅ Tap "OK"
 
 **Test 4.2: Check Logcat for Service Start**
@@ -836,7 +836,7 @@ RealVPNService: Bytes received: 67890
 1. Create account with password `TestPassword123`
 2. Check electron-store data:
 ```bash
-cat ~/Library/Application\ Support/workvpn-desktop/auth.json
+cat ~/Library/Application\ Support/barqnet-desktop/auth.json
 ```
 
 **Expected:**
@@ -859,7 +859,7 @@ cat ~/Library/Application\ Support/workvpn-desktop/auth.json
 1. Create account
 2. Check SharedPreferences:
 ```bash
-adb shell run-as com.workvpn.android cat /data/data/com.workvpn.android/shared_prefs/*.xml
+adb shell run-as com.barqnet.android cat /data/data/com.barqnet.android/shared_prefs/*.xml
 ```
 
 **Expected:**
@@ -887,7 +887,7 @@ adb shell run-as com.workvpn.android cat /data/data/com.workvpn.android/shared_p
 **Console Verification:**
 ```
 [CERT-PIN] Certificate pinning enabled
-[CERT-PIN] Verifying certificate for api.chameleonvpn.com
+[CERT-PIN] Verifying certificate for api.barqnet.com
 [CERT-PIN] Certificate pin matched
 ```
 
@@ -970,7 +970,7 @@ adb shell run-as com.workvpn.android cat /data/data/com.workvpn.android/shared_p
 **Desktop:**
 ```bash
 # macOS
-top -pid $(pgrep -f "Electron.*workvpn")
+top -pid $(pgrep -f "Electron.*barqnet")
 
 # Expected:
 # CPU: < 5% when idle, < 20% when connecting
@@ -984,7 +984,7 @@ top -pid $(pgrep -f "Electron.*workvpn")
 
 **Android:**
 ```bash
-adb shell dumpsys meminfo com.workvpn.android
+adb shell dumpsys meminfo com.barqnet.android
 
 # Expected:
 # Total PSS: < 150 MB

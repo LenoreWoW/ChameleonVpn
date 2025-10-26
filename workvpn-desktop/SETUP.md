@@ -1,8 +1,8 @@
-# WorkVPN Desktop - Setup Guide
+# BarqNet Desktop - Setup Guide
 
 ## Prerequisites
 
-WorkVPN Desktop requires OpenVPN to be installed on the system.
+BarqNet Desktop requires OpenVPN to be installed on the system.
 
 ### macOS
 
@@ -102,7 +102,7 @@ Management interface needs ~2 seconds to initialize after connection.
 ## Architecture
 
 ```
-workvpn-desktop/
+barqnet-desktop/
 ├── src/
 │   ├── main/
 │   │   ├── index.ts              # Main process
@@ -128,7 +128,7 @@ workvpn-desktop/
 When backend is ready, update base URL in `src/main/auth/service.ts`:
 
 ```typescript
-const API_BASE_URL = 'https://api.workvpn.com/v1';
+const API_BASE_URL = 'https://api.barqnet.com/v1';
 ```
 
 ## Production Checklist

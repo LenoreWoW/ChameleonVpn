@@ -1,4 +1,4 @@
-# ChameleonVPN - Executive Summary: Production Status
+# BarqNet - Executive Summary: Production Status
 
 **Report Date:** October 26, 2025
 **Assessment Type:** Independent Technical Audit
@@ -8,7 +8,7 @@
 
 ## 60-Second Summary
 
-ChameleonVPN has **excellent architecture and beautiful UI**, but **critical VPN functionality is missing on mobile**.
+BarqNet has **excellent architecture and beautiful UI**, but **critical VPN functionality is missing on mobile**.
 
 - **Desktop:** 90% ready - VPN works, ships in 2-4 hours
 - **Android:** 30% ready - VPN is simulation, needs 2-3 weeks
@@ -59,7 +59,7 @@ ChameleonVPN has **excellent architecture and beautiful UI**, but **critical VPN
 
 **Evidence from code:**
 ```kotlin
-// app/src/main/java/com/workvpn/android/vpn/OpenVPNService.kt:145
+// app/src/main/java/com/barqnet/android/vpn/OpenVPNService.kt:145
 // For now: just echo it back (loopback for demo)
 outputStream.write(buffer.array(), 0, length)
 ```
@@ -458,7 +458,7 @@ POST /vpn/stats
 
 ## Conclusion
 
-**ChameleonVPN is well-architected with beautiful UI, but mobile VPN functionality is incomplete.**
+**BarqNet is well-architected with beautiful UI, but mobile VPN functionality is incomplete.**
 
 **Desktop can ship quickly** with minor fixes.
 

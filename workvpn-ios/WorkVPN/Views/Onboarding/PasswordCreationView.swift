@@ -1,6 +1,6 @@
 //
 //  PasswordCreationView.swift
-//  WorkVPN
+//  BarqNet
 //
 //  Password creation for onboarding
 //

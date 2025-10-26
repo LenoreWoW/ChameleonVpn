@@ -1,4 +1,4 @@
-# ChameleonVPN - Master Implementation Plan
+# BarqNet - Master Implementation Plan
 ## Ship All Platforms - Complete Roadmap
 
 **Created:** 2025-10-26

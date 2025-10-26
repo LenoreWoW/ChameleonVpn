@@ -1,4 +1,4 @@
-# ChameleonVPN Specialized Skills - Deployment Report
+# BarqNet Specialized Skills - Deployment Report
 
 **Date:** October 26, 2025
 **Status:** ✅ COMPLETE
@@ -8,9 +8,9 @@
 
 ## Executive Summary
 
-Successfully developed and deployed **7 specialized AI agent skills** for the ChameleonVPN project, creating an intelligent multi-agent development system capable of handling complex cross-platform development, testing, documentation, and deployment workflows.
+Successfully developed and deployed **7 specialized AI agent skills** for the BarqNet project, creating an intelligent multi-agent development system capable of handling complex cross-platform development, testing, documentation, and deployment workflows.
 
-**Key Achievement:** Transformed Claude Code into a specialized ChameleonVPN development environment with deep expertise across all project platforms and domains.
+**Key Achievement:** Transformed Claude Code into a specialized BarqNet development environment with deep expertise across all project platforms and domains.
 
 ---
 
@@ -80,9 +80,9 @@ Successfully developed and deployed **7 specialized AI agent skills** for the Ch
 
 **Project Locations:**
 - Backend: `/Users/hassanalsahli/Desktop/go-hello-main/`
-- Desktop: `/Users/hassanalsahli/Desktop/ChameleonVpn/workvpn-desktop/`
-- iOS: `/Users/hassanalsahli/Desktop/ChameleonVpn/WorkVPN/`
-- Android: `/Users/hassanalsahli/Desktop/ChameleonVpn/WorkVPNApp/`
+- Desktop: `/Users/hassanalsahli/Desktop/ChameleonVpn/barqnet-desktop/`
+- iOS: `/Users/hassanalsahli/Desktop/ChameleonVpn/BarqNet/`
+- Android: `/Users/hassanalsahli/Desktop/ChameleonVpn/BarqNetApp/`
 - Skills: `/Users/hassanalsahli/Desktop/ChameleonVpn/.claude/skills/`
 
 ---
@@ -97,11 +97,11 @@ Successfully developed and deployed **7 specialized AI agent skills** for the Ch
 ❌ Generic documentation templates
 
 ### After Skills
-✅ **7 specialized expert agents** for ChameleonVPN
+✅ **7 specialized expert agents** for BarqNet
 ✅ **Deep project knowledge** of all platforms
 ✅ **Automatic multi-agent coordination** via E2E orchestrator
 ✅ **Cross-platform expertise** (Go, TypeScript, Swift, Kotlin)
-✅ **ChameleonVPN-specific** templates and patterns
+✅ **BarqNet-specific** templates and patterns
 
 ---
 
@@ -116,7 +116,7 @@ Successfully developed and deployed **7 specialized AI agent skills** for the Ch
 3. Adds database query with prepared statements
 4. Creates unit tests
 5. Updates API_CONTRACT.md
-6. Follows ChameleonVPN coding standards
+6. Follows BarqNet coding standards
 
 **Time Saved:** 70% faster than manual coordination
 
@@ -437,7 +437,7 @@ Here's a generic example of how to add an API endpoint in Go...
 User: "Use chameleon-backend to add GET /v1/user/profile endpoint"
 
 Backend Agent:
-I'll add the user profile endpoint following ChameleonVPN patterns:
+I'll add the user profile endpoint following BarqNet patterns:
 
 1. Creating handler in apps/management/api/auth.go
 2. Using existing JWT validation middleware
@@ -460,7 +460,7 @@ I'll add the user profile endpoint following ChameleonVPN patterns:
 > feature X' and watch all agents coordinate automatically. Development time
 > reduced by 70% for cross-platform features."
 >
-> — *ChameleonVPN Developer*
+> — *BarqNet Developer*
 
 ---
 
@@ -489,7 +489,7 @@ Each skill contains multiple examples showing:
 
 ## Conclusion
 
-The ChameleonVPN Specialized Skills system transforms Claude Code into a **multi-agent expert development environment** specifically tailored for your project.
+The BarqNet Specialized Skills system transforms Claude Code into a **multi-agent expert development environment** specifically tailored for your project.
 
 **What You Get:**
 - ✅ 7 specialized expert agents
@@ -525,4 +525,4 @@ The ChameleonVPN Specialized Skills system transforms Claude Code into a **multi
 **Documentation:** Complete
 **Testing:** Validated with real workflows
 
-🚀 **Ready to accelerate ChameleonVPN development!**
+🚀 **Ready to accelerate BarqNet development!**

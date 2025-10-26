@@ -1,4 +1,4 @@
-package com.workvpn.android.vpn
+package com.barqnet.android.vpn
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -10,8 +10,8 @@ import android.os.Build
 import android.os.ParcelFileDescriptor
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.workvpn.android.MainActivity
-import com.workvpn.android.R
+import com.barqnet.android.MainActivity
+import com.barqnet.android.R
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -44,7 +44,7 @@ import javax.crypto.spec.SecretKeySpec
  * - IPv6 leak protection
  * - Kill switch capability
  *
- * @author ChameleonVPN Team
+ * @author BarqNet Team
  * @version 2.0 - Production Ready
  */
 class RealVPNService : VpnService() {
@@ -677,8 +677,8 @@ class RealVPNService : VpnService() {
 
     companion object {
         private const val TAG = "RealVPNService"
-        const val ACTION_START_VPN = "com.workvpn.android.REAL_START_VPN"
-        const val ACTION_STOP_VPN = "com.workvpn.android.REAL_STOP_VPN"
+        const val ACTION_START_VPN = "com.barqnet.android.REAL_START_VPN"
+        const val ACTION_STOP_VPN = "com.barqnet.android.REAL_STOP_VPN"
         const val EXTRA_CONFIG_CONTENT = "config_content"
         const val EXTRA_USERNAME = "username"
         const val EXTRA_PASSWORD = "password"

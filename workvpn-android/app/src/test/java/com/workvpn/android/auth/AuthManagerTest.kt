@@ -1,4 +1,4 @@
-package com.workvpn.android.auth
+package com.barqnet.android.auth
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider

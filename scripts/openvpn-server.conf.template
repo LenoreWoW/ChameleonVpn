@@ -1,6 +1,6 @@
 ###############################################################################
 # OpenVPN Server Configuration Template
-# ChameleonVPN - Secure Configuration with CRL Support
+# BarqNet - Secure Configuration with CRL Support
 #
 # Purpose: Production-ready OpenVPN server configuration with certificate
 #          revocation list (CRL) verification enabled

@@ -1,14 +1,14 @@
 //
-//  WorkVPNApp.swift
-//  WorkVPN
+//  BarqNetApp.swift
+//  BarqNet
 //
-//  Main app entry point for WorkVPN iOS
+//  Main app entry point for BarqNet iOS
 //
 
 import SwiftUI
 
 @main
-struct WorkVPNApp: App {
+struct BarqNetApp: App {
     @StateObject private var vpnManager = VPNManager.shared
 
     var body: some Scene {

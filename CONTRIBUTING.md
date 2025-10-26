@@ -1,6 +1,6 @@
-# Contributing to WorkVPN
+# Contributing to BarqNet
 
-Thank you for your interest in contributing to WorkVPN! This document provides guidelines and instructions for contributing to this multi-platform VPN client project.
+Thank you for your interest in contributing to BarqNet! This document provides guidelines and instructions for contributing to this multi-platform VPN client project.
 
 ---
 
@@ -70,12 +70,12 @@ Before contributing, ensure you have:
 1. **Fork the repository** on GitHub
 2. **Clone your fork**:
    ```bash
-   git clone https://github.com/yourusername/workvpn.git
-   cd workvpn
+   git clone https://github.com/yourusername/barqnet.git
+   cd barqnet
    ```
 3. **Add upstream remote**:
    ```bash
-   git remote add upstream https://github.com/original/workvpn.git
+   git remote add upstream https://github.com/original/barqnet.git
    ```
 
 ---
@@ -85,7 +85,7 @@ Before contributing, ensure you have:
 ### Android Setup
 
 ```bash
-cd workvpn-android
+cd barqnet-android
 
 # Install dependencies (automatically via Gradle)
 ./gradlew build
@@ -97,26 +97,26 @@ cd workvpn-android
 ./gradlew installDebug
 ```
 
-**See**: [workvpn-android/README.md](workvpn-android/README.md) for detailed setup
+**See**: [barqnet-android/README.md](barqnet-android/README.md) for detailed setup
 
 ### iOS Setup
 
 ```bash
-cd workvpn-ios
+cd barqnet-ios
 
 # Install dependencies
 pod install
 
 # Open in Xcode
-open WorkVPN.xcworkspace
+open BarqNet.xcworkspace
 ```
 
-**See**: [workvpn-ios/SETUP.md](workvpn-ios/SETUP.md) for detailed setup
+**See**: [barqnet-ios/SETUP.md](barqnet-ios/SETUP.md) for detailed setup
 
 ### Desktop Setup
 
 ```bash
-cd workvpn-desktop
+cd barqnet-desktop
 
 # Install OpenVPN
 brew install openvpn  # macOS
@@ -133,28 +133,28 @@ npm start
 npm test
 ```
 
-**See**: [workvpn-desktop/SETUP.md](workvpn-desktop/SETUP.md) for detailed setup
+**See**: [barqnet-desktop/SETUP.md](barqnet-desktop/SETUP.md) for detailed setup
 
 ---
 
 ## Project Structure
 
 ```
-WorkVPN/
-├── workvpn-android/        # Android app (Kotlin + Compose)
+BarqNet/
+├── barqnet-android/        # Android app (Kotlin + Compose)
 │   ├── app/src/main/
 │   ├── app/src/test/
 │   └── build.gradle
 │
-├── workvpn-desktop/        # Desktop app (Electron + TypeScript)
+├── barqnet-desktop/        # Desktop app (Electron + TypeScript)
 │   ├── src/main/
 │   ├── src/renderer/
 │   ├── test/
 │   └── package.json
 │
-├── workvpn-ios/            # iOS app (Swift + SwiftUI)
-│   ├── WorkVPN/
-│   ├── WorkVPNTunnelExtension/
+├── barqnet-ios/            # iOS app (Swift + SwiftUI)
+│   ├── BarqNet/
+│   ├── BarqNetTunnelExtension/
 │   ├── Tests/
 │   └── Podfile
 │
@@ -358,7 +358,7 @@ class AuthManagerTest {
 **Unit Tests** (XCTest):
 ```swift
 import XCTest
-@testable import WorkVPN
+@testable import BarqNet
 
 class VPNManagerTests: XCTestCase {
     func testConnectShouldStartVPN() {
@@ -376,8 +376,8 @@ class VPNManagerTests: XCTestCase {
 **Run tests**:
 ```bash
 xcodebuild test \
-  -workspace WorkVPN.xcworkspace \
-  -scheme WorkVPN \
+  -workspace BarqNet.xcworkspace \
+  -scheme BarqNet \
   -destination 'platform=iOS Simulator,name=iPhone 15 Pro'
 ```
 
@@ -509,13 +509,13 @@ Closes #42
 4. **Run tests locally**:
    ```bash
    # Android
-   cd workvpn-android && ./gradlew test
+   cd barqnet-android && ./gradlew test
 
    # Desktop
-   cd workvpn-desktop && npm test
+   cd barqnet-desktop && npm test
 
    # iOS
-   cd workvpn-ios && xcodebuild test ...
+   cd barqnet-ios && xcodebuild test ...
    ```
 
 5. **Commit your changes** following commit convention
@@ -605,7 +605,7 @@ Closes #issue_number
 
 **DO NOT** create public GitHub issues for security vulnerabilities.
 
-Instead, please email: **security@workvpn.com** (or your configured contact)
+Instead, please email: **security@barqnet.com** (or your configured contact)
 
 Include:
 - Description of the vulnerability
@@ -722,7 +722,7 @@ git checkout -b feat/add-server-list
 # ... edit files ...
 
 # 4. Test changes
-cd workvpn-android && ./gradlew test
+cd barqnet-android && ./gradlew test
 
 # 5. Commit
 git add .
@@ -748,13 +748,13 @@ git push origin feat/add-server-list
 - **Documentation**: Check [README.md](README.md) first
 - **Issues**: Search existing GitHub issues
 - **Discussions**: Use GitHub Discussions for questions
-- **Email**: contact@workvpn.com (for private inquiries)
+- **Email**: contact@barqnet.com (for private inquiries)
 
 ### Resources
 
-- **Android**: [workvpn-android/README.md](workvpn-android/README.md)
-- **iOS**: [workvpn-ios/SETUP.md](workvpn-ios/SETUP.md)
-- **Desktop**: [workvpn-desktop/SETUP.md](workvpn-desktop/SETUP.md)
+- **Android**: [barqnet-android/README.md](barqnet-android/README.md)
+- **iOS**: [barqnet-ios/SETUP.md](barqnet-ios/SETUP.md)
+- **Desktop**: [barqnet-desktop/SETUP.md](barqnet-desktop/SETUP.md)
 - **API**: [API_CONTRACT.md](API_CONTRACT.md)
 - **Architecture**: [ARCHITECTURE.md](ARCHITECTURE.md)
 
@@ -771,16 +771,16 @@ Contributors will be recognized in:
 
 ## License
 
-By contributing to WorkVPN, you agree that your contributions will be licensed under the MIT License (see [LICENSE](LICENSE)).
+By contributing to BarqNet, you agree that your contributions will be licensed under the MIT License (see [LICENSE](LICENSE)).
 
 ---
 
-Thank you for contributing to WorkVPN! 🎉
+Thank you for contributing to BarqNet! 🎉
 
 Your efforts help make this project better for everyone.
 
 ---
 
 **Last Updated**: 2025-10-15
-**Project**: WorkVPN Multi-Platform VPN Client
+**Project**: BarqNet Multi-Platform VPN Client
 **Maintainers**: Hassan Alsahli

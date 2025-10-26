@@ -1,4 +1,4 @@
-package com.workvpn.android.util
+package com.barqnet.android.util
 
 import okhttp3.CertificatePinner
 import okhttp3.OkHttpClient

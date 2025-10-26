@@ -1,4 +1,4 @@
-package com.workvpn.android.ui.screens
+package com.barqnet.android.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -18,11 +18,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.workvpn.android.auth.AuthManager
-import com.workvpn.android.model.ConnectionState
-import com.workvpn.android.ui.screens.onboarding.*
-import com.workvpn.android.ui.theme.*
-import com.workvpn.android.viewmodel.RealVPNViewModel
+import com.barqnet.android.auth.AuthManager
+import com.barqnet.android.model.ConnectionState
+import com.barqnet.android.ui.screens.onboarding.*
+import com.barqnet.android.ui.theme.*
+import com.barqnet.android.viewmodel.RealVPNViewModel
 import kotlinx.coroutines.launch
 
 enum class OnboardingState {
@@ -134,7 +134,7 @@ fun HomeScreen(
             Scaffold(
                 topBar = {
                     TopAppBar(
-                        title = { Text("WorkVPN") },
+                        title = { Text("BarqNet") },
                         colors = TopAppBarDefaults.topAppBarColors(
                             containerColor = DarkBg,
                             titleContentColor = CyanBlue,
@@ -239,9 +239,9 @@ fun NoConfigContent(onImportClick: () -> Unit) {
 
 @Composable
 fun VPNStatusContent(
-    config: com.workvpn.android.model.VPNConfig,
+    config: com.barqnet.android.model.VPNConfig,
     connectionState: ConnectionState,
-    stats: com.workvpn.android.model.VPNStats,
+    stats: com.barqnet.android.model.VPNStats,
     vpnViewModel: RealVPNViewModel
 ) {
     val context = LocalContext.current

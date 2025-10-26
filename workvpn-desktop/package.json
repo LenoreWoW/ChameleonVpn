@@ -1,7 +1,7 @@
 {
-  "name": "workvpn-desktop",
+  "name": "barqnet-desktop",
   "version": "1.0.0",
-  "description": "WorkVPN Desktop Client for Windows and macOS",
+  "description": "BarqNet Desktop Client for Windows and macOS",
   "main": "dist/main/index.js",
   "scripts": {
     "build": "tsc && npm run copy-assets",
@@ -20,26 +20,26 @@
     "openvpn",
     "electron"
   ],
-  "author": "WorkVPN Team",
+  "author": "BarqNet Team",
   "license": "MIT",
   "config": {
     "forge": {
       "packagerConfig": {
-        "name": "WorkVPN",
-        "executableName": "workvpn",
+        "name": "BarqNet",
+        "executableName": "barqnet",
         "icon": "./assets/icon",
-        "appBundleId": "com.workvpn.desktop",
+        "appBundleId": "com.barqnet.desktop",
         "appCategoryType": "public.app-category.utilities",
         "win32metadata": {
-          "CompanyName": "WorkVPN",
-          "ProductName": "WorkVPN Connect"
+          "CompanyName": "BarqNet",
+          "ProductName": "BarqNet Connect"
         }
       },
       "makers": [
         {
           "name": "@electron-forge/maker-squirrel",
           "config": {
-            "name": "WorkVPN"
+            "name": "BarqNet"
           }
         },
         {

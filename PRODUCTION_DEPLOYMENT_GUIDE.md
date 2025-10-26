@@ -1,6 +1,6 @@
-# ChameleonVPN Production Deployment Guide
+# BarqNet Production Deployment Guide
 
-**Complete Guide to Deploy ChameleonVPN to Production**
+**Complete Guide to Deploy BarqNet to Production**
 
 **Date:** October 26, 2025
 **Version:** 1.0.0
@@ -113,7 +113,7 @@ All critical components have been implemented by specialized AI agents:
 | Component | Repository | Path |
 |-----------|------------|------|
 | **Backend** | go-hello | `/Users/hassanalsahli/Desktop/go-hello-main/` |
-| **Desktop Client** | ChameleonVPN | `/Users/hassanalsahli/Desktop/ChameleonVpn/workvpn-desktop/` |
+| **Desktop Client** | BarqNet | `/Users/hassanalsahli/Desktop/ChameleonVpn/barqnet-desktop/` |
 | **Database Migrations** | go-hello | `/Users/hassanalsahli/Desktop/go-hello-main/migrations/` |
 | **API Documentation** | go-hello | `/Users/hassanalsahli/Desktop/go-hello-main/apps/management/api/` |
 
@@ -142,7 +142,7 @@ All critical components have been implemented by specialized AI agents:
 ### Required Accounts/Services
 
 - [ ] **Your Local OTP Service** - For SMS/authentication
-- [ ] **Domain Name** - For production API (e.g., api.chameleonvpn.com)
+- [ ] **Domain Name** - For production API (e.g., api.barqnet.com)
 - [ ] **SSL Certificate** - For HTTPS
 - [ ] **Server Hosting** - AWS, DigitalOcean, or similar
 
@@ -155,13 +155,13 @@ export DB_HOST="localhost"  # or production DB host
 export DB_PORT="5432"
 export DB_USER="vpnmanager"
 export DB_PASSWORD="<secure-password>"
-export DB_NAME="chameleonvpn"
+export DB_NAME="barqnet"
 export DB_SSLMODE="require"  # Production: require, Development: disable
 export API_PORT="8080"
 export ENVIRONMENT="production"
 
 # Desktop Client Environment Variables
-export API_BASE_URL="https://api.chameleonvpn.com"  # Production API URL
+export API_BASE_URL="https://api.barqnet.com"  # Production API URL
 export NODE_ENV="production"
 ```
 
@@ -195,7 +195,7 @@ DB_HOST=your-db-host.rds.amazonaws.com
 DB_PORT=5432
 DB_USER=vpnmanager
 DB_PASSWORD=your-secure-db-password
-DB_NAME=chameleonvpn
+DB_NAME=barqnet
 DB_SSLMODE=require
 
 # JWT Configuration
@@ -298,18 +298,18 @@ mux.HandleFunc("/vpn/config", configHandler.HandleVPNConfig)
 
 #### Option A: systemd Service (Linux)
 
-Create `/etc/systemd/system/chameleonvpn-backend.service`:
+Create `/etc/systemd/system/barqnet-backend.service`:
 
 ```ini
 [Unit]
-Description=ChameleonVPN Backend API
+Description=BarqNet Backend API
 After=network.target postgresql.service
 
 [Service]
 Type=simple
 User=vpnmanager
-WorkingDirectory=/opt/chameleonvpn
-ExecStart=/opt/chameleonvpn/bin/vpnmanager-production
+WorkingDirectory=/opt/barqnet
+ExecStart=/opt/barqnet/bin/vpnmanager-production
 Restart=always
 RestartSec=10
 
@@ -319,7 +319,7 @@ Environment="DB_HOST=localhost"
 Environment="DB_PORT=5432"
 Environment="DB_USER=vpnmanager"
 Environment="DB_PASSWORD=secure-password"
-Environment="DB_NAME=chameleonvpn"
+Environment="DB_NAME=barqnet"
 Environment="DB_SSLMODE=require"
 
 [Install]
@@ -329,9 +329,9 @@ WantedBy=multi-user.target
 Enable and start:
 ```bash
 sudo systemctl daemon-reload
-sudo systemctl enable chameleonvpn-backend
-sudo systemctl start chameleonvpn-backend
-sudo systemctl status chameleonvpn-backend
+sudo systemctl enable barqnet-backend
+sudo systemctl start barqnet-backend
+sudo systemctl status barqnet-backend
 ```
 
 #### Option B: Docker Container
@@ -356,34 +356,34 @@ CMD ["./vpnmanager"]
 
 Build and run:
 ```bash
-docker build -t chameleonvpn-backend .
+docker build -t barqnet-backend .
 docker run -d \
   -p 8080:8080 \
   -e JWT_SECRET="your-secret" \
   -e DB_HOST="your-db-host" \
   -e DB_PASSWORD="your-password" \
-  --name chameleonvpn \
-  chameleonvpn-backend
+  --name barqnet \
+  barqnet-backend
 ```
 
 ### Step 7: Configure Reverse Proxy (Nginx)
 
-Create `/etc/nginx/sites-available/chameleonvpn`:
+Create `/etc/nginx/sites-available/barqnet`:
 
 ```nginx
 server {
     listen 80;
-    server_name api.chameleonvpn.com;
+    server_name api.barqnet.com;
     return 301 https://$server_name$request_uri;
 }
 
 server {
     listen 443 ssl http2;
-    server_name api.chameleonvpn.com;
+    server_name api.barqnet.com;
 
     # SSL Configuration
-    ssl_certificate /etc/letsencrypt/live/api.chameleonvpn.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/api.chameleonvpn.com/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/api.barqnet.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/api.barqnet.com/privkey.pem;
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_ciphers HIGH:!aNULL:!MD5;
 
@@ -422,7 +422,7 @@ server {
 
 Enable and reload:
 ```bash
-sudo ln -s /etc/nginx/sites-available/chameleonvpn /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/barqnet /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
 ```
@@ -433,11 +433,11 @@ sudo systemctl reload nginx
 
 ### Step 1: Configure API URL
 
-Edit `/Users/hassanalsahli/Desktop/ChameleonVpn/workvpn-desktop/.env`:
+Edit `/Users/hassanalsahli/Desktop/ChameleonVpn/barqnet-desktop/.env`:
 
 ```bash
 # Production API URL
-API_BASE_URL=https://api.chameleonvpn.com
+API_BASE_URL=https://api.barqnet.com
 
 # Environment
 NODE_ENV=production
@@ -446,7 +446,7 @@ NODE_ENV=production
 ### Step 2: Build Client
 
 ```bash
-cd /Users/hassanalsahli/Desktop/ChameleonVpn/workvpn-desktop
+cd /Users/hassanalsahli/Desktop/ChameleonVpn/barqnet-desktop
 
 # Install dependencies
 npm install
@@ -471,7 +471,7 @@ npm run make
 # OR
 npx electron-builder --mac
 
-# Output: dist/ChameleonVPN-1.0.0.dmg
+# Output: dist/BarqNet-1.0.0.dmg
 ```
 
 #### Windows
@@ -480,7 +480,7 @@ npx electron-builder --mac
 # Build Windows installer
 npx electron-builder --win
 
-# Output: dist/ChameleonVPN Setup 1.0.0.exe
+# Output: dist/BarqNet Setup 1.0.0.exe
 ```
 
 #### Linux
@@ -489,8 +489,8 @@ npx electron-builder --win
 # Build Linux packages
 npx electron-builder --linux
 
-# Output: dist/ChameleonVPN-1.0.0.AppImage
-#         dist/ChameleonVPN_1.0.0_amd64.deb
+# Output: dist/BarqNet-1.0.0.AppImage
+#         dist/BarqNet_1.0.0_amd64.deb
 ```
 
 ### Step 4: Code Signing (Recommended)
@@ -500,13 +500,13 @@ npx electron-builder --linux
 ```bash
 # Sign the app
 codesign --deep --force --verify --verbose --sign "Developer ID Application: Your Name" \
-  dist/mac/ChameleonVPN.app
+  dist/mac/BarqNet.app
 
 # Verify signature
-codesign --verify --deep --strict --verbose=2 dist/mac/ChameleonVPN.app
+codesign --verify --deep --strict --verbose=2 dist/mac/BarqNet.app
 
 # Notarize with Apple
-xcrun notarytool submit dist/ChameleonVPN-1.0.0.dmg \
+xcrun notarytool submit dist/BarqNet-1.0.0.dmg \
   --apple-id "your@email.com" \
   --password "app-specific-password" \
   --team-id "YOUR_TEAM_ID"
@@ -517,13 +517,13 @@ xcrun notarytool submit dist/ChameleonVPN-1.0.0.dmg \
 ```bash
 # Sign the executable (requires certificate)
 signtool sign /f certificate.pfx /p password /tr http://timestamp.digicert.com \
-  dist/ChameleonVPN Setup 1.0.0.exe
+  dist/BarqNet Setup 1.0.0.exe
 ```
 
 ### Step 5: Distribution
 
 Upload installers to:
-- **Website**: https://chameleonvpn.com/download
+- **Website**: https://barqnet.com/download
 - **GitHub Releases**: https://github.com/LenoreWoW/ChameleonVpn/releases
 - **App Stores**: Mac App Store, Microsoft Store (if applicable)
 
@@ -538,9 +538,9 @@ Upload installers to:
 psql -h your-db-host -U postgres
 
 # Create database and user
-CREATE DATABASE chameleonvpn;
+CREATE DATABASE barqnet;
 CREATE USER vpnmanager WITH ENCRYPTED PASSWORD 'your-secure-password';
-GRANT ALL PRIVILEGES ON DATABASE chameleonvpn TO vpnmanager;
+GRANT ALL PRIVILEGES ON DATABASE barqnet TO vpnmanager;
 
 # Exit psql
 \q
@@ -570,9 +570,9 @@ Check logs for:
 cd /Users/hassanalsahli/Desktop/go-hello-main/migrations
 
 # Run migrations in order
-psql -h your-db-host -U vpnmanager -d chameleonvpn -f 002_add_phone_auth.sql
-psql -h your-db-host -U vpnmanager -d chameleonvpn -f 003_add_statistics.sql
-psql -h your-db-host -U vpnmanager -d chameleonvpn -f 004_add_locations.sql
+psql -h your-db-host -U vpnmanager -d barqnet -f 002_add_phone_auth.sql
+psql -h your-db-host -U vpnmanager -d barqnet -f 003_add_statistics.sql
+psql -h your-db-host -U vpnmanager -d barqnet -f 004_add_locations.sql
 ```
 
 #### Option C: CLI Tool
@@ -585,13 +585,13 @@ go run migrations/run_migrations.go \
   -port 5432 \
   -user vpnmanager \
   -password your-password \
-  -dbname chameleonvpn
+  -dbname barqnet
 ```
 
 ### Step 3: Verify Schema
 
 ```bash
-psql -h your-db-host -U vpnmanager -d chameleonvpn
+psql -h your-db-host -U vpnmanager -d barqnet
 
 # Check tables
 \dt
@@ -730,7 +730,7 @@ Already configured in Nginx (see Step 7 of Backend Deployment).
 Obtain SSL certificate:
 ```bash
 # Using Let's Encrypt (free)
-sudo certbot --nginx -d api.chameleonvpn.com
+sudo certbot --nginx -d api.barqnet.com
 ```
 
 ---
@@ -741,15 +741,15 @@ sudo certbot --nginx -d api.chameleonvpn.com
 
 ```bash
 # Health check
-curl https://api.chameleonvpn.com/health
+curl https://api.barqnet.com/health
 
 # Send OTP
-curl -X POST https://api.chameleonvpn.com/v1/auth/send-otp \
+curl -X POST https://api.barqnet.com/v1/auth/send-otp \
   -H "Content-Type: application/json" \
   -d '{"phoneNumber": "+1234567890", "countryCode": "+1"}'
 
 # Register user (use OTP from logs/SMS)
-curl -X POST https://api.chameleonvpn.com/v1/auth/register \
+curl -X POST https://api.barqnet.com/v1/auth/register \
   -H "Content-Type: application/json" \
   -d '{
     "phoneNumber": "+1234567890",
@@ -758,7 +758,7 @@ curl -X POST https://api.chameleonvpn.com/v1/auth/register \
   }'
 
 # Login
-curl -X POST https://api.chameleonvpn.com/v1/auth/login \
+curl -X POST https://api.barqnet.com/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "phoneNumber": "+1234567890",
@@ -766,7 +766,7 @@ curl -X POST https://api.chameleonvpn.com/v1/auth/login \
   }'
 
 # Test protected endpoint
-curl https://api.chameleonvpn.com/vpn/locations?username=user \
+curl https://api.barqnet.com/vpn/locations?username=user \
   -H "Authorization: Bearer <access-token>"
 ```
 
@@ -818,7 +818,7 @@ sudo apt-get install apache2-utils
 
 # Test login endpoint (100 requests, 10 concurrent)
 ab -n 100 -c 10 -p login.json -T application/json \
-  https://api.chameleonvpn.com/v1/auth/login
+  https://api.barqnet.com/v1/auth/login
 
 # Expected: < 200ms average response time
 ```
@@ -831,13 +831,13 @@ ab -n 100 -c 10 -p login.json -T application/json \
 
 ```bash
 # Backend logs (systemd)
-sudo journalctl -u chameleonvpn-backend -f
+sudo journalctl -u barqnet-backend -f
 
 # Desktop logs (macOS)
-~/Library/Logs/ChameleonVPN/main.log
+~/Library/Logs/BarqNet/main.log
 
 # Desktop logs (Windows)
-%APPDATA%\ChameleonVPN\logs\main.log
+%APPDATA%\BarqNet\logs\main.log
 ```
 
 ### Database Monitoring
@@ -868,7 +868,7 @@ WHERE created_at > NOW() - INTERVAL '24 hours';
 
 Set up monitoring service (e.g., UptimeRobot, Pingdom) to check:
 
-- **API Health**: GET https://api.chameleonvpn.com/health (every 5 minutes)
+- **API Health**: GET https://api.barqnet.com/health (every 5 minutes)
 - **Database**: Check connection from application
 - **Disk Space**: Alert when > 80% full
 - **Memory Usage**: Alert when > 85% used
@@ -904,7 +904,7 @@ psql -h $DB_HOST -U $DB_USER -d $DB_NAME
 env | grep DB_
 
 # Check logs
-sudo journalctl -u chameleonvpn-backend -n 50
+sudo journalctl -u barqnet-backend -n 50
 ```
 
 ---
@@ -932,11 +932,11 @@ echo $JWT_SECRET
 cat .env | grep API_BASE_URL
 
 # Test API manually
-curl https://api.chameleonvpn.com/health
+curl https://api.barqnet.com/health
 
 # Check network/firewall
-ping api.chameleonvpn.com
-telnet api.chameleonvpn.com 443
+ping api.barqnet.com
+telnet api.barqnet.com 443
 ```
 
 ---
@@ -945,8 +945,8 @@ telnet api.chameleonvpn.com 443
 
 **Solution:**
 1. Clear stored tokens:
-   - macOS: `rm ~/Library/Application\ Support/workvpn-desktop/auth.json`
-   - Windows: Delete `%APPDATA%\workvpn-desktop\auth.json`
+   - macOS: `rm ~/Library/Application\ Support/barqnet-desktop/auth.json`
+   - Windows: Delete `%APPDATA%\barqnet-desktop\auth.json`
 2. Restart app
 3. Login again
 
@@ -976,7 +976,7 @@ telnet api.chameleonvpn.com 443
 SELECT * FROM schema_migrations;
 
 -- If stuck, manually apply:
-psql -d chameleonvpn -f migrations/002_add_phone_auth.sql
+psql -d barqnet -f migrations/002_add_phone_auth.sql
 ```
 
 ---
@@ -1077,16 +1077,16 @@ go build -o bin/vpnmanager ./apps/management/main.go
 ./bin/vpnmanager
 
 # Desktop Client
-cd /Users/hassanalsahli/Desktop/ChameleonVpn/workvpn-desktop
+cd /Users/hassanalsahli/Desktop/ChameleonVpn/barqnet-desktop
 npm run build
 npm start
 
 # Database
-psql -h localhost -U vpnmanager -d chameleonvpn
+psql -h localhost -U vpnmanager -d barqnet
 
 # Logs
-sudo journalctl -u chameleonvpn-backend -f
-tail -f ~/Library/Logs/ChameleonVPN/main.log
+sudo journalctl -u barqnet-backend -f
+tail -f ~/Library/Logs/BarqNet/main.log
 ```
 
 ---
@@ -1135,4 +1135,4 @@ You now have a **complete, production-ready VPN authentication and management sy
 **Last Updated:** October 26, 2025
 **Version:** 1.0.0
 
-*Generated with ❤️ by the ChameleonVPN deployment team*
+*Generated with ❤️ by the BarqNet deployment team*

@@ -2,7 +2,7 @@ version: 2
 updates:
   # Android dependencies
   - package-ecosystem: "gradle"
-    directory: "/workvpn-android"
+    directory: "/barqnet-android"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -18,7 +18,7 @@ updates:
 
   # Desktop (npm) dependencies
   - package-ecosystem: "npm"
-    directory: "/workvpn-desktop"
+    directory: "/barqnet-desktop"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -38,7 +38,7 @@ updates:
 
   # iOS CocoaPods dependencies
   - package-ecosystem: "cocoapods"
-    directory: "/workvpn-ios"
+    directory: "/barqnet-ios"
     schedule:
       interval: "weekly"
       day: "monday"

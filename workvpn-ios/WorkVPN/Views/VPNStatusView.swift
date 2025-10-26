@@ -1,6 +1,6 @@
 //
 //  VPNStatusView.swift
-//  WorkVPN
+//  BarqNet
 //
 //  Shows VPN connection status and controls
 //

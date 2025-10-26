@@ -1,4 +1,4 @@
-# ChameleonVPN - Production Deployment Checklist
+# BarqNet - Production Deployment Checklist
 ## Date: 2025-10-26
 
 ---
@@ -26,15 +26,15 @@ This checklist ensures all three platforms (Desktop, iOS, Android) are productio
 
 #### OTP Service Integration
 - [ ] **Remove development mode OTP bypass from Desktop**
-  - File: `workvpn-desktop/src/main/auth/service.ts`
+  - File: `barqnet-desktop/src/main/auth/service.ts`
   - Action: Set `NODE_ENV=production` or remove dev mode checks
   - Lines: 297-316, 350-368, 412-440, 483-507
 
 - [ ] **Configure production OTP endpoint**
   - Update `BACKEND_BASE_URL` in all platforms
   - Desktop: `src/main/config.ts`
-  - iOS: `WorkVPN/Config/APIConfig.swift`
-  - Android: `app/src/main/java/com/workvpn/android/network/ApiConfig.kt`
+  - iOS: `BarqNet/Config/APIConfig.swift`
+  - Android: `app/src/main/java/com/barqnet/android/network/ApiConfig.kt`
 
 - [ ] **Test OTP flow end-to-end**
   - Send OTP via SMS
@@ -88,15 +88,15 @@ This checklist ensures all three platforms (Desktop, iOS, Android) are productio
   **How to get certificate pins:**
   ```bash
   # Method 1: Using OpenSSL
-  openssl s_client -servername api.chameleonvpn.com -connect api.chameleonvpn.com:443 < /dev/null | \
+  openssl s_client -servername api.barqnet.com -connect api.barqnet.com:443 < /dev/null | \
     openssl x509 -pubkey -noout | \
     openssl pkey -pubin -outform der | \
     openssl dgst -sha256 -binary | \
     base64
 
   # Method 2: Using Node.js script
-  cd workvpn-desktop
-  npm run extract-pins -- https://api.chameleonvpn.com
+  cd barqnet-desktop
+  npm run extract-pins -- https://api.barqnet.com
   ```
 
   - [ ] Extract primary certificate pin
@@ -112,7 +112,7 @@ This checklist ensures all three platforms (Desktop, iOS, Android) are productio
 - [ ] **Environment Variables**
   - [ ] Copy `.env.example` to `.env.production`
   - [ ] Set `NODE_ENV=production`
-  - [ ] Set `BACKEND_BASE_URL=https://api.chameleonvpn.com`
+  - [ ] Set `BACKEND_BASE_URL=https://api.barqnet.com`
   - [ ] Set `ENABLE_DEV_TOOLS=false`
   - [ ] Generate secure `ENCRYPTION_KEY` (32 bytes hex)
 
@@ -124,7 +124,7 @@ This checklist ensures all three platforms (Desktop, iOS, Android) are productio
 
 - [ ] **Run automated test suite**
   ```bash
-  cd workvpn-desktop
+  cd barqnet-desktop
   npm test
   ```
   - Expected: 116/118 tests passing (2 expected failures)
@@ -164,12 +164,12 @@ This checklist ensures all three platforms (Desktop, iOS, Android) are productio
   ```bash
   npm run build:mac
   ```
-  - Output: `dist/ChameleonVPN-1.0.0-mac.dmg`
-  - Verify signature: `codesign -dv --verbose=4 dist/mac/ChameleonVPN.app`
+  - Output: `dist/BarqNet-1.0.0-mac.dmg`
+  - Verify signature: `codesign -dv --verbose=4 dist/mac/BarqNet.app`
 
 - [ ] **Notarize with Apple**
   ```bash
-  xcrun notarytool submit dist/ChameleonVPN-1.0.0-mac.dmg \
+  xcrun notarytool submit dist/BarqNet-1.0.0-mac.dmg \
     --apple-id your@email.com \
     --team-id TEAM_ID \
     --password app-specific-password
@@ -188,7 +188,7 @@ This checklist ensures all three platforms (Desktop, iOS, Android) are productio
   ```bash
   npm run build:win
   ```
-  - Output: `dist/ChameleonVPN-Setup-1.0.0.exe`
+  - Output: `dist/BarqNet-Setup-1.0.0.exe`
   - Verify signature: Right-click → Properties → Digital Signatures
 
 #### Linux Packaging
@@ -196,13 +196,13 @@ This checklist ensures all three platforms (Desktop, iOS, Android) are productio
   ```bash
   npm run build:linux
   ```
-  - Output: `dist/ChameleonVPN-1.0.0.AppImage`
+  - Output: `dist/BarqNet-1.0.0.AppImage`
 
 - [ ] **Build .deb package**
-  - Output: `dist/chameleonvpn_1.0.0_amd64.deb`
+  - Output: `dist/barqnet_1.0.0_amd64.deb`
 
 - [ ] **Build .rpm package**
-  - Output: `dist/chameleonvpn-1.0.0.x86_64.rpm`
+  - Output: `dist/barqnet-1.0.0.x86_64.rpm`
 
 ### 2.4 Distribution
 
@@ -237,7 +237,7 @@ This checklist ensures all three platforms (Desktop, iOS, Android) are productio
 **Status:** ⏳ PENDING
 
 - [ ] **Certificate Pinning Implementation**
-  - Create `CertificatePinning.swift` in `WorkVPN/Security/`
+  - Create `CertificatePinning.swift` in `BarqNet/Security/`
   - Integrate with URLSession delegate
   - Extract production certificate pins (same method as Desktop)
 
@@ -265,7 +265,7 @@ This checklist ensures all three platforms (Desktop, iOS, Android) are productio
 - [ ] **Password Hashing Verification**
   - Confirm PBKDF2-HMAC-SHA256 with 100,000 iterations
   - Test password migration for existing users
-  - File: `WorkVPN/Utils/PasswordHasher.swift`
+  - File: `BarqNet/Utils/PasswordHasher.swift`
 
 ### 3.2 Testing
 
@@ -276,28 +276,28 @@ This checklist ensures all three platforms (Desktop, iOS, Android) are productio
 - [ ] **Create XCTest Suite**
 
   **3.2.1 Password Hashing Tests**
-  - File: `WorkVPNTests/PasswordHasherTests.swift`
+  - File: `BarqNetTests/PasswordHasherTests.swift`
   - [ ] Test PBKDF2 hash generation
   - [ ] Test hash verification
   - [ ] Test legacy Base64 password detection
   - [ ] Test migration to hashed passwords
 
   **3.2.2 Keychain Storage Tests**
-  - File: `WorkVPNTests/KeychainHelperTests.swift`
+  - File: `BarqNetTests/KeychainHelperTests.swift`
   - [ ] Test VPN config save/retrieve
   - [ ] Test password save/retrieve
   - [ ] Test data deletion
   - [ ] Test migration from UserDefaults
 
   **3.2.3 VPN Manager Tests**
-  - File: `WorkVPNTests/VPNManagerTests.swift`
+  - File: `BarqNetTests/VPNManagerTests.swift`
   - [ ] Test connection flow
   - [ ] Test disconnection flow
   - [ ] Test auto-reconnect
   - [ ] Test error handling
 
   **3.2.4 Authentication Tests**
-  - File: `WorkVPNTests/AuthManagerTests.swift`
+  - File: `BarqNetTests/AuthManagerTests.swift`
   - [ ] Test OTP sending
   - [ ] Test OTP verification
   - [ ] Test login flow
@@ -306,8 +306,8 @@ This checklist ensures all three platforms (Desktop, iOS, Android) are productio
 - [ ] **Run test suite**
   ```bash
   xcodebuild test \
-    -workspace WorkVPN.xcworkspace \
-    -scheme WorkVPN \
+    -workspace BarqNet.xcworkspace \
+    -scheme BarqNet \
     -destination 'platform=iOS Simulator,name=iPhone 15 Pro'
   ```
   - Target: 100% test pass rate
@@ -327,7 +327,7 @@ This checklist ensures all three platforms (Desktop, iOS, Android) are productio
 
 - [ ] **Xcode Project Configuration**
   - [ ] Set Development Team in project settings
-  - [ ] Update Bundle Identifier: `com.chameleonvpn.ios`
+  - [ ] Update Bundle Identifier: `com.barqnet.ios`
   - [ ] Set Version: `1.0.0`
   - [ ] Set Build Number: `1`
   - [ ] Configure App Icon (all sizes)
@@ -358,15 +358,15 @@ This checklist ensures all three platforms (Desktop, iOS, Android) are productio
 - [ ] **Build Archive**
   ```bash
   xcodebuild archive \
-    -workspace WorkVPN.xcworkspace \
-    -scheme WorkVPN \
-    -archivePath build/WorkVPN.xcarchive
+    -workspace BarqNet.xcworkspace \
+    -scheme BarqNet \
+    -archivePath build/BarqNet.xcarchive
   ```
 
 - [ ] **Export IPA**
   ```bash
   xcodebuild -exportArchive \
-    -archivePath build/WorkVPN.xcarchive \
+    -archivePath build/BarqNet.xcarchive \
     -exportPath build/ \
     -exportOptionsPlist ExportOptions.plist
   ```
@@ -375,7 +375,7 @@ This checklist ensures all three platforms (Desktop, iOS, Android) are productio
   ```bash
   xcrun altool --upload-app \
     --type ios \
-    --file build/WorkVPN.ipa \
+    --file build/BarqNet.ipa \
     --username your@email.com \
     --password app-specific-password
   ```
@@ -430,7 +430,7 @@ This checklist ensures all three platforms (Desktop, iOS, Android) are productio
 
 - [ ] **Verify Gradle Build**
   ```bash
-  cd workvpn-android
+  cd barqnet-android
   ./gradlew clean build
   ```
   - Fix any dependency resolution errors
@@ -530,19 +530,19 @@ This checklist ensures all three platforms (Desktop, iOS, Android) are productio
 - [ ] **Create JUnit Test Suite**
 
   **4.4.1 VPN Configuration Tests**
-  - File: `app/src/test/java/com/workvpn/android/OVPNParserTest.kt`
+  - File: `app/src/test/java/com/barqnet/android/OVPNParserTest.kt`
   - [ ] Test .ovpn parsing
   - [ ] Test config validation
   - [ ] Test error handling
 
   **4.4.2 Encryption Tests**
-  - File: `app/src/test/java/com/workvpn/android/EncryptionTest.kt`
+  - File: `app/src/test/java/com/barqnet/android/EncryptionTest.kt`
   - [ ] Test AES-256-GCM encryption
   - [ ] Test key derivation
   - [ ] Test packet encryption/decryption
 
   **4.4.3 VPN Service Tests**
-  - File: `app/src/androidTest/java/com/workvpn/android/RealVPNServiceTest.kt`
+  - File: `app/src/androidTest/java/com/barqnet/android/RealVPNServiceTest.kt`
   - [ ] Test connection flow
   - [ ] Test kill switch
   - [ ] Test DNS leak protection
@@ -571,7 +571,7 @@ This checklist ensures all three platforms (Desktop, iOS, Android) are productio
   - [ ] Generate upload key
     ```bash
     keytool -genkey -v -keystore upload-key.jks \
-      -alias chameleonvpn \
+      -alias barqnet \
       -keyalg RSA -keysize 2048 -validity 10000
     ```
   - [ ] Configure signing in `app/build.gradle`

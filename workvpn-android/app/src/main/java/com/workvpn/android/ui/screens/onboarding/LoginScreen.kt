@@ -1,4 +1,4 @@
-package com.workvpn.android.ui.screens.onboarding
+package com.barqnet.android.ui.screens.onboarding
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -15,7 +15,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.workvpn.android.ui.theme.*
+import com.barqnet.android.ui.theme.*
 
 @Composable
 fun LoginScreen(

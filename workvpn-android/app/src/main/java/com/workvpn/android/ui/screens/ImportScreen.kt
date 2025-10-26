@@ -1,4 +1,4 @@
-package com.workvpn.android.ui.screens
+package com.barqnet.android.ui.screens
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -15,7 +15,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.workvpn.android.viewmodel.RealVPNViewModel
+import com.barqnet.android.viewmodel.RealVPNViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

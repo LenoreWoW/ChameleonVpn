@@ -14,7 +14,7 @@ curl http://localhost:8080
 
 ### 2. Configure Desktop Client
 ```bash
-cd /Users/hassanalsahli/Desktop/ChameleonVpn/workvpn-desktop
+cd /Users/hassanalsahli/Desktop/ChameleonVpn/barqnet-desktop
 
 # Set API URL (optional - defaults to localhost:8080)
 export API_BASE_URL=http://localhost:8080
@@ -65,7 +65,7 @@ If backend is down, shows friendly error message
 API_BASE_URL=http://localhost:8080
 
 # Production
-API_BASE_URL=https://api.chameleonvpn.com
+API_BASE_URL=https://api.barqnet.com
 NODE_ENV=production
 ```
 

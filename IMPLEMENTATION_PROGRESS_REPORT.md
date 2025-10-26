@@ -1,4 +1,4 @@
-# ChameleonVPN Implementation Progress Report
+# BarqNet Implementation Progress Report
 ## Multi-Agent Parallel Execution - Status Update
 
 **Date:** 2025-10-26
@@ -30,7 +30,7 @@ Major breakthroughs achieved through parallel agent execution:
 1. **Kill Switch UI Removal** ✅ COMPLETE
    - Already removed in previous session
    - Verified no misleading UI elements
-   - File: `workvpn-desktop/src/renderer/index.html`
+   - File: `barqnet-desktop/src/renderer/index.html`
    - Status: Clean
 
 2. **Certificate Pinning Integration** ✅ COMPLETE
@@ -78,14 +78,14 @@ guard let passwordHash = PasswordHasher.hash(password: password) else {
 ```
 
 **Implementation Details:**
-- File: `workvpn-ios/WorkVPN/Utils/PasswordHasher.swift` ✅ COMPLETE
+- File: `barqnet-ios/BarqNet/Utils/PasswordHasher.swift` ✅ COMPLETE
   - PBKDF2-HMAC-SHA256 algorithm
   - 100,000 iterations (OWASP recommended)
   - 16-byte random salt per password
   - 32-byte hash output (SHA-256)
   - Constant-time comparison (prevents timing attacks)
 
-- File: `workvpn-ios/WorkVPN/Services/AuthManager.swift` ✅ UPDATED
+- File: `barqnet-ios/BarqNet/Services/AuthManager.swift` ✅ UPDATED
   - Line 221: `createAccount()` uses `PasswordHasher.hash()`
   - Line 251: `login()` uses `PasswordHasher.verify()`
   - Lines 299-334: Migration function for legacy passwords
@@ -117,17 +117,17 @@ UserDefaults.standard.set(encoded, forKey: "vpn_config")
 **AFTER (SECURE - Keychain):**
 ```swift
 // ✅ SECURE: VPN configs in encrypted Keychain
-KeychainHelper.save(encoded, service: "com.workvpn.ios", account: "vpn_config")
+KeychainHelper.save(encoded, service: "com.barqnet.ios", account: "vpn_config")
 ```
 
 **Implementation Details:**
-- File: `workvpn-ios/WorkVPN/Utils/KeychainHelper.swift` ✅ COMPLETE
+- File: `barqnet-ios/BarqNet/Utils/KeychainHelper.swift` ✅ COMPLETE
   - Secure storage using iOS Keychain Services
   - `kSecAttrAccessibleWhenUnlocked` security level
   - Save/load/delete/update operations
   - Proper error handling
 
-- File: `workvpn-ios/WorkVPN/Services/VPNManager.swift` ✅ UPDATED
+- File: `barqnet-ios/BarqNet/Services/VPNManager.swift` ✅ UPDATED
   - Line 148: `saveConfig()` uses Keychain
   - Line 166: `loadSavedConfig()` uses Keychain
   - Line 176: `deleteConfig()` uses Keychain
@@ -182,8 +182,8 @@ private func migrateConfigToKeychain() {
 5. Test VPN connection
 
 **Files to Modify:**
-- `workvpn-ios/Podfile`
-- `workvpn-ios/WorkVPNTunnelExtension/PacketTunnelProvider.swift`
+- `barqnet-ios/Podfile`
+- `barqnet-ios/BarqNetTunnelExtension/PacketTunnelProvider.swift`
 
 ---
 
@@ -221,9 +221,9 @@ private func migrateConfigToKeychain() {
 4. Verify on Android 8.0+ devices
 
 **Files to Modify:**
-- `workvpn-android/app/build.gradle`
-- `workvpn-android/app/src/main/java/com/workvpn/android/vpn/OpenVPNService.kt`
-- `workvpn-android/app/src/main/java/com/workvpn/android/util/KillSwitch.kt`
+- `barqnet-android/app/build.gradle`
+- `barqnet-android/app/src/main/java/com/barqnet/android/vpn/OpenVPNService.kt`
+- `barqnet-android/app/src/main/java/com/barqnet/android/util/KillSwitch.kt`
 
 ---
 

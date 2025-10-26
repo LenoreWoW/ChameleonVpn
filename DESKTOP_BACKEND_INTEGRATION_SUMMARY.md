@@ -1,4 +1,4 @@
-# ChameleonVPN Desktop - Backend Integration Summary
+# BarqNet Desktop - Backend Integration Summary
 
 **Date:** October 26, 2025
 **Status:** ✅ COMPLETED
@@ -8,13 +8,13 @@
 
 ## Overview
 
-Successfully updated the ChameleonVPN Desktop client to integrate with the backend API. All authentication operations now use the backend API endpoints instead of in-memory storage.
+Successfully updated the BarqNet Desktop client to integrate with the backend API. All authentication operations now use the backend API endpoints instead of in-memory storage.
 
 ---
 
 ## Files Modified
 
-### 1. `/Users/hassanalsahli/Desktop/ChameleonVpn/workvpn-desktop/src/main/auth/service.ts`
+### 1. `/Users/hassanalsahli/Desktop/ChameleonVpn/barqnet-desktop/src/main/auth/service.ts`
 
 **Changes:**
 - ✅ Removed in-memory user storage and bcrypt password hashing
@@ -34,7 +34,7 @@ Successfully updated the ChameleonVPN Desktop client to integrate with the backe
 
 **Lines of Code:** ~378 lines
 
-### 2. `/Users/hassanalsahli/Desktop/ChameleonVpn/workvpn-desktop/src/main/index.ts`
+### 2. `/Users/hassanalsahli/Desktop/ChameleonVpn/barqnet-desktop/src/main/index.ts`
 
 **Changes:**
 - ✅ Added API base URL configuration with validation
@@ -54,7 +54,7 @@ Successfully updated the ChameleonVPN Desktop client to integrate with the backe
 **Modified IPC Handlers:**
 - All `auth-*` handlers now wrapped with error handling
 
-### 3. `/Users/hassanalsahli/Desktop/ChameleonVpn/workvpn-desktop/src/preload/index.ts`
+### 3. `/Users/hassanalsahli/Desktop/ChameleonVpn/barqnet-desktop/src/preload/index.ts`
 
 **Changes:**
 - ✅ Exposed `getApiConfig()` method to renderer process
@@ -63,7 +63,7 @@ Successfully updated the ChameleonVPN Desktop client to integrate with the backe
 **New Methods:**
 - `window.vpn.getApiConfig()` - Get API configuration in renderer
 
-### 4. `/Users/hassanalsahli/Desktop/ChameleonVpn/workvpn-desktop/.env.example`
+### 4. `/Users/hassanalsahli/Desktop/ChameleonVpn/barqnet-desktop/.env.example`
 
 **Changes:**
 - ✅ Updated API configuration documentation
@@ -71,7 +71,7 @@ Successfully updated the ChameleonVPN Desktop client to integrate with the backe
 - ✅ Added comprehensive API endpoint reference
 - ✅ Added important notes about URL format
 
-### 5. `/Users/hassanalsahli/Desktop/ChameleonVpn/workvpn-desktop/TESTING_BACKEND_INTEGRATION.md`
+### 5. `/Users/hassanalsahli/Desktop/ChameleonVpn/barqnet-desktop/TESTING_BACKEND_INTEGRATION.md`
 
 **New File:**
 - ✅ Comprehensive testing guide
@@ -133,9 +133,9 @@ POST /v1/auth/login
 ## Token Management
 
 ### Storage Location
-- **macOS:** `~/Library/Application Support/workvpn-desktop/auth.json`
-- **Windows:** `%APPDATA%\workvpn-desktop\auth.json`
-- **Linux:** `~/.config/workvpn-desktop/auth.json`
+- **macOS:** `~/Library/Application Support/barqnet-desktop/auth.json`
+- **Windows:** `%APPDATA%\barqnet-desktop\auth.json`
+- **Linux:** `~/.config/barqnet-desktop/auth.json`
 
 ### Token Lifecycle
 
@@ -179,7 +179,7 @@ API_BASE_URL=http://localhost:8080
 
 **Production:**
 ```bash
-API_BASE_URL=https://api.chameleonvpn.com
+API_BASE_URL=https://api.barqnet.com
 NODE_ENV=production
 ```
 
@@ -230,7 +230,7 @@ curl http://localhost:8080
 ### 2. Build Desktop Client
 
 ```bash
-cd /Users/hassanalsahli/Desktop/ChameleonVpn/workvpn-desktop
+cd /Users/hassanalsahli/Desktop/ChameleonVpn/barqnet-desktop
 npm install
 npm run build
 ```
@@ -297,7 +297,7 @@ For detailed testing scenarios, see: `TESTING_BACKEND_INTEGRATION.md`
 **Existing Users:**
 - Users stored in local electron-store will need to re-register
 - Old authentication data is incompatible with new API-based system
-- Recommend clearing old data: Delete `~/.config/workvpn-desktop/` directory
+- Recommend clearing old data: Delete `~/.config/barqnet-desktop/` directory
 
 **For Developers:**
 - `bcrypt` dependency is no longer used (can be removed in cleanup)
@@ -335,7 +335,7 @@ npm uninstall --save-dev @types/bcrypt
 ```bash
 # Set production environment
 export NODE_ENV=production
-export API_BASE_URL=https://api.chameleonvpn.com
+export API_BASE_URL=https://api.barqnet.com
 
 # Build and package
 npm run build
@@ -454,7 +454,7 @@ npm test
 
 ## Conclusion
 
-The ChameleonVPN Desktop client has been successfully updated to integrate with the backend API. All authentication operations now use API endpoints with proper error handling, token management, and graceful degradation.
+The BarqNet Desktop client has been successfully updated to integrate with the backend API. All authentication operations now use API endpoints with proper error handling, token management, and graceful degradation.
 
 **Build Status:** ✅ PASSING
 **TypeScript Compilation:** ✅ SUCCESS

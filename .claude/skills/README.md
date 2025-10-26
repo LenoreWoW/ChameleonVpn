@@ -1,14 +1,14 @@
-# ChameleonVPN Specialized Skills
+# BarqNet Specialized Skills
 
 **Version:** 1.0.0
 **Created:** 2025-10-26
-**Project:** ChameleonVPN
+**Project:** BarqNet
 
 ---
 
 ## Overview
 
-This directory contains **7 specialized AI agent skills** designed specifically for the ChameleonVPN project. Each skill provides deep expertise in a specific domain, enabling efficient, high-quality development across all platforms and layers.
+This directory contains **7 specialized AI agent skills** designed specifically for the BarqNet project. Each skill provides deep expertise in a specific domain, enabling efficient, high-quality development across all platforms and layers.
 
 ### What are Skills?
 
@@ -20,7 +20,7 @@ Skills are **reusable instruction sets** that Claude Code loads to provide speci
 
 ### 🔧 Development Skills
 
-#### 1. **chameleon-backend** - Backend Development Agent
+#### 1. **barqnet-backend** - Backend Development Agent
 **Focus:** Go backend, PostgreSQL, API development, authentication
 
 **Use When:**
@@ -37,11 +37,11 @@ Skills are **reusable instruction sets** that Claude Code loads to provide speci
 - Bcrypt password hashing
 - SQL migration management
 
-**Location:** `.claude/skills/chameleon-backend/`
+**Location:** `.claude/skills/barqnet-backend/`
 
 ---
 
-#### 2. **chameleon-client** - Client Development Agent
+#### 2. **barqnet-client** - Client Development Agent
 **Focus:** Desktop/iOS/Android client applications
 
 **Use When:**
@@ -57,15 +57,15 @@ Skills are **reusable instruction sets** that Claude Code loads to provide speci
 - **Android:** Kotlin, Jetpack Compose, VpnService
 
 **Platforms:**
-- Desktop: `/Users/hassanalsahli/Desktop/ChameleonVpn/workvpn-desktop/`
-- iOS: `/Users/hassanalsahli/Desktop/ChameleonVpn/WorkVPN/`
-- Android: `/Users/hassanalsahli/Desktop/ChameleonVpn/WorkVPNApp/`
+- Desktop: `/Users/hassanalsahli/Desktop/ChameleonVpn/barqnet-desktop/`
+- iOS: `/Users/hassanalsahli/Desktop/ChameleonVpn/BarqNet/`
+- Android: `/Users/hassanalsahli/Desktop/ChameleonVpn/BarqNetApp/`
 
-**Location:** `.claude/skills/chameleon-client/`
+**Location:** `.claude/skills/barqnet-client/`
 
 ---
 
-#### 3. **chameleon-integration** - Integration Agent
+#### 3. **barqnet-integration** - Integration Agent
 **Focus:** Connecting clients to backend APIs
 
 **Use When:**
@@ -82,13 +82,13 @@ Skills are **reusable instruction sets** that Claude Code loads to provide speci
 - Error handling strategies
 - Cross-platform compatibility
 
-**Location:** `.claude/skills/chameleon-integration/`
+**Location:** `.claude/skills/barqnet-integration/`
 
 ---
 
 ### 📝 Quality Assurance Skills
 
-#### 4. **chameleon-documentation** - Documentation & Recording Agent
+#### 4. **barqnet-documentation** - Documentation & Recording Agent
 **Focus:** Creating and maintaining all project documentation
 
 **Use When:**
@@ -105,11 +105,11 @@ Skills are **reusable instruction sets** that Claude Code loads to provide speci
 - Markdown formatting
 - Documentation organization
 
-**Location:** `.claude/skills/chameleon-documentation/`
+**Location:** `.claude/skills/barqnet-documentation/`
 
 ---
 
-#### 5. **chameleon-audit** - Code Audit Agent
+#### 5. **barqnet-audit** - Code Audit Agent
 **Focus:** Security, quality, and performance analysis
 
 **Use When:**
@@ -126,11 +126,11 @@ Skills are **reusable instruction sets** that Claude Code loads to provide speci
 - Best practices validation
 - Architecture evaluation
 
-**Location:** `.claude/skills/chameleon-audit/`
+**Location:** `.claude/skills/barqnet-audit/`
 
 ---
 
-#### 6. **chameleon-testing** - Testing Agent
+#### 6. **barqnet-testing** - Testing Agent
 **Focus:** Comprehensive testing across all platforms
 
 **Use When:**
@@ -147,13 +147,13 @@ Skills are **reusable instruction sets** that Claude Code loads to provide speci
 - Test automation & CI/CD
 - Performance testing
 
-**Location:** `.claude/skills/chameleon-testing/`
+**Location:** `.claude/skills/barqnet-testing/`
 
 ---
 
 ### 🎯 Orchestration Skill
 
-#### 7. **chameleon-e2e** - End-to-End Orchestrator Agent
+#### 7. **barqnet-e2e** - End-to-End Orchestrator Agent
 **Focus:** Coordinating all agents for complete workflows
 
 **Use When:**
@@ -170,7 +170,7 @@ Skills are **reusable instruction sets** that Claude Code loads to provide speci
 - Progress tracking
 - Quality gate enforcement
 
-**Location:** `.claude/skills/chameleon-e2e/`
+**Location:** `.claude/skills/barqnet-e2e/`
 
 ---
 
@@ -190,7 +190,7 @@ Claude Code will automatically detect and load them when referenced.
 #### Method 1: Explicit Skill Invocation (Recommended)
 
 ```
-Use the chameleon-backend skill to add a new API endpoint for user profile management.
+Use the barqnet-backend skill to add a new API endpoint for user profile management.
 ```
 
 #### Method 2: Natural Language (Claude Auto-Detects)
@@ -199,12 +199,12 @@ Use the chameleon-backend skill to add a new API endpoint for user profile manag
 I need to implement a new authentication endpoint on the backend.
 ```
 
-Claude will recognize this requires `chameleon-backend` skill and activate it automatically.
+Claude will recognize this requires `barqnet-backend` skill and activate it automatically.
 
 #### Method 3: Multi-Skill Workflows
 
 ```
-Use the chameleon-e2e skill to coordinate implementation of two-factor authentication across all platforms.
+Use the barqnet-e2e skill to coordinate implementation of two-factor authentication across all platforms.
 ```
 
 The E2E orchestrator will then deploy specialized agents as needed.
@@ -219,41 +219,41 @@ The E2E orchestrator will then deploy specialized agents as needed.
 Q: What are you working on?
 
 ├─ Backend API / Database
-│  └─ Use: chameleon-backend
+│  └─ Use: barqnet-backend
 
 ├─ Client Application (Desktop/iOS/Android)
-│  └─ Use: chameleon-client
+│  └─ Use: barqnet-client
 
 ├─ Connecting Client to Backend
-│  └─ Use: chameleon-integration
+│  └─ Use: barqnet-integration
 
 ├─ Writing Documentation
-│  └─ Use: chameleon-documentation
+│  └─ Use: barqnet-documentation
 
 ├─ Code Review / Security Audit
-│  └─ Use: chameleon-audit
+│  └─ Use: barqnet-audit
 
 ├─ Writing Tests
-│  └─ Use: chameleon-testing
+│  └─ Use: barqnet-testing
 
 └─ Complex Multi-Platform Feature (affects 2+ areas)
-   └─ Use: chameleon-e2e
+   └─ Use: barqnet-e2e
 ```
 
 ### Use Case Matrix
 
 | Task | Best Skill |
 |------|-----------|
-| Add new database table | chameleon-backend |
-| Create new API endpoint | chameleon-backend |
-| Implement UI screen | chameleon-client |
-| Connect UI to API | chameleon-integration |
-| Write API documentation | chameleon-documentation |
-| Review security of auth flow | chameleon-audit |
-| Write integration tests | chameleon-testing |
-| Implement 2FA across all platforms | chameleon-e2e |
-| Fix critical security bug | chameleon-e2e |
-| Deploy to production | chameleon-e2e |
+| Add new database table | barqnet-backend |
+| Create new API endpoint | barqnet-backend |
+| Implement UI screen | barqnet-client |
+| Connect UI to API | barqnet-integration |
+| Write API documentation | barqnet-documentation |
+| Review security of auth flow | barqnet-audit |
+| Write integration tests | barqnet-testing |
+| Implement 2FA across all platforms | barqnet-e2e |
+| Fix critical security bug | barqnet-e2e |
+| Deploy to production | barqnet-e2e |
 
 ---
 
@@ -265,7 +265,7 @@ Q: What are you working on?
 
 **Workflow:**
 ```
-User: "Use chameleon-backend skill to add a GET /v1/user/stats endpoint that returns
+User: "Use barqnet-backend skill to add a GET /v1/user/stats endpoint that returns
        VPN usage statistics for the authenticated user."
 
 Backend Agent:
@@ -276,7 +276,7 @@ Backend Agent:
 5. Documents in API_CONTRACT.md
 ```
 
-**Skills Used:** 1 (chameleon-backend)
+**Skills Used:** 1 (barqnet-backend)
 
 ---
 
@@ -286,32 +286,32 @@ Backend Agent:
 
 **Workflow:**
 ```
-User: "Use chameleon-e2e skill to implement server location selection on all platforms."
+User: "Use barqnet-e2e skill to implement server location selection on all platforms."
 
 E2E Orchestrator:
-  Phase 1 - Backend (chameleon-backend):
+  Phase 1 - Backend (barqnet-backend):
     - Create locations table
     - Add GET /v1/vpn/locations endpoint
     - Populate with initial servers
 
-  Phase 2 - Integration (chameleon-integration):
+  Phase 2 - Integration (barqnet-integration):
     - Define API contract
     - Specify location data format
 
-  Phase 3 - Clients (chameleon-client):
+  Phase 3 - Clients (barqnet-client):
     - Desktop: Server selector dropdown
     - iOS: Location picker UI
     - Android: Server selection screen
 
-  Phase 4 - Documentation (chameleon-documentation):
+  Phase 4 - Documentation (barqnet-documentation):
     - API endpoint docs
     - User guide updates
 
-  Phase 5 - Testing (chameleon-testing):
+  Phase 5 - Testing (barqnet-testing):
     - Integration tests
     - E2E tests on all platforms
 
-  Phase 6 - Audit (chameleon-audit):
+  Phase 6 - Audit (barqnet-audit):
     - Security review
     - Code quality check
 ```
@@ -326,17 +326,17 @@ E2E Orchestrator:
 
 **Workflow:**
 ```
-User: "Use chameleon-e2e skill to prepare and execute production deployment."
+User: "Use barqnet-e2e skill to prepare and execute production deployment."
 
 E2E Orchestrator:
   Pre-Deploy:
-    - chameleon-audit: Complete security and quality audit
-    - chameleon-testing: Run full test suite
-    - chameleon-documentation: Generate release notes
+    - barqnet-audit: Complete security and quality audit
+    - barqnet-testing: Run full test suite
+    - barqnet-documentation: Generate release notes
 
   Build:
-    - chameleon-backend: Build backend binary
-    - chameleon-client: Build all platform clients
+    - barqnet-backend: Build backend binary
+    - barqnet-client: Build all platform clients
 
   Deploy:
     - Database migrations
@@ -344,8 +344,8 @@ E2E Orchestrator:
     - Client distribution
 
   Post-Deploy:
-    - chameleon-testing: Smoke tests
-    - chameleon-documentation: Update deployment log
+    - barqnet-testing: Smoke tests
+    - barqnet-documentation: Update deployment log
 ```
 
 **Skills Used:** 5 (backend, client, documentation, testing, audit, orchestrated by E2E)
@@ -358,19 +358,19 @@ E2E Orchestrator:
 
 ✅ **DO:** Use specific skills for focused tasks
 ```
-Use chameleon-backend to add JWT token expiry checking.
+Use barqnet-backend to add JWT token expiry checking.
 ```
 
 ❌ **DON'T:** Use E2E for simple single-component tasks
 ```
-Use chameleon-e2e to add a log statement. ❌
+Use barqnet-e2e to add a log statement. ❌
 ```
 
 ### 2. Let E2E Orchestrate Complex Work
 
 ✅ **DO:** Use E2E for multi-component features
 ```
-Use chameleon-e2e to implement push notifications.
+Use barqnet-e2e to implement push notifications.
 (Requires backend, all clients, testing, docs)
 ```
 
@@ -384,25 +384,25 @@ First use backend, then integration, then client... ❌
 
 ✅ **DO:** Provide clear requirements
 ```
-Use chameleon-client to add dark mode support to the Desktop app,
+Use barqnet-client to add dark mode support to the Desktop app,
 ensuring it persists user preference in electron-store.
 ```
 
 ❌ **DON'T:** Be vague
 ```
-Use chameleon-client to make the app better. ❌
+Use barqnet-client to make the app better. ❌
 ```
 
 ### 4. Trust the Specialization
 
 Each skill has deep expertise in its domain. Let them:
-- chameleon-backend: Handle all backend architecture decisions
-- chameleon-client: Choose appropriate UI patterns
-- chameleon-integration: Define optimal API contracts
-- chameleon-documentation: Determine documentation structure
-- chameleon-audit: Identify security issues
-- chameleon-testing: Design test strategies
-- chameleon-e2e: Coordinate multi-agent workflows
+- barqnet-backend: Handle all backend architecture decisions
+- barqnet-client: Choose appropriate UI patterns
+- barqnet-integration: Define optimal API contracts
+- barqnet-documentation: Determine documentation structure
+- barqnet-audit: Identify security issues
+- barqnet-testing: Design test strategies
+- barqnet-e2e: Coordinate multi-agent workflows
 
 ---
 
@@ -421,14 +421,14 @@ ls -la /Users/hassanalsahli/Desktop/ChameleonVpn/.claude/skills/
 
 **Solution:** Be explicit in your request
 ```
-Use the chameleon-backend skill to... [specific task]
+Use the barqnet-backend skill to... [specific task]
 ```
 
 ### Issue: "Task requires multiple skills"
 
 **Solution:** Use the E2E orchestrator
 ```
-Use chameleon-e2e to [complex multi-component task]
+Use barqnet-e2e to [complex multi-component task]
 ```
 
 ---
@@ -438,7 +438,7 @@ Use chameleon-e2e to [complex multi-component task]
 ### Current (v1.0.0)
 - ✅ 7 core specialized skills
 - ✅ E2E orchestration capability
-- ✅ ChameleonVPN-specific expertise
+- ✅ BarqNet-specific expertise
 
 ### Planned (v1.1.0)
 - [ ] Performance optimization skill

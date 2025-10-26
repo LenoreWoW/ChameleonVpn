@@ -1,6 +1,6 @@
 //
 //  Colors.swift
-//  WorkVPN
+//  BarqNet
 //
 //  Blue theme color palette
 //

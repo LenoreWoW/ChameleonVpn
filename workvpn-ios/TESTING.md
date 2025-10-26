@@ -1,10 +1,10 @@
-# WorkVPN iOS - Testing Guide
+# BarqNet iOS - Testing Guide
 
 Comprehensive testing guide for Platform 2 (iOS/iPadOS).
 
 ## Testing Overview
 
-This guide covers all testing phases for the WorkVPN iOS application, from unit tests to XcodeBuild MCP automated testing.
+This guide covers all testing phases for the BarqNet iOS application, from unit tests to XcodeBuild MCP automated testing.
 
 ---
 
@@ -28,7 +28,7 @@ sudo gem install cocoapods
 pod install
 
 # Open workspace
-open WorkVPN.xcworkspace
+open BarqNet.xcworkspace
 ```
 
 ---
@@ -40,13 +40,13 @@ open WorkVPN.xcworkspace
 ```bash
 # Clean build folder
 xcodebuild clean \
-  -workspace WorkVPN.xcworkspace \
-  -scheme WorkVPN
+  -workspace BarqNet.xcworkspace \
+  -scheme BarqNet
 
 # Build for simulator
 xcodebuild build \
-  -workspace WorkVPN.xcworkspace \
-  -scheme WorkVPN \
+  -workspace BarqNet.xcworkspace \
+  -scheme BarqNet \
   -destination 'platform=iOS Simulator,name=iPhone 15 Pro'
 ```
 
@@ -61,9 +61,9 @@ xcodebuild build \
 ```bash
 # Build archive for device
 xcodebuild archive \
-  -workspace WorkVPN.xcworkspace \
-  -scheme WorkVPN \
-  -archivePath build/WorkVPN.xcarchive \
+  -workspace BarqNet.xcworkspace \
+  -scheme BarqNet \
+  -archivePath build/BarqNet.xcarchive \
   -destination generic/platform=iOS
 ```
 
@@ -109,10 +109,10 @@ Test the configuration file parser:
 
 ```bash
 xcodebuild test \
-  -workspace WorkVPN.xcworkspace \
-  -scheme WorkVPN \
+  -workspace BarqNet.xcworkspace \
+  -scheme BarqNet \
   -destination 'platform=iOS Simulator,name=iPhone 15 Pro' \
-  -only-testing:WorkVPNTests
+  -only-testing:BarqNetTests
 ```
 
 **Success Criteria**:
@@ -431,10 +431,10 @@ xcodebuild test \
 ```bash
 # Run full UI test suite with XcodeBuild MCP
 xcodebuild test \
-  -workspace WorkVPN.xcworkspace \
-  -scheme WorkVPN \
+  -workspace BarqNet.xcworkspace \
+  -scheme BarqNet \
   -destination 'platform=iOS Simulator,name=iPhone 15 Pro' \
-  -only-testing:WorkVPNUITests \
+  -only-testing:BarqNetUITests \
   -resultBundlePath TestResults.xcresult
 ```
 

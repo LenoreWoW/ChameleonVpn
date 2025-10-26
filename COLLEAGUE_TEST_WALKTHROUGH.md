@@ -1,6 +1,6 @@
-# 🧪 ChameleonVPN - Complete Test Walkthrough for Colleague
+# 🧪 BarqNet - Complete Test Walkthrough for Colleague
 
-**Welcome!** This guide will walk you through testing the complete ChameleonVPN application in **15 minutes**.
+**Welcome!** This guide will walk you through testing the complete BarqNet application in **15 minutes**.
 
 **What You're Testing**: A production-ready multi-platform VPN client with OpenVPN support.
 
@@ -35,7 +35,7 @@ Use this to track your progress:
 
 1. **Open Terminal** in the project directory:
    ```bash
-   cd /Users/hassanalsahli/Desktop/ChameleonVpn/workvpn-desktop
+   cd /Users/hassanalsahli/Desktop/ChameleonVpn/barqnet-desktop
    npm start
    ```
 
@@ -45,7 +45,7 @@ Use this to track your progress:
    - Electron window opens
    - Beautiful blue gradient background
    - 3D animated particles (Three.js scene)
-   - "Welcome to WorkVPN" title
+   - "Welcome to BarqNet" title
    - Phone number input field
    - "Continue" button
    - "Already have an account? Sign In" link
@@ -188,7 +188,7 @@ npm start
 
 2. **Select Test Configuration**:
    - File dialog opens
-   - Navigate to: `/Users/hassanalsahli/Desktop/ChameleonVpn/workvpn-desktop/`
+   - Navigate to: `/Users/hassanalsahli/Desktop/ChameleonVpn/barqnet-desktop/`
    - Select file: `test-config.ovpn`
    - Click "Open"
 
@@ -215,7 +215,7 @@ npm start
 ```
 
 ### **Check Configuration Details**:
-- Server: `demo.chameleonvpn.com`
+- Server: `demo.barqnet.com`
 - Port: `1194`
 - Protocol: `UDP:1194`
 - Status: `Disconnected` (red/grey indicator)
@@ -240,7 +240,7 @@ npm start
    - Clean, modern design
 
 2. **Check Server Info Section**:
-   - **Server**: `demo.chameleonvpn.com` (or similar)
+   - **Server**: `demo.barqnet.com` (or similar)
    - **Protocol**: `UDP:1194`
    - **Local IP**: `-` (empty until connected)
    - **Duration**: `-` (empty until connected)
@@ -318,7 +318,7 @@ npm start
    - "Try Again" button visible
 
 5. **This is EXPECTED and CORRECT**:
-   - The `demo.chameleonvpn.com` server doesn't actually exist
+   - The `demo.barqnet.com` server doesn't actually exist
    - This proves the OpenVPN integration is working
    - With a real server .ovpn file, connection would succeed
 
@@ -603,7 +603,7 @@ Based on your testing, rate these aspects:
 
 ## 🎊 **TESTING COMPLETE!**
 
-**Thank you for testing ChameleonVPN!**
+**Thank you for testing BarqNet!**
 
 ### **What You Tested**:
 - ✅ Complete authentication flow (Phone + OTP + Password)
@@ -640,6 +640,6 @@ Based on your testing, rate these aspects:
 
 ---
 
-*Thank you for helping make ChameleonVPN better!* 🙏
+*Thank you for helping make BarqNet better!* 🙏
 
 *Questions? Check GETTING_IT_TO_WORK.md or README.md for more details.*

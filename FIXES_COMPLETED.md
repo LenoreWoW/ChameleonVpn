@@ -1,4 +1,4 @@
-# ChameleonVPN - Fixes Completed Summary
+# BarqNet - Fixes Completed Summary
 
 **Date:** October 26, 2025
 **Work Session:** UltraThink Todo Completion
@@ -28,8 +28,8 @@ Completed **6 critical security fixes** across Desktop, Android, and iOS platfor
 #### 1. ✅ Removed Kill Switch UI (COMPLETED)
 **Severity:** CRITICAL
 **Files Changed:**
-- `workvpn-desktop/src/renderer/index.html`
-- `workvpn-desktop/src/renderer/app.ts`
+- `barqnet-desktop/src/renderer/index.html`
+- `barqnet-desktop/src/renderer/app.ts`
 
 **What Was Fixed:**
 - Removed non-functional kill switch checkbox from settings UI
@@ -49,7 +49,7 @@ Completed **6 critical security fixes** across Desktop, Android, and iOS platfor
 #### 2. ✅ Fixed Java Version Mismatch (COMPLETED)
 **Severity:** CRITICAL (Build Breaking)
 **File Changed:**
-- `workvpn-android/app/build.gradle`
+- `barqnet-android/app/build.gradle`
 
 **What Was Fixed:**
 ```kotlin
@@ -83,7 +83,7 @@ kotlinOptions {
 #### 3. ✅ Removed OTP Logging (COMPLETED)
 **Severity:** CRITICAL (Security)
 **File Changed:**
-- `workvpn-android/app/src/main/java/com/workvpn/android/auth/AuthManager.kt`
+- `barqnet-android/app/src/main/java/com/barqnet/android/auth/AuthManager.kt`
 
 **What Was Fixed:**
 ```kotlin
@@ -111,7 +111,7 @@ if (BuildConfig.DEBUG) {
 #### 4. ✅ Removed OTP Console Logging (COMPLETED)
 **Severity:** CRITICAL (Security)
 **File Changed:**
-- `workvpn-ios/WorkVPN/Services/AuthManager.swift`
+- `barqnet-ios/BarqNet/Services/AuthManager.swift`
 
 **What Was Fixed:**
 ```swift
@@ -318,15 +318,15 @@ print("[AUTH] OTP for \(phoneNumber): \(otp)")
 ## 📊 FILES CHANGED IN THIS SESSION
 
 ### Desktop (2 files)
-1. `workvpn-desktop/src/renderer/index.html` - Removed kill switch UI
-2. `workvpn-desktop/src/renderer/app.ts` - Removed kill switch logic
+1. `barqnet-desktop/src/renderer/index.html` - Removed kill switch UI
+2. `barqnet-desktop/src/renderer/app.ts` - Removed kill switch logic
 
 ### Android (2 files)
-1. `workvpn-android/app/build.gradle` - Fixed Java version to 11
-2. `workvpn-android/app/src/main/java/com/workvpn/android/auth/AuthManager.kt` - Removed OTP logging
+1. `barqnet-android/app/build.gradle` - Fixed Java version to 11
+2. `barqnet-android/app/src/main/java/com/barqnet/android/auth/AuthManager.kt` - Removed OTP logging
 
 ### iOS (1 file)
-1. `workvpn-ios/WorkVPN/Services/AuthManager.swift` - Removed OTP logging
+1. `barqnet-ios/BarqNet/Services/AuthManager.swift` - Removed OTP logging
 
 ### Documentation (1 file)
 1. `FIXES_COMPLETED.md` - This document

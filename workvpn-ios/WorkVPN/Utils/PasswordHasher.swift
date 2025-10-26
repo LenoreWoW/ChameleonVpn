@@ -1,6 +1,6 @@
 //
 //  PasswordHasher.swift
-//  WorkVPN
+//  BarqNet
 //
 //  Secure password hashing using PBKDF2-HMAC-SHA256
 //

@@ -1,11 +1,11 @@
 ---
-name: chameleon-testing
-description: Specialized agent for comprehensive testing of the ChameleonVPN project across all platforms and layers. Handles unit testing, integration testing, E2E testing, performance testing, security testing, and test automation. Creates test plans, writes test code, executes tests, and generates test reports. Use when implementing tests, debugging test failures, or validating functionality.
+name: barqnet-testing
+description: Specialized agent for comprehensive testing of the BarqNet project across all platforms and layers. Handles unit testing, integration testing, E2E testing, performance testing, security testing, and test automation. Creates test plans, writes test code, executes tests, and generates test reports. Use when implementing tests, debugging test failures, or validating functionality.
 ---
 
-# ChameleonVPN Testing Agent
+# BarqNet Testing Agent
 
-You are a specialized testing agent for the ChameleonVPN project. Your primary focus is ensuring comprehensive test coverage and quality assurance across all platforms and components.
+You are a specialized testing agent for the BarqNet project. Your primary focus is ensuring comprehensive test coverage and quality assurance across all platforms and components.
 
 ## Core Responsibilities
 
@@ -310,9 +310,9 @@ npm test -- -u
 
 **iOS (Swift/XCTest) Example:**
 ```swift
-// WorkVPNTests/AuthServiceTests.swift
+// BarqNetTests/AuthServiceTests.swift
 import XCTest
-@testable import WorkVPN
+@testable import BarqNet
 
 class AuthServiceTests: XCTestCase {
     var authService: AuthService!
@@ -430,13 +430,13 @@ class MockKeychainManager: KeychainManagerProtocol {
 **Run iOS Tests:**
 ```bash
 # Run all tests
-xcodebuild test -scheme WorkVPN -destination 'platform=iOS Simulator,name=iPhone 15'
+xcodebuild test -scheme BarqNet -destination 'platform=iOS Simulator,name=iPhone 15'
 
 # Run specific test
-xcodebuild test -scheme WorkVPN -only-testing:WorkVPNTests/AuthServiceTests
+xcodebuild test -scheme BarqNet -only-testing:BarqNetTests/AuthServiceTests
 
 # Generate coverage
-xcodebuild test -scheme WorkVPN -enableCodeCoverage YES
+xcodebuild test -scheme BarqNet -enableCodeCoverage YES
 
 # View coverage
 open DerivedData/.../Coverage.xcresult
@@ -444,7 +444,7 @@ open DerivedData/.../Coverage.xcresult
 
 **Android (Kotlin/JUnit) Example:**
 ```kotlin
-// app/src/test/java/com/chameleon/workvpn/AuthServiceTest.kt
+// app/src/test/java/com/chameleon/barqnet/AuthServiceTest.kt
 import org.junit.Before
 import org.junit.Test
 import org.junit.Assert.*
@@ -789,7 +789,7 @@ test.describe('Authentication Flow', () => {
 npm run test:e2e
 
 # iOS (UI Tests)
-xcodebuild test -scheme WorkVPNUITests
+xcodebuild test -scheme BarqNetUITests
 
 # Android (Espresso)
 ./gradlew connectedAndroidTest
@@ -947,7 +947,7 @@ jobs:
       - name: Run tests
         run: |
           xcodebuild test \
-            -scheme WorkVPN \
+            -scheme BarqNet \
             -destination 'platform=iOS Simulator,name=iPhone 15'
 
   android-tests:
@@ -1101,9 +1101,9 @@ What will be tested and what won't be tested.
 
 ❌ **Don't use this skill for:**
 - Writing production code (use platform skills)
-- Documentation (use chameleon-documentation)
-- Code audits (use chameleon-audit)
-- Integration setup (use chameleon-integration)
+- Documentation (use barqnet-documentation)
+- Code audits (use barqnet-audit)
+- Integration setup (use barqnet-integration)
 
 ## Success Criteria
 

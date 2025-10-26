@@ -1,6 +1,6 @@
 //
 //  VPNConfig.swift
-//  WorkVPN
+//  BarqNet
 //
 //  Model for VPN configuration
 //

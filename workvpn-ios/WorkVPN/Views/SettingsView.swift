@@ -1,6 +1,6 @@
 //
 //  SettingsView.swift
-//  WorkVPN
+//  BarqNet
 //
 //  App settings view
 //

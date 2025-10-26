@@ -1,6 +1,6 @@
 //
 //  KeychainHelper.swift
-//  WorkVPN
+//  BarqNet
 //
 //  Secure storage for sensitive data using iOS Keychain
 //

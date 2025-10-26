@@ -1,4 +1,4 @@
-package com.workvpn.android.util
+package com.barqnet.android.util
 
 import kotlinx.coroutines.test.runTest
 import org.junit.Before

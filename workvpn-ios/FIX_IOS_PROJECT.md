@@ -14,7 +14,7 @@
 
 1. **Delete current broken project**:
    ```bash
-   rm -rf WorkVPN.xcodeproj/
+   rm -rf BarqNet.xcodeproj/
    ```
 
 2. **Create new Xcode project** (requires Xcode installed):
@@ -23,10 +23,10 @@
    open /Applications/Xcode.app
    
    # Create new iOS App project:
-   # - Product Name: WorkVPN  
+   # - Product Name: BarqNet  
    # - Team: [Your Team]
-   # - Organization Identifier: com.workvpn.ios
-   # - Bundle Identifier: com.workvpn.ios
+   # - Organization Identifier: com.barqnet.ios
+   # - Bundle Identifier: com.barqnet.ios
    # - Language: Swift
    # - Interface: SwiftUI
    # - Save location: [Current directory]
@@ -36,13 +36,13 @@
    ```
    File → New → Target
    - iOS → Network Extension
-   - Product Name: WorkVPNTunnelExtension
-   - Bundle Identifier: com.workvpn.ios.TunnelExtension
+   - Product Name: BarqNetTunnelExtension
+   - Bundle Identifier: com.barqnet.ios.TunnelExtension
    ```
 
 4. **Add source files to project**:
-   - Drag `WorkVPN/` folder into Xcode project
-   - Drag `WorkVPNTunnelExtension/PacketTunnelProvider.swift` to extension target
+   - Drag `BarqNet/` folder into Xcode project
+   - Drag `BarqNetTunnelExtension/PacketTunnelProvider.swift` to extension target
    - Add `Assets.xcassets` to main target
 
 5. **Configure capabilities**:
@@ -52,16 +52,16 @@
 6. **Install dependencies**:
    ```bash
    pod install
-   open WorkVPN.xcworkspace  # Use .xcworkspace, not .xcodeproj
+   open BarqNet.xcworkspace  # Use .xcworkspace, not .xcodeproj
    ```
 
 ### **Issue #2: Bundle Identifier Mismatch**
 
-**Problem**: VPNManager references `com.workvpn.ios.TunnelExtension` but Info.plist may have different bundle ID.
+**Problem**: VPNManager references `com.barqnet.ios.TunnelExtension` but Info.plist may have different bundle ID.
 
 **Fix**: Update VPNManager.swift line 104:
 ```swift
-providerProtocol.providerBundleIdentifier = "com.workvpn.ios.TunnelExtension"
+providerProtocol.providerBundleIdentifier = "com.barqnet.ios.TunnelExtension"
 ```
 
 Make sure this matches the Network Extension target's bundle identifier in Xcode.
@@ -72,7 +72,7 @@ Make sure this matches the Network Extension target's bundle identifier in Xcode
 
 **Fix**: Add these to both Info.plist files:
 
-**Main App (WorkVPN/Info.plist)**:
+**Main App (BarqNet/Info.plist)**:
 ```xml
 <key>NSAppTransportSecurity</key>
 <dict>
@@ -80,10 +80,10 @@ Make sure this matches the Network Extension target's bundle identifier in Xcode
     <true/>
 </dict>
 <key>NSFaceIDUsageDescription</key>
-<string>WorkVPN uses Face ID to quickly connect to your VPN</string>
+<string>BarqNet uses Face ID to quickly connect to your VPN</string>
 ```
 
-**Extension (WorkVPNTunnelExtension/Info.plist)**:
+**Extension (BarqNetTunnelExtension/Info.plist)**:
 ```xml
 <key>NSExtension</key>
 <dict>
@@ -100,7 +100,7 @@ Make sure this matches the Network Extension target's bundle identifier in Xcode
 
 **Fix**: Create entitlements files in Xcode:
 
-**WorkVPN.entitlements**:
+**BarqNet.entitlements**:
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -116,7 +116,7 @@ Make sure this matches the Network Extension target's bundle identifier in Xcode
 </plist>
 ```
 
-**WorkVPNTunnelExtension.entitlements**:
+**BarqNetTunnelExtension.entitlements**:
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

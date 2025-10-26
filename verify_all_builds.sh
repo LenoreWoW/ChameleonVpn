@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# ChameleonVPN - Final Build Verification Script
+# BarqNet - Final Build Verification Script
 # Tests all platforms to ensure everything is working
 
-echo "🔍 ChameleonVPN - Final Build Verification"
+echo "🔍 BarqNet - Final Build Verification"
 echo "==========================================="
 echo ""
 
@@ -24,7 +24,7 @@ echo ""
 
 # Test Desktop
 echo -e "${BLUE}🖥️  Testing Desktop Application...${NC}"
-cd workvpn-desktop
+cd barqnet-desktop
 
 if npm run build > /dev/null 2>&1; then
     echo -e "   ✅ ${GREEN}Desktop build: SUCCESS${NC}"
@@ -43,9 +43,9 @@ echo ""
 
 # Test iOS  
 echo -e "${BLUE}📱 Testing iOS Application...${NC}"
-cd ../workvpn-ios
+cd ../barqnet-ios
 
-if [ -f "WorkVPN.xcworkspace/contents.xcworkspacedata" ]; then
+if [ -f "BarqNet.xcworkspace/contents.xcworkspacedata" ]; then
     echo -e "   ✅ ${GREEN}iOS project: READY${NC}"
     IOS_SUCCESS=true
 else
@@ -62,7 +62,7 @@ echo ""
 
 # Test Android
 echo -e "${BLUE}🤖 Testing Android Application...${NC}"
-cd ../workvpn-android
+cd ../barqnet-android
 
 export JAVA_HOME=/opt/homebrew/opt/openjdk@11/libexec/openjdk.jdk/Contents/Home
 

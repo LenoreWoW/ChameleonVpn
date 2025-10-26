@@ -14,7 +14,7 @@
 
 ### Current Behavior
 
-**File:** `WorkVPNTunnelExtension/PacketTunnelProvider.swift`
+**File:** `BarqNetTunnelExtension/PacketTunnelProvider.swift`
 **Lines:** 9-52
 
 ```swift
@@ -64,7 +64,7 @@ class OpenVPNConfiguration {
 ```ruby
 platform :ios, '14.0'
 
-target 'WorkVPN' do
+target 'BarqNet' do
   use_frameworks!
 
   # OpenVPN library for real VPN functionality
@@ -73,7 +73,7 @@ target 'WorkVPN' do
   # Other dependencies...
 end
 
-target 'WorkVPNTunnelExtension' do
+target 'BarqNetTunnelExtension' do
   use_frameworks!
 
   # OpenVPN library (required in extension too)
@@ -83,17 +83,17 @@ end
 
 **Install:**
 ```bash
-cd workvpn-ios
+cd barqnet-ios
 pod install
 ```
 
-**Note:** After this, ALWAYS open `WorkVPN.xcworkspace` (not `.xcodeproj`)
+**Note:** After this, ALWAYS open `BarqNet.xcworkspace` (not `.xcodeproj`)
 
 ---
 
 ### Step 2: Replace Stub Classes
 
-**File:** `WorkVPNTunnelExtension/PacketTunnelProvider.swift`
+**File:** `BarqNetTunnelExtension/PacketTunnelProvider.swift`
 
 **REMOVE stub classes (lines 12-52):**
 ```swift
@@ -111,7 +111,7 @@ import OpenVPNAdapter
 
 ### Step 3: Implement PacketTunnelProvider
 
-**File:** `WorkVPNTunnelExtension/PacketTunnelProvider.swift`
+**File:** `BarqNetTunnelExtension/PacketTunnelProvider.swift`
 
 ```swift
 import NetworkExtension
@@ -143,7 +143,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         guard let configData = (protocolConfiguration as? NETunnelProviderProtocol)?.providerConfiguration,
               let configString = configData["ovpn"] as? String else {
             NSLog("[PacketTunnel] ERROR: No configuration found")
-            completionHandler(NSError(domain: "WorkVPN", code: 1, userInfo: [
+            completionHandler(NSError(domain: "BarqNet", code: 1, userInfo: [
                 NSLocalizedDescriptionKey: "VPN configuration not found"
             ]))
             return
@@ -293,7 +293,7 @@ extension PacketTunnelProvider: OpenVPNAdapterDelegate {
 
 ### Step 4: Implement Traffic Statistics
 
-**File:** `WorkVPN/Services/VPNManager.swift`
+**File:** `BarqNet/Services/VPNManager.swift`
 
 **REPLACE lines 220-226 (TODO comment):**
 
@@ -356,7 +356,7 @@ struct TrafficStats: Codable {
 
 ### Step 5: Update Entitlements
 
-**File:** `WorkVPN.entitlements`
+**File:** `BarqNet.entitlements`
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -371,7 +371,7 @@ struct TrafficStats: Codable {
 </plist>
 ```
 
-**File:** `WorkVPNTunnelExtension.entitlements`
+**File:** `BarqNetTunnelExtension.entitlements`
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -384,7 +384,7 @@ struct TrafficStats: Codable {
     </array>
     <key>keychain-access-groups</key>
     <array>
-        <string>$(AppIdentifierPrefix)com.workvpn.ios</string>
+        <string>$(AppIdentifierPrefix)com.barqnet.ios</string>
     </array>
 </dict>
 </plist>
@@ -478,9 +478,9 @@ func testStatistics() {
 
 **Solution:**
 ```bash
-cd workvpn-ios
+cd barqnet-ios
 pod install
-# Then open WorkVPN.xcworkspace (not .xcodeproj)
+# Then open BarqNet.xcworkspace (not .xcodeproj)
 ```
 
 ### Issue 2: VPN won't connect on simulator
@@ -504,7 +504,7 @@ Cannot test on simulator - deploy to physical iPhone
 ```xml
 <key>keychain-access-groups</key>
 <array>
-    <string>$(AppIdentifierPrefix)com.workvpn.ios</string>
+    <string>$(AppIdentifierPrefix)com.barqnet.ios</string>
 </array>
 ```
 
@@ -548,18 +548,18 @@ override func didReceiveMemoryWarning() {
 
 ### Build Settings
 
-**Target:** WorkVPN
+**Target:** BarqNet
 ```
 Deployment Target: iOS 14.0
 Swift Language Version: 5.0
 Build Active Architecture Only: Debug=Yes, Release=No
 ```
 
-**Target:** WorkVPNTunnelExtension
+**Target:** BarqNetTunnelExtension
 ```
 Deployment Target: iOS 14.0
-Product Name: WorkVPNTunnelExtension
-Product Bundle Identifier: com.workvpn.ios.WorkVPNTunnelExtension
+Product Name: BarqNetTunnelExtension
+Product Bundle Identifier: com.barqnet.ios.BarqNetTunnelExtension
 ```
 
 ### Code Signing

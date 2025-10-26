@@ -1,11 +1,11 @@
-package com.workvpn.android
+package com.barqnet.android
 
 import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.os.Build
 
-class WorkVPNApplication : Application() {
+class BarqNetApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()

@@ -1,4 +1,4 @@
-# WorkVPN - Multi-Platform VPN Client
+# BarqNet - Multi-Platform VPN Client
 
 **Status**: ✅ Production-Ready (100%) - ALL ISSUES FIXED
 **Platforms**: Android, iOS, Desktop (macOS/Windows/Linux)  
@@ -9,7 +9,7 @@
 
 ## 🎯 Project Overview
 
-WorkVPN is a production-ready, multi-platform VPN client that connects to **your colleague's OpenVPN backend server**.
+BarqNet is a production-ready, multi-platform VPN client that connects to **your colleague's OpenVPN backend server**.
 
 ### ⚡ Key Features
 
@@ -28,7 +28,7 @@ WorkVPN is a production-ready, multi-platform VPN client that connects to **your
 
 ### Android (OpenVPN + WireGuard)
 ```bash
-cd workvpn-android
+cd barqnet-android
 ./gradlew assembleDebug
 adb install app/build/outputs/apk/debug/app-debug.apk
 ```
@@ -37,7 +37,7 @@ adb install app/build/outputs/apk/debug/app-debug.apk
 
 ### Desktop (OpenVPN)
 ```bash
-cd workvpn-desktop
+cd barqnet-desktop
 brew install openvpn  # macOS
 npm install && npm start
 ```
@@ -46,9 +46,9 @@ npm install && npm start
 
 ### iOS (OpenVPN)
 ```bash
-cd workvpn-ios
+cd barqnet-ios
 pod install
-open WorkVPN.xcworkspace
+open BarqNet.xcworkspace
 # Build with ⌘ + B
 ```
 
@@ -71,9 +71,9 @@ open WorkVPN.xcworkspace
 ## 🏗️ Architecture
 
 ```
-WorkVPN/
-├── workvpn-android/          # Android (Kotlin + Compose)
-│   ├── app/src/main/java/com/workvpn/android/
+BarqNet/
+├── barqnet-android/          # Android (Kotlin + Compose)
+│   ├── app/src/main/java/com/barqnet/android/
 │   │   ├── vpn/
 │   │   │   ├── OpenVPNVPNService.kt    # ✅ NEW - OpenVPN support
 │   │   │   └── WireGuardVPNService.kt  # ✅ WireGuard alternative
@@ -85,7 +85,7 @@ WorkVPN/
 │   │       └── CertificatePinner.kt    # ✅ Security
 │   └── build.gradle                    # ✅ Both VPN libs
 │
-├── workvpn-desktop/          # Desktop (Electron + TypeScript)
+├── barqnet-desktop/          # Desktop (Electron + TypeScript)
 │   ├── src/main/
 │   │   ├── vpn/
 │   │   │   ├── manager.ts              # ✅ OpenVPN process manager
@@ -95,15 +95,15 @@ WorkVPN/
 │   ├── test/integration.js             # ✅ 118 tests
 │   └── SETUP.md                        # ✅ OpenVPN install guide
 │
-├── workvpn-ios/              # iOS (Swift + SwiftUI)
-│   ├── WorkVPN/
+├── barqnet-ios/              # iOS (Swift + SwiftUI)
+│   ├── BarqNet/
 │   │   ├── Services/
 │   │   │   ├── VPNManager.swift        # ✅ VPN control
 │   │   │   └── AuthManager.swift       # ✅ Authentication
 │   │   ├── Views/                      # ✅ SwiftUI
 │   │   └── Utils/
 │   │       └── CertificatePinning.swift # ✅ Security
-│   ├── WorkVPNTunnelExtension/
+│   ├── BarqNetTunnelExtension/
 │   │   └── PacketTunnelProvider.swift  # ✅ OpenVPN integration
 │   ├── Podfile                         # ✅ OpenVPNAdapter
 │   └── SETUP.md                        # ✅ Xcode guide
@@ -131,7 +131,7 @@ WorkVPN/
 - ✅ ChaCha20-Poly1305 encryption
 - ✅ Simpler protocol
 
-**File**: `workvpn-android/app/src/main/java/com/workvpn/android/vpn/OpenVPNVPNService.kt`
+**File**: `barqnet-android/app/src/main/java/com/barqnet/android/vpn/OpenVPNVPNService.kt`
 
 ### ✅ Desktop - OpenVPN Native
 
@@ -142,7 +142,7 @@ WorkVPN/
 
 **Requires**: OpenVPN installed (`brew install openvpn` on macOS)
 
-**File**: `workvpn-desktop/src/main/vpn/manager.ts`
+**File**: `barqnet-desktop/src/main/vpn/manager.ts`
 
 ### ✅ iOS - OpenVPNAdapter
 
@@ -151,7 +151,7 @@ WorkVPN/
 - ✅ Full OpenVPN 2.x support
 - ✅ Real-time delegate callbacks
 
-**File**: `workvpn-ios/WorkVPNTunnelExtension/PacketTunnelProvider.swift`
+**File**: `barqnet-ios/BarqNetTunnelExtension/PacketTunnelProvider.swift`
 
 ---
 
@@ -210,13 +210,13 @@ See [API_CONTRACT.md](API_CONTRACT.md) for:
 
 ```bash
 # Android
-cd workvpn-android && ./gradlew test      # 35+ tests
+cd barqnet-android && ./gradlew test      # 35+ tests
 
 # Desktop
-cd workvpn-desktop && npm test            # 118 tests
+cd barqnet-desktop && npm test            # 118 tests
 
 # iOS
-cd workvpn-ios && xcodebuild test         # Ready
+cd barqnet-ios && xcodebuild test         # Ready
 ```
 
 ---
@@ -259,22 +259,22 @@ pod 'OpenVPNAdapter', '~> 0.8.0'
 
 ### Android - APK/AAB
 ```bash
-cd workvpn-android
+cd barqnet-android
 ./gradlew assembleRelease  # APK
 ./gradlew bundleRelease    # AAB for Play Store
 ```
 
 ### Desktop - Installers
 ```bash
-cd workvpn-desktop
+cd barqnet-desktop
 npm run make
 # Outputs: DMG (macOS), EXE (Windows), DEB (Linux)
 ```
 
 ### iOS - App Store
 ```bash
-cd workvpn-ios
-xcodebuild archive -workspace WorkVPN.xcworkspace -scheme WorkVPN
+cd barqnet-ios
+xcodebuild archive -workspace BarqNet.xcworkspace -scheme BarqNet
 xcodebuild -exportArchive ...
 ```
 
@@ -393,17 +393,17 @@ See [API_CONTRACT.md](API_CONTRACT.md) for:
 
 ```bash
 # Android - Build & install
-cd workvpn-android
+cd barqnet-android
 ./gradlew installDebug
 
 # Desktop - Run
-cd workvpn-desktop
+cd barqnet-desktop
 brew install openvpn
 npm start
 
 # iOS - Build (after Xcode setup)
-cd workvpn-ios
-xcodebuild -workspace WorkVPN.xcworkspace -scheme WorkVPN
+cd barqnet-ios
+xcodebuild -workspace BarqNet.xcworkspace -scheme BarqNet
 ```
 
 ---
@@ -467,7 +467,7 @@ cat QUICK_TEST_CHECKLIST.md
 
 ---
 
-**⚡ WorkVPN - Compatible with OpenVPN Backends ⚡**
+**⚡ BarqNet - Compatible with OpenVPN Backends ⚡**
 
 **VPN**: ✅ OpenVPN Ready | **Backend**: ✅ Your Colleague's Server | **Status**: ✅ 98% Complete
 

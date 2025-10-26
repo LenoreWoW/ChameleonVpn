@@ -1,4 +1,4 @@
-package com.workvpn.android.util
+package com.barqnet.android.util
 
 import org.junit.Test
 import kotlin.test.assertEquals

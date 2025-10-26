@@ -1,14 +1,14 @@
-# WorkVPN ProGuard Rules
+# BarqNet ProGuard Rules
 # Production code obfuscation and optimization
 
 # Keep Application class
--keep class com.workvpn.android.WorkVPNApplication { *; }
+-keep class com.barqnet.android.BarqNetApplication { *; }
 
 # Keep VPN Service
--keep class com.workvpn.android.vpn.** { *; }
+-keep class com.barqnet.android.vpn.** { *; }
 
 # Keep Models (for serialization)
--keep class com.workvpn.android.model.** { *; }
+-keep class com.barqnet.android.model.** { *; }
 
 # Keep BCrypt and Spring Security
 -keep class org.springframework.security.crypto.** { *; }
@@ -75,19 +75,19 @@
 }
 
 # Keep AuthManager
--keep class com.workvpn.android.auth.AuthManager { *; }
+-keep class com.barqnet.android.auth.AuthManager { *; }
 
 # Keep Repository classes
--keep class com.workvpn.android.repository.** { *; }
+-keep class com.barqnet.android.repository.** { *; }
 
 # Keep NetworkExtension components
--keep class com.workvpn.android.util.NetworkMonitor { *; }
--keep class com.workvpn.android.util.ConnectionRetryManager { *; }
--keep class com.workvpn.android.util.KillSwitch { *; }
--keep class com.workvpn.android.util.CertificatePinnerManager { *; }
+-keep class com.barqnet.android.util.NetworkMonitor { *; }
+-keep class com.barqnet.android.util.ConnectionRetryManager { *; }
+-keep class com.barqnet.android.util.KillSwitch { *; }
+-keep class com.barqnet.android.util.CertificatePinnerManager { *; }
 
 # Keep OVPN Parser
--keep class com.workvpn.android.util.OVPNParser { *; }
+-keep class com.barqnet.android.util.OVPNParser { *; }
 
 # Optimization: Remove unused resources
 -optimizations !code/simplification/arithmetic,!code/simplification/cast,!field/*,!class/merging/*

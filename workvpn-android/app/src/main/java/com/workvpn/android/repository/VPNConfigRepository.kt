@@ -1,4 +1,4 @@
-package com.workvpn.android.repository
+package com.barqnet.android.repository
 
 import android.content.Context
 import androidx.datastore.core.DataStore
@@ -6,7 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.workvpn.android.model.VPNConfig
+import com.barqnet.android.model.VPNConfig
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.encodeToString

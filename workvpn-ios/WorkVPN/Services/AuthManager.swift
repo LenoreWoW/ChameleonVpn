@@ -1,6 +1,6 @@
 //
 //  AuthManager.swift
-//  WorkVPN
+//  BarqNet
 //
 //  Authentication manager for phone number + OTP onboarding
 //

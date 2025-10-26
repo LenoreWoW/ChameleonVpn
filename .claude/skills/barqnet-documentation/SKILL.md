@@ -1,11 +1,11 @@
 ---
-name: chameleon-documentation
-description: Specialized agent for creating, maintaining, and organizing comprehensive documentation for the ChameleonVPN project. Records all changes, creates technical specifications, API documentation, user guides, deployment guides, and maintains documentation consistency across the entire codebase. Use when documenting features, creating guides, or organizing project knowledge.
+name: barqnet-documentation
+description: Specialized agent for creating, maintaining, and organizing comprehensive documentation for the BarqNet project. Records all changes, creates technical specifications, API documentation, user guides, deployment guides, and maintains documentation consistency across the entire codebase. Use when documenting features, creating guides, or organizing project knowledge.
 ---
 
-# ChameleonVPN Documentation & Recording Agent
+# BarqNet Documentation & Recording Agent
 
-You are a specialized documentation agent for the ChameleonVPN project. Your primary focus is creating clear, comprehensive, and maintainable documentation for all aspects of the project.
+You are a specialized documentation agent for the BarqNet project. Your primary focus is creating clear, comprehensive, and maintainable documentation for all aspects of the project.
 
 ## Core Responsibilities
 
@@ -623,11 +623,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Windows:** OpenVPN process termination issues
   - Use taskkill instead of SIGTERM on Windows
   - Multi-path OpenVPN detection
-  - See: workvpn-desktop/src/main/vpn/manager.ts:145
+  - See: barqnet-desktop/src/main/vpn/manager.ts:145
 
 - **Desktop:** Token refresh race condition
   - Prevent multiple simultaneous refresh requests
-  - See: workvpn-desktop/src/main/auth/service.ts:287
+  - See: barqnet-desktop/src/main/auth/service.ts:287
 
 ### Security
 - **JWT Tokens:** Implemented secure token handling
@@ -811,9 +811,9 @@ When fixing a bug:
 
 ❌ **Don't use this skill for:**
 - Writing code (use platform-specific skills)
-- Testing (use chameleon-testing)
-- Auditing (use chameleon-audit)
-- End-to-end orchestration (use chameleon-e2e)
+- Testing (use barqnet-testing)
+- Auditing (use barqnet-audit)
+- End-to-end orchestration (use barqnet-e2e)
 
 ## Success Criteria
 
@@ -831,7 +831,7 @@ Documentation is complete when:
 
 ## Documentation Locations
 
-### Current ChameleonVPN Documentation
+### Current BarqNet Documentation
 
 **Project Root:**
 - `/Users/hassanalsahli/Desktop/ChameleonVpn/README.md`
@@ -843,9 +843,9 @@ Documentation is complete when:
 - `/Users/hassanalsahli/Desktop/ChameleonVpn/DESKTOP_INTEGRATION_QUICK_START.md`
 
 **Desktop Client:**
-- `/Users/hassanalsahli/Desktop/ChameleonVpn/workvpn-desktop/README.md`
-- `/Users/hassanalsahli/Desktop/ChameleonVpn/workvpn-desktop/TESTING_BACKEND_INTEGRATION.md`
-- `/Users/hassanalsahli/Desktop/ChameleonVpn/workvpn-desktop/.env.example`
+- `/Users/hassanalsahli/Desktop/ChameleonVpn/barqnet-desktop/README.md`
+- `/Users/hassanalsahli/Desktop/ChameleonVpn/barqnet-desktop/TESTING_BACKEND_INTEGRATION.md`
+- `/Users/hassanalsahli/Desktop/ChameleonVpn/barqnet-desktop/.env.example`
 
 **Backend:**
 - `/Users/hassanalsahli/Desktop/go-hello-main/README.md`

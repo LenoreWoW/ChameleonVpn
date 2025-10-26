@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # iOS Project Creation Script
-# Creates a basic Xcode project structure for WorkVPN
+# Creates a basic Xcode project structure for BarqNet
 
 echo "================================"
 echo "🍏 iOS Project Setup Script"
@@ -20,10 +20,10 @@ echo "✅ Xcode found: $(xcodebuild -version | head -1)"
 echo ""
 
 # Remove old broken project
-if [ -d "WorkVPN.xcodeproj" ]; then
+if [ -d "BarqNet.xcodeproj" ]; then
     echo "🗑️  Removing old project files..."
-    rm -rf WorkVPN.xcodeproj
-    rm -rf WorkVPN.xcworkspace
+    rm -rf BarqNet.xcodeproj
+    rm -rf BarqNet.xcworkspace
     rm -rf Pods
     rm -f Podfile.lock
     echo "   Old files cleaned up"
@@ -32,10 +32,10 @@ fi
 # Create basic project structure using pbxproj
 echo "📁 Creating Xcode project structure..."
 
-mkdir -p WorkVPN.xcodeproj/project.xcworkspace/xcshareddata
+mkdir -p BarqNet.xcodeproj/project.xcworkspace/xcshareddata
 
 # Create project.pbxproj with minimal working configuration
-cat > WorkVPN.xcodeproj/project.pbxproj << 'EOF'
+cat > BarqNet.xcodeproj/project.pbxproj << 'EOF'
 // !$*UTF8*$!
 {
 	archiveVersion = 1;
@@ -46,46 +46,46 @@ cat > WorkVPN.xcodeproj/project.pbxproj << 'EOF'
 /* Begin PBXBuildFile section */
 /* End PBXBuildFile section */
 /* Begin PBXFileReference section */
-		A0100000000000001000000A /* WorkVPN.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WorkVPN.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A0100000000000001000000A /* BarqNet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BarqNet.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 /* Begin PBXGroup section */
 		A0100000000000001000000B = {
 			isa = PBXGroup;
 			children = (
-				A0100000000000001000000C /* WorkVPN */,
+				A0100000000000001000000C /* BarqNet */,
 				A0100000000000001000000D /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		A0100000000000001000000C /* WorkVPN */ = {
+		A0100000000000001000000C /* BarqNet */ = {
 			isa = PBXGroup;
 			children = (
 			);
-			path = WorkVPN;
+			path = BarqNet;
 			sourceTree = "<group>";
 		};
 		A0100000000000001000000D /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				A0100000000000001000000A /* WorkVPN.app */,
+				A0100000000000001000000A /* BarqNet.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 /* Begin PBXNativeTarget section */
-		A0100000000000001000000E /* WorkVPN */ = {
+		A0100000000000001000000E /* BarqNet */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = A0100000000000001000000F /* Build configuration list for PBXNativeTarget "WorkVPN" */;
+			buildConfigurationList = A0100000000000001000000F /* Build configuration list for PBXNativeTarget "BarqNet" */;
 			buildPhases = (
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = WorkVPN;
-			productName = WorkVPN;
-			productReference = A0100000000000001000000A /* WorkVPN.app */;
+			name = BarqNet;
+			productName = BarqNet;
+			productReference = A0100000000000001000000A /* BarqNet.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -102,7 +102,7 @@ cat > WorkVPN.xcodeproj/project.pbxproj << 'EOF'
 					};
 				};
 			};
-			buildConfigurationList = A0100000000000001000001A /* Build configuration list for PBXProject "WorkVPN" */;
+			buildConfigurationList = A0100000000000001000001A /* Build configuration list for PBXProject "BarqNet" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -115,7 +115,7 @@ cat > WorkVPN.xcodeproj/project.pbxproj << 'EOF'
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				A0100000000000001000000E /* WorkVPN */,
+				A0100000000000001000000E /* BarqNet */,
 			);
 		};
 /* End PBXProject section */
@@ -243,7 +243,7 @@ cat > WorkVPN.xcodeproj/project.pbxproj << 'EOF'
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = WorkVPN/Info.plist;
+				INFOPLIST_FILE = BarqNet/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -254,7 +254,7 @@ cat > WorkVPN.xcodeproj/project.pbxproj << 'EOF'
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.workvpn.ios";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.barqnet.ios";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -272,7 +272,7 @@ cat > WorkVPN.xcodeproj/project.pbxproj << 'EOF'
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = WorkVPN/Info.plist;
+				INFOPLIST_FILE = BarqNet/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -283,7 +283,7 @@ cat > WorkVPN.xcodeproj/project.pbxproj << 'EOF'
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.workvpn.ios";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.barqnet.ios";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -293,7 +293,7 @@ cat > WorkVPN.xcodeproj/project.pbxproj << 'EOF'
 		};
 /* End XCBuildConfiguration section */
 /* Begin XCConfigurationList section */
-		A0100000000000001000001A /* Build configuration list for PBXProject "WorkVPN" */ = {
+		A0100000000000001000001A /* Build configuration list for PBXProject "BarqNet" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				A0100000000000001000001B /* Debug */,
@@ -302,7 +302,7 @@ cat > WorkVPN.xcodeproj/project.pbxproj << 'EOF'
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		A0100000000000001000000F /* Build configuration list for PBXNativeTarget "WorkVPN" */ = {
+		A0100000000000001000000F /* Build configuration list for PBXNativeTarget "BarqNet" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				A0100000000000001000001D /* Debug */,
@@ -318,12 +318,12 @@ cat > WorkVPN.xcodeproj/project.pbxproj << 'EOF'
 EOF
 
 # Create workspace contents
-cat > WorkVPN.xcodeproj/project.xcworkspace/contents.xcworkspacedata << 'EOF'
+cat > BarqNet.xcodeproj/project.xcworkspace/contents.xcworkspacedata << 'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <Workspace
    version = "1.0">
    <FileRef
-      location = "self:WorkVPN.xcodeproj">
+      location = "self:BarqNet.xcodeproj">
    </FileRef>
 </Workspace>
 EOF
@@ -345,8 +345,8 @@ echo "✅ SETUP COMPLETE!"
 echo "================================"
 echo ""
 echo "NEXT STEPS:"
-echo "1. Open Xcode: open WorkVPN.xcworkspace"
-echo "2. Add source files to project (drag & drop WorkVPN/ folder)"
+echo "1. Open Xcode: open BarqNet.xcworkspace"
+echo "2. Add source files to project (drag & drop BarqNet/ folder)"
 echo "3. Add Network Extension target"
 echo "4. Configure capabilities: Personal VPN, Network Extensions"
 echo "5. Build and run! ⌘ + B"

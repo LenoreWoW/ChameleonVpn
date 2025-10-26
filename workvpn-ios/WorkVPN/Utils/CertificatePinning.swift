@@ -1,6 +1,6 @@
 //
 //  CertificatePinning.swift
-//  WorkVPN
+//  BarqNet
 //
 //  Certificate pinning implementation for iOS
 //

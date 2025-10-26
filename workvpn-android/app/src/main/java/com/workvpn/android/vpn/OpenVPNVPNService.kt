@@ -1,4 +1,4 @@
-package com.workvpn.android.vpn
+package com.barqnet.android.vpn
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -8,9 +8,9 @@ import android.content.Intent
 import android.net.VpnService
 import android.os.Build
 import androidx.core.app.NotificationCompat
-import com.workvpn.android.MainActivity
-import com.workvpn.android.R
-import com.workvpn.android.util.KillSwitch
+import com.barqnet.android.MainActivity
+import com.barqnet.android.R
+import com.barqnet.android.util.KillSwitch
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -184,8 +184,8 @@ class OpenVPNVPNService : VpnService() {
 
     companion object {
         private const val TAG = "OpenVPNVPNService"
-        const val ACTION_START_VPN = "com.workvpn.android.START_OPENVPN_VPN"
-        const val ACTION_STOP_VPN = "com.workvpn.android.STOP_OPENVPN_VPN"
+        const val ACTION_START_VPN = "com.barqnet.android.START_OPENVPN_VPN"
+        const val ACTION_STOP_VPN = "com.barqnet.android.STOP_OPENVPN_VPN"
         const val EXTRA_CONFIG_CONTENT = "config_content"
 
         private const val CHANNEL_ID = "vpn_service_channel"

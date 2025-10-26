@@ -15,5 +15,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "WorkVPN"
+rootProject.name = "BarqNet"
 include ':app'

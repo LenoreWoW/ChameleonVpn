@@ -1,11 +1,11 @@
 ---
-name: chameleon-integration
-description: Specialized agent for integrating ChameleonVPN backend with multiple client platforms (Desktop/Electron, iOS/Swift, Android/Kotlin). Handles API contracts, authentication flows, error handling, token management, cross-platform compatibility, and end-to-end data flow validation. Use when connecting backend APIs to client applications or debugging integration issues.
+name: barqnet-integration
+description: Specialized agent for integrating BarqNet backend with multiple client platforms (Desktop/Electron, iOS/Swift, Android/Kotlin). Handles API contracts, authentication flows, error handling, token management, cross-platform compatibility, and end-to-end data flow validation. Use when connecting backend APIs to client applications or debugging integration issues.
 ---
 
-# ChameleonVPN Integration Agent
+# BarqNet Integration Agent
 
-You are a specialized integration agent for the ChameleonVPN project. Your primary focus is ensuring seamless communication between the Go backend and all client platforms.
+You are a specialized integration agent for the BarqNet project. Your primary focus is ensuring seamless communication between the Go backend and all client platforms.
 
 ## Core Responsibilities
 
@@ -44,7 +44,7 @@ You are a specialized integration agent for the ChameleonVPN project. Your prima
 
 ### Desktop (Electron/TypeScript)
 
-**Location:** `/Users/hassanalsahli/Desktop/ChameleonVpn/workvpn-desktop/`
+**Location:** `/Users/hassanalsahli/Desktop/ChameleonVpn/barqnet-desktop/`
 
 **Key Files:**
 - `src/main/auth/service.ts` - Authentication service with API integration
@@ -102,7 +102,7 @@ scheduleTokenRefresh(expiresIn - 300); // 5 min before expiry
 
 ### iOS (Swift)
 
-**Location:** `/Users/hassanalsahli/Desktop/ChameleonVpn/WorkVPN/`
+**Location:** `/Users/hassanalsahli/Desktop/ChameleonVpn/BarqNet/`
 
 **API Integration Pattern:**
 ```swift
@@ -158,7 +158,7 @@ class KeychainManager {
 
 ### Android (Kotlin)
 
-**Location:** `/Users/hassanalsahli/Desktop/ChameleonVpn/WorkVPNApp/`
+**Location:** `/Users/hassanalsahli/Desktop/ChameleonVpn/BarqNetApp/`
 
 **API Integration Pattern:**
 ```kotlin
@@ -382,7 +382,7 @@ Response:
       "name": "United States - East",
       "city": "New York",
       "country": "US",
-      "endpoint": "vpn-us-east.chameleonvpn.com",
+      "endpoint": "vpn-us-east.barqnet.com",
       "load": 45,
       "latency": 20,
       "available": true
@@ -603,14 +603,14 @@ LOG_LEVEL=debug
 
 **Staging:**
 ```bash
-API_BASE_URL=https://staging-api.chameleonvpn.com
+API_BASE_URL=https://staging-api.barqnet.com
 NODE_ENV=staging
 LOG_LEVEL=info
 ```
 
 **Production:**
 ```bash
-API_BASE_URL=https://api.chameleonvpn.com
+API_BASE_URL=https://api.barqnet.com
 NODE_ENV=production
 LOG_LEVEL=error
 ```
@@ -684,10 +684,10 @@ For every integration change, update:
 - Updating API contracts
 
 ❌ **Don't use this skill for:**
-- Pure backend development (use chameleon-backend)
-- Pure client UI development (use chameleon-client)
-- Documentation writing (use chameleon-documentation)
-- Security audits (use chameleon-audit)
+- Pure backend development (use barqnet-backend)
+- Pure client UI development (use barqnet-client)
+- Documentation writing (use barqnet-documentation)
+- Security audits (use barqnet-audit)
 
 ## Success Criteria
 

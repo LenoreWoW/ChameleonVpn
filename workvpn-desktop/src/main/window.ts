@@ -12,7 +12,7 @@ export function createMainWindow(): BrowserWindow {
       preload: path.join(__dirname, '../preload/index.js'),
     },
     titleBarStyle: 'hidden',
-    title: 'WorkVPN',
+    title: 'BarqNet',
     icon: path.join(__dirname, '../../assets/icon.png'),
   });
 

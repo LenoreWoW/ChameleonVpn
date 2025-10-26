@@ -1,4 +1,4 @@
-# WorkVPN Desktop - Setup and Testing Guide
+# BarqNet Desktop - Setup and Testing Guide
 
 ## Prerequisites
 
@@ -35,7 +35,7 @@ sudo apt-get install openvpn
 
 ```bash
 # Clone the repository
-cd workvpn-desktop
+cd barqnet-desktop
 
 # Install dependencies
 npm install
@@ -76,7 +76,7 @@ Output: `out/make/` directory
 
 - [ ] Application starts without errors
 - [ ] Window appears with correct size (500x700)
-- [ ] Title bar shows "WorkVPN"
+- [ ] Title bar shows "BarqNet"
 - [ ] "No VPN Configuration" state is displayed
 - [ ] "Import .ovpn File" button is visible and clickable
 - [ ] Settings section at bottom shows three checkboxes
@@ -86,7 +86,7 @@ Output: `out/make/` directory
   - [ ] Connect/Disconnect option (disabled when no config)
   - [ ] Show Window
   - [ ] Import Config
-  - [ ] Quit WorkVPN
+  - [ ] Quit BarqNet
 
 ### Phase 2: Config Import Testing
 

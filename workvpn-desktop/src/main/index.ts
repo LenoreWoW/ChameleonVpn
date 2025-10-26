@@ -316,7 +316,7 @@ const updateTrayMenu = (status: any) => {
   ]);
 
   tray.setContextMenu(contextMenu);
-  tray.setToolTip(status.connected ? 'WorkVPN - Connected' : 'WorkVPN - Disconnected');
+  tray.setToolTip(status.connected ? 'BarqNet - Connected' : 'BarqNet - Disconnected');
 };
 
 app.whenReady().then(() => {

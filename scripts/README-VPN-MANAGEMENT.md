@@ -401,7 +401,7 @@ sudo tail -f /var/log/vpnmanager/crl.log
 - [OpenVPN Management Interface](https://openvpn.net/community-resources/management-interface/)
 - [OpenVPN CRL Verification](https://openvpn.net/community-resources/reference-manual-for-openvpn-2-6/#certificate-revocation-list-crl-options)
 - [EasyRSA Documentation](https://easy-rsa.readthedocs.io/)
-- ChameleonVPN Security Docs:
+- BarqNet Security Docs:
   - `SECURITY_BUG_ANALYSIS_USER_DELETION.md`
   - `SECURITY_BUG_FIX_DEPLOYMENT.md`
 

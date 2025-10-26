@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# ChameleonVPN - Complete Testing Script for Hassan's Colleague
+# BarqNet - Complete Testing Script for Hassan's Colleague
 # Tests all functionality without requiring backend implementation
 
-echo "🎮 ChameleonVPN - COMPLETE CLIENT TESTING"
+echo "🎮 BarqNet - COMPLETE CLIENT TESTING"
 echo "========================================"
 echo ""
 echo "This script helps you test all VPN clients before implementing the backend."
@@ -42,7 +42,7 @@ echo "=========================="
 echo ""
 
 # Check if desktop app is running
-if pgrep -f "electron.*workvpn-desktop" > /dev/null; then
+if pgrep -f "electron.*barqnet-desktop" > /dev/null; then
     echo -e "✅ ${GREEN}Desktop app is currently RUNNING${NC}"
     echo ""
     echo "TO TEST RIGHT NOW:"
@@ -57,7 +57,7 @@ if pgrep -f "electron.*workvpn-desktop" > /dev/null; then
 else
     echo "Desktop app not running. Starting it..."
     echo ""
-    cd workvpn-desktop
+    cd barqnet-desktop
     echo "Run: npm start"
     echo "Then complete authentication flow as described above."
     echo ""
@@ -68,18 +68,18 @@ echo -e "${BLUE}🤖 ANDROID CLIENT TESTING${NC}"
 echo "========================="
 echo ""
 
-if [ -f "workvpn-android/app/build/outputs/apk/debug/app-debug.apk" ]; then
+if [ -f "barqnet-android/app/build/outputs/apk/debug/app-debug.apk" ]; then
     echo -e "✅ ${GREEN}Android APK is ready for testing${NC}"
     echo ""
     echo "TO TEST:"
-    echo "1. Install: adb install workvpn-android/app/build/outputs/apk/debug/app-debug.apk"
-    echo "2. Launch: Open WorkVPN app on device"  
+    echo "1. Install: adb install barqnet-android/app/build/outputs/apk/debug/app-debug.apk"
+    echo "2. Launch: Open BarqNet app on device"  
     echo "3. Test authentication with same phone/OTP/password flow"
     echo "4. Check logcat: adb logcat | grep OTP"
     echo ""
 else
     echo "Building Android APK..."
-    cd workvpn-android
+    cd barqnet-android
     export JAVA_HOME=/opt/homebrew/opt/openjdk@11/libexec/openjdk.jdk/Contents/Home
     if ./gradlew assembleDebug --quiet; then
         echo -e "✅ ${GREEN}APK built successfully!${NC}"
@@ -95,11 +95,11 @@ echo -e "${BLUE}📱 iOS CLIENT TESTING${NC}"
 echo "==================="
 echo ""
 
-if [ -f "workvpn-ios/WorkVPN.xcworkspace/contents.xcworkspacedata" ]; then
+if [ -f "barqnet-ios/BarqNet.xcworkspace/contents.xcworkspacedata" ]; then
     echo -e "✅ ${GREEN}iOS project is ready for Xcode${NC}"
     echo ""
     echo "TO TEST:"
-    echo "1. Open: open workvpn-ios/WorkVPN.xcworkspace"  
+    echo "1. Open: open barqnet-ios/BarqNet.xcworkspace"  
     echo "2. In Xcode: Select iPhone Simulator"
     echo "3. Build: Press ⌘+B (should build successfully)"
     echo "4. Run: Press ⌘+R (launches app)"
@@ -107,7 +107,7 @@ if [ -f "workvpn-ios/WorkVPN.xcworkspace/contents.xcworkspacedata" ]; then
     echo ""
 else
     echo -e "⚠️  ${YELLOW}iOS project needs Xcode setup${NC}"
-    echo "Follow the setup guide in workvpn-ios/FIX_IOS_PROJECT.md"
+    echo "Follow the setup guide in barqnet-ios/FIX_IOS_PROJECT.md"
     echo ""
 fi
 
@@ -117,18 +117,18 @@ echo ""
 echo "Test .ovpn file import on all platforms:"
 echo ""
 echo "Files available for testing:"
-if [ -f "workvpn-desktop/test-config.ovpn" ]; then
+if [ -f "barqnet-desktop/test-config.ovpn" ]; then
     echo -e "✅ ${GREEN}Desktop: test-config.ovpn${NC}"
 fi
-if [ -f "workvpn-ios/test-config.ovpn" ]; then  
+if [ -f "barqnet-ios/test-config.ovpn" ]; then  
     echo -e "✅ ${GREEN}iOS: test-config.ovpn${NC}"
 fi
-if [ -f "workvpn-android/test-config.ovpn" ]; then
+if [ -f "barqnet-android/test-config.ovpn" ]; then
     echo -e "✅ ${GREEN}Android: test-config.ovpn${NC}"  
 fi
 echo ""
 echo "Config contains:"
-echo "• Server: demo.chameleonvpn.com:1194"
+echo "• Server: demo.barqnet.com:1194"
 echo "• Protocol: UDP"  
 echo "• Cipher: AES-256-GCM"
 echo "• Certificates: Test certificates included"

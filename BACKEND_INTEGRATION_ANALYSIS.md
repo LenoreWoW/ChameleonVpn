@@ -1,4 +1,4 @@
-# Backend Integration Analysis - ChameleonVPN + go-hello Backend
+# Backend Integration Analysis - BarqNet + go-hello Backend
 
 **Analysis Date:** October 26, 2025
 **Analyst:** Claude (AI Assistant)
@@ -12,7 +12,7 @@
 Your colleague has created a comprehensive backend VPN management system in Go, but there are **critical mismatches** between:
 1. What the documentation promises
 2. What's actually implemented
-3. What ChameleonVPN needs
+3. What BarqNet needs
 
 ### Key Findings:
 
@@ -65,11 +65,11 @@ Your colleague has created a comprehensive backend VPN management system in Go, 
 └─────────────────────────────────────────────────────────┘
 ```
 
-### ChameleonVPN Client Architecture
+### BarqNet Client Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                  ChameleonVPN Client                    │
+│                  BarqNet Client                    │
 ├─────────────────────────────────────────────────────────┤
 │                                                         │
 │  Desktop (Electron + TypeScript)                        │
@@ -146,9 +146,9 @@ The actual API only has:
 - `POST /api/endnodes/register`
 - `GET /api/ovpn/{username}/{server_id}`
 
-### What ChameleonVPN Expects
+### What BarqNet Expects
 
-ChameleonVPN current auth flow (src/main/auth/service.ts):
+BarqNet current auth flow (src/main/auth/service.ts):
 
 ```typescript
 // 1. User enters phone number
@@ -173,7 +173,7 @@ login(phoneNumber, password) → Backend should return JWT
 Your colleague created TWO different API specifications:
 
 ### Design 1: API_CONTRACT.md (Client-Facing)
-- **Purpose:** For ChameleonVPN mobile/desktop clients
+- **Purpose:** For BarqNet mobile/desktop clients
 - **Authentication:** JWT Bearer tokens
 - **Endpoints:** /auth/*, /vpn/*, /user/*
 - **Status:** 📄 Documentation only, NOT implemented
@@ -257,7 +257,7 @@ CREATE TABLE users (
 );
 ```
 
-### What ChameleonVPN Stores Locally
+### What BarqNet Stores Locally
 
 Currently uses electron-store:
 ```typescript
@@ -275,7 +275,7 @@ interface User {
 
 ### Feature Matrix
 
-| Feature | ChameleonVPN Client | Backend Implemented | Gap |
+| Feature | BarqNet Client | Backend Implemented | Gap |
 |---------|---------------------|---------------------|-----|
 | **Authentication** |
 | Phone + OTP | ✅ Full UI | ❌ Not implemented | 🔴 **Critical** |
@@ -393,7 +393,7 @@ func GenerateJWT(username string) (string, error) {
 
 **Severity:** 🔴 Critical
 
-**Issue:** ChameleonVPN uses phone + OTP but backend has no support
+**Issue:** BarqNet uses phone + OTP but backend has no support
 
 **What's Missing:**
 - OTP generation
@@ -470,7 +470,7 @@ func (s *OTPService) VerifyOTP(phoneNumber, code string) bool {
 
 **Client Has This Ready:**
 ```typescript
-// In VPNManager (workvpn-desktop/src/main/vpn/manager.ts)
+// In VPNManager (barqnet-desktop/src/main/vpn/manager.ts)
 interface VPNStats {
   bytesIn: number;
   bytesOut: number;
@@ -746,7 +746,7 @@ db.Exec(query)
 - Latency/ping data
 - Load balancing logic
 
-**ChameleonVPN Expects:**
+**BarqNet Expects:**
 ```json
 GET /vpn/locations
 
@@ -968,7 +968,7 @@ func (s *OTPService) Send(phoneNumber string) error {
     params := &twilioApi.CreateMessageParams{}
     params.SetTo(phoneNumber)
     params.SetFrom(s.twilioFrom)
-    params.SetBody(fmt.Sprintf("Your ChameleonVPN verification code is: %s", otp))
+    params.SetBody(fmt.Sprintf("Your BarqNet verification code is: %s", otp))
 
     _, err = s.twilioClient.Api.CreateMessage(params)
     if err != nil {
@@ -1065,11 +1065,11 @@ CREATE TABLE otp_attempts (
 CREATE INDEX idx_otp_phone ON otp_attempts(phone_number);
 ```
 
-#### 1.4 Update ChameleonVPN Client to Use Backend
+#### 1.4 Update BarqNet Client to Use Backend
 
 **Priority:** 🔴 Critical
 **Effort:** 2-3 days
-**File:** `workvpn-desktop/src/main/auth/service.ts`
+**File:** `barqnet-desktop/src/main/auth/service.ts`
 
 ```typescript
 import Store from 'electron-store';
@@ -1396,8 +1396,8 @@ export TWILIO_TOKEN=your_token
 export TWILIO_FROM=+1234567890
 go run apps/management/main.go
 
-# Terminal 4: Start ChameleonVPN Desktop
-cd ChameleonVpn/workvpn-desktop
+# Terminal 4: Start BarqNet Desktop
+cd ChameleonVpn/barqnet-desktop
 export API_URL=http://localhost:8080
 npm start
 ```
@@ -1472,7 +1472,7 @@ curl -X POST http://localhost:8080/vpn/stats \
 # Expected: {"success":true}
 ```
 
-### 3. End-to-End Test in ChameleonVPN
+### 3. End-to-End Test in BarqNet
 
 **Desktop App Test:**
 1. Launch app
@@ -1595,7 +1595,7 @@ Before going to production:
 
 ### Summary
 
-Your colleague built a **solid foundation** for an enterprise VPN management system, but it's **not ready for ChameleonVPN integration** yet. The main issues are:
+Your colleague built a **solid foundation** for an enterprise VPN management system, but it's **not ready for BarqNet integration** yet. The main issues are:
 
 1. **API Mismatch**: Documentation promises client auth API but it's not implemented
 2. **Authentication Gap**: No JWT, no OTP, no phone number support
@@ -1638,7 +1638,7 @@ Your colleague built a **solid foundation** for an enterprise VPN management sys
    - Auth API endpoints
    - OTP service
    - JWT tokens
-   - Update ChameleonVPN client
+   - Update BarqNet client
 
 4. **Test integration:**
    - Registration flow
@@ -1653,9 +1653,9 @@ Your colleague built a **solid foundation** for an enterprise VPN management sys
 
 ### Recommendation
 
-**Do NOT push to production yet.** The backend needs 6 weeks of work to be production-ready for ChameleonVPN. Focus on Phase 1 first (authentication), as nothing else works without it.
+**Do NOT push to production yet.** The backend needs 6 weeks of work to be production-ready for BarqNet. Focus on Phase 1 first (authentication), as nothing else works without it.
 
-Your colleague did good work on the enterprise management side, but the client-facing API (what ChameleonVPN needs) is mostly documentation without implementation.
+Your colleague did good work on the enterprise management side, but the client-facing API (what BarqNet needs) is mostly documentation without implementation.
 
 ---
 

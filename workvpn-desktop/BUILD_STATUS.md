@@ -1,8 +1,8 @@
-# WorkVPN - Build Status Report
+# BarqNet - Build Status Report
 
 ## Overview
 
-This document tracks the development progress of WorkVPN, a multi-platform VPN client application built on standard OpenVPN.
+This document tracks the development progress of BarqNet, a multi-platform VPN client application built on standard OpenVPN.
 
 **Architecture**: Standard OpenVPN Client (imports .ovpn configs)
 **No Custom Backend Required**: Works with any OpenVPN server
@@ -86,7 +86,7 @@ This document tracks the development progress of WorkVPN, a multi-platform VPN c
 ### File Structure ✅
 
 ```
-workvpn-desktop/
+barqnet-desktop/
 ├── src/
 │   ├── main/
 │   │   ├── index.ts           ✅ App entry, IPC handlers

@@ -1,11 +1,11 @@
 ---
-name: chameleon-audit
-description: Specialized agent for comprehensive code auditing, security analysis, architecture review, and quality assurance for the ChameleonVPN project. Performs deep analysis of code quality, security vulnerabilities, performance bottlenecks, best practices compliance, and generates detailed audit reports. Use when reviewing code changes, security assessments, or quality checks.
+name: barqnet-audit
+description: Specialized agent for comprehensive code auditing, security analysis, architecture review, and quality assurance for the BarqNet project. Performs deep analysis of code quality, security vulnerabilities, performance bottlenecks, best practices compliance, and generates detailed audit reports. Use when reviewing code changes, security assessments, or quality checks.
 ---
 
-# ChameleonVPN Audit Agent
+# BarqNet Audit Agent
 
-You are a specialized audit agent for the ChameleonVPN project. Your primary focus is ensuring code quality, security, performance, and best practices compliance across all platforms.
+You are a specialized audit agent for the BarqNet project. Your primary focus is ensuring code quality, security, performance, and best practices compliance across all platforms.
 
 ## Core Responsibilities
 
@@ -501,7 +501,7 @@ const findDuplicates = (arr: string[]) => {
 ## Audit Report Template
 
 ```markdown
-# ChameleonVPN Audit Report
+# BarqNet Audit Report
 
 **Date:** {Date}
 **Auditor:** {Name/Agent}
@@ -697,7 +697,7 @@ npm run analyze
 **Tools:**
 ```bash
 # Static analysis
-xcodebuild analyze -scheme WorkVPN
+xcodebuild analyze -scheme BarqNet
 
 # Instruments (memory leaks)
 instruments -t Leaks
@@ -787,7 +787,7 @@ validateSchema(data); // Validate before use
 #!/bin/bash
 # audit.sh - Run all audit tools
 
-echo "🔍 Running ChameleonVPN Audit..."
+echo "🔍 Running BarqNet Audit..."
 
 # Backend
 echo "📦 Auditing Backend (Go)..."
@@ -798,19 +798,19 @@ gosec ./...
 
 # Desktop
 echo "🖥️  Auditing Desktop (TypeScript)..."
-cd /Users/hassanalsahli/Desktop/ChameleonVpn/workvpn-desktop
+cd /Users/hassanalsahli/Desktop/ChameleonVpn/barqnet-desktop
 npm audit
 npm run lint
 tsc --noEmit
 
 # iOS
 echo "📱 Auditing iOS (Swift)..."
-cd /Users/hassanalsahli/Desktop/ChameleonVpn/WorkVPN
+cd /Users/hassanalsahli/Desktop/ChameleonVpn/BarqNet
 swiftlint
 
 # Android
 echo "🤖 Auditing Android (Kotlin)..."
-cd /Users/hassanalsahli/Desktop/ChameleonVpn/WorkVPNApp
+cd /Users/hassanalsahli/Desktop/ChameleonVpn/BarqNetApp
 ./gradlew lint
 ./gradlew detekt
 
@@ -831,9 +831,9 @@ echo "✅ Audit complete! Check reports in ./audit-reports/"
 
 ❌ **Don't use this skill for:**
 - Writing new code (use platform-specific skills)
-- Documentation (use chameleon-documentation)
-- Testing (use chameleon-testing)
-- Integration work (use chameleon-integration)
+- Documentation (use barqnet-documentation)
+- Testing (use barqnet-testing)
+- Integration work (use barqnet-integration)
 
 ## Success Criteria
 

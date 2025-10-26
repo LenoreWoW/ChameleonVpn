@@ -87,7 +87,7 @@ Platform 1 (Desktop Electron App) has been **fully developed and tested** to 100
 
 ```
 ╔════════════════════════════════════════════════════════╗
-║      WorkVPN Desktop - Integration Test Suite         ║
+║      BarqNet Desktop - Integration Test Suite         ║
 ║              Platform 1: Electron App                  ║
 ╚════════════════════════════════════════════════════════╝
 
@@ -119,10 +119,10 @@ Pass Rate:    100.0%
 ### macOS Installer ✅
 
 ```
-File: WorkVPN-1.0.0-arm64.dmg
+File: BarqNet-1.0.0-arm64.dmg
 Size: 91 MB
 Platform: macOS (Apple Silicon M1/M2)
-Location: out/make/WorkVPN-1.0.0-arm64.dmg
+Location: out/make/BarqNet-1.0.0-arm64.dmg
 Format: DMG (Disk Image)
 Status: ✅ Successfully built
 ```
@@ -130,16 +130,16 @@ Status: ✅ Successfully built
 **Installation**:
 ```bash
 # Open the DMG
-open out/make/WorkVPN-1.0.0-arm64.dmg
+open out/make/BarqNet-1.0.0-arm64.dmg
 
-# Drag WorkVPN.app to Applications folder
+# Drag BarqNet.app to Applications folder
 # Launch from Applications
 ```
 
 ### Zip Archive ✅
 
 ```
-File: WorkVPN-darwin-arm64-1.0.0.zip
+File: BarqNet-darwin-arm64-1.0.0.zip
 Size: 93 MB
 Platform: macOS (Apple Silicon)
 Location: out/make/zip/darwin/arm64/
@@ -160,7 +160,7 @@ assets/icon.svg   - 651 B  (Vector source)
 ## File Structure
 
 ```
-workvpn-desktop/
+barqnet-desktop/
 ├── src/
 │   ├── main/                   ✅ Main Electron process
 │   │   ├── index.ts            ✅ App entry, IPC handlers
@@ -187,7 +187,7 @@ workvpn-desktop/
 ├── dist/                       ✅ Compiled JavaScript
 ├── out/
 │   └── make/
-│       ├── WorkVPN-1.0.0-arm64.dmg  ✅ macOS installer
+│       ├── BarqNet-1.0.0-arm64.dmg  ✅ macOS installer
 │       └── zip/                     ✅ Portable app
 ├── package.json                ✅ Dependencies & scripts
 ├── tsconfig.json               ✅ TypeScript config
@@ -343,7 +343,7 @@ workvpn-desktop/
 1. **Change encryption key** in `src/main/store/config.ts`:
    ```typescript
    // BEFORE PRODUCTION, change this to a unique key
-   encryptionKey: 'workvpn-encryption-key-change-in-production'
+   encryptionKey: 'barqnet-encryption-key-change-in-production'
    ```
 
 2. **Code signing** (macOS):
@@ -351,13 +351,13 @@ workvpn-desktop/
    # Sign the app with Apple Developer certificate
    codesign --deep --force --verify --verbose \
      --sign "Developer ID Application: Your Name" \
-     WorkVPN.app
+     BarqNet.app
    ```
 
 3. **Notarization** (macOS):
    ```bash
    # Notarize with Apple
-   xcrun notarytool submit WorkVPN-1.0.0-arm64.dmg \
+   xcrun notarytool submit BarqNet-1.0.0-arm64.dmg \
      --apple-id your@email.com \
      --team-id TEAM_ID \
      --password APP_SPECIFIC_PASSWORD
@@ -366,7 +366,7 @@ workvpn-desktop/
 4. **Windows code signing**:
    ```bash
    # Sign the .exe with Windows certificate
-   signtool sign /f certificate.pfx /p password WorkVPN.exe
+   signtool sign /f certificate.pfx /p password BarqNet.exe
    ```
 
 ---
@@ -478,4 +478,4 @@ npm run package    # Package without installer
 ---
 
 *Report generated: October 4, 2025*
-*WorkVPN Desktop v1.0.0*
+*BarqNet Desktop v1.0.0*

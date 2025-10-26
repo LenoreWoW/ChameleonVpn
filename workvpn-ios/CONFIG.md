@@ -1,6 +1,6 @@
-# WorkVPN iOS - Configuration Guide
+# BarqNet iOS - Configuration Guide
 
-This guide explains how to configure the WorkVPN iOS application for development and production.
+This guide explains how to configure the BarqNet iOS application for development and production.
 
 ---
 
@@ -20,13 +20,13 @@ This guide explains how to configure the WorkVPN iOS application for development
 
 ### Project Settings
 
-**File**: `WorkVPN.xcodeproj/project.pbxproj`
+**File**: `BarqNet.xcodeproj/project.pbxproj`
 
 Key settings to configure:
 
 1. **Bundle Identifier**:
-   - Main app: `com.workvpn.ios` (or your own)
-   - Tunnel extension: `com.workvpn.ios.TunnelExtension`
+   - Main app: `com.barqnet.ios` (or your own)
+   - Tunnel extension: `com.barqnet.ios.TunnelExtension`
 
 2. **Development Team**:
    - Select your Apple Developer team
@@ -41,7 +41,7 @@ Key settings to configure:
 
 ### Build Schemes
 
-**WorkVPN** scheme configurations:
+**BarqNet** scheme configurations:
 
 - **Debug**: Development builds with logging
 - **Release**: Production builds, optimized
@@ -52,7 +52,7 @@ Key settings to configure:
 
 ### Main App Info.plist
 
-**File**: `WorkVPN/Info.plist`
+**File**: `BarqNet/Info.plist`
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -61,7 +61,7 @@ Key settings to configure:
 <dict>
     <!-- App Display Name -->
     <key>CFBundleDisplayName</key>
-    <string>WorkVPN</string>
+    <string>BarqNet</string>
 
     <!-- Bundle Version -->
     <key>CFBundleShortVersionString</key>
@@ -139,7 +139,7 @@ Key settings to configure:
 
 ### Tunnel Extension Info.plist
 
-**File**: `WorkVPNTunnelExtension/Info.plist`
+**File**: `BarqNetTunnelExtension/Info.plist`
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -201,7 +201,7 @@ if let apiUrl = Bundle.main.object(forInfoDictionaryKey: "API_BASE_URL") as? Str
 
 Create separate configuration files for each environment:
 
-**File**: `WorkVPN/Config.xcconfig` (Debug)
+**File**: `BarqNet/Config.xcconfig` (Debug)
 
 ```xcconfig
 // Debug Configuration
@@ -211,7 +211,7 @@ ENABLE_ANALYTICS = false
 SKIP_CERT_VALIDATION = false
 ```
 
-**File**: `WorkVPN/Config-Release.xcconfig` (Release)
+**File**: `BarqNet/Config-Release.xcconfig` (Release)
 
 ```xcconfig
 // Release Configuration
@@ -232,7 +232,7 @@ SKIP_CERT_VALIDATION = false
 
 ### Main App Entitlements
 
-**File**: `WorkVPN/WorkVPN.entitlements`
+**File**: `BarqNet/BarqNet.entitlements`
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -249,13 +249,13 @@ SKIP_CERT_VALIDATION = false
     <!-- Keychain Access Groups -->
     <key>keychain-access-groups</key>
     <array>
-        <string>$(AppIdentifierPrefix)com.workvpn.ios</string>
+        <string>$(AppIdentifierPrefix)com.barqnet.ios</string>
     </array>
 
     <!-- App Groups (for data sharing with extension) -->
     <key>com.apple.security.application-groups</key>
     <array>
-        <string>group.com.workvpn.ios</string>
+        <string>group.com.barqnet.ios</string>
     </array>
 </dict>
 </plist>
@@ -263,7 +263,7 @@ SKIP_CERT_VALIDATION = false
 
 ### Tunnel Extension Entitlements
 
-**File**: `WorkVPNTunnelExtension/WorkVPNTunnelExtension.entitlements`
+**File**: `BarqNetTunnelExtension/BarqNetTunnelExtension.entitlements`
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -279,13 +279,13 @@ SKIP_CERT_VALIDATION = false
     <!-- Keychain Access Groups (shared with main app) -->
     <key>keychain-access-groups</key>
     <array>
-        <string>$(AppIdentifierPrefix)com.workvpn.ios</string>
+        <string>$(AppIdentifierPrefix)com.barqnet.ios</string>
     </array>
 
     <!-- App Groups (shared with main app) -->
     <key>com.apple.security.application-groups</key>
     <array>
-        <string>group.com.workvpn.ios</string>
+        <string>group.com.barqnet.ios</string>
     </array>
 </dict>
 </plist>
@@ -297,7 +297,7 @@ SKIP_CERT_VALIDATION = false
 
 ### Development Signing
 
-1. **Select target** (WorkVPN or WorkVPNTunnelExtension)
+1. **Select target** (BarqNet or BarqNetTunnelExtension)
 2. **Signing & Capabilities** tab
 3. **Team**: Select your development team
 4. **Automatically manage signing**: ✅ Enabled (recommended)
@@ -307,11 +307,11 @@ SKIP_CERT_VALIDATION = false
 For App Store distribution:
 
 1. **Create App ID** in Apple Developer Portal:
-   - Identifier: `com.workvpn.ios`
+   - Identifier: `com.barqnet.ios`
    - Capabilities: Personal VPN, Network Extensions
 
 2. **Create App ID for Extension**:
-   - Identifier: `com.workvpn.ios.TunnelExtension`
+   - Identifier: `com.barqnet.ios.TunnelExtension`
    - Capabilities: Network Extensions
 
 3. **Create Provisioning Profiles**:
@@ -346,8 +346,8 @@ For App Store distribution:
 
 **To use**:
 ```bash
-xcodebuild -workspace WorkVPN.xcworkspace \
-           -scheme WorkVPN \
+xcodebuild -workspace BarqNet.xcworkspace \
+           -scheme BarqNet \
            -configuration Debug
 ```
 
@@ -364,8 +364,8 @@ xcodebuild -workspace WorkVPN.xcworkspace \
 
 **To use**:
 ```bash
-xcodebuild -workspace WorkVPN.xcworkspace \
-           -scheme WorkVPN \
+xcodebuild -workspace BarqNet.xcworkspace \
+           -scheme BarqNet \
            -configuration Release \
            archive
 ```
@@ -378,7 +378,7 @@ xcodebuild -workspace WorkVPN.xcworkspace \
 
 Create a configuration file for runtime settings:
 
-**File**: `WorkVPN/Config/AppConfig.swift`
+**File**: `BarqNet/Config/AppConfig.swift`
 
 ```swift
 import Foundation
@@ -460,15 +460,15 @@ enum Environment {
 For sharing data between main app and tunnel extension:
 
 1. **Enable App Groups** in both targets:
-   - WorkVPN → Signing & Capabilities → + Capability → App Groups
-   - WorkVPNTunnelExtension → Same
+   - BarqNet → Signing & Capabilities → + Capability → App Groups
+   - BarqNetTunnelExtension → Same
 
-2. **Add group identifier**: `group.com.workvpn.ios`
+2. **Add group identifier**: `group.com.barqnet.ios`
 
 3. **Access shared data**:
 
 ```swift
-let groupID = "group.com.workvpn.ios"
+let groupID = "group.com.barqnet.ios"
 
 // Write to shared UserDefaults
 if let userDefaults = UserDefaults(suiteName: groupID) {

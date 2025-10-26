@@ -1,10 +1,10 @@
-package com.workvpn.android.auth
+package com.barqnet.android.auth
 
 import android.content.Context
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.workvpn.android.BuildConfig
+import com.barqnet.android.BuildConfig
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch

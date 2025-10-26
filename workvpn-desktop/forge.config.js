@@ -1,9 +1,9 @@
 module.exports = {
   packagerConfig: {
-    name: 'WorkVPN',
-    executableName: 'workvpn',
+    name: 'BarqNet',
+    executableName: 'barqnet',
     icon: './assets/icon',
-    appBundleId: 'com.workvpn.desktop',
+    appBundleId: 'com.barqnet.desktop',
     appCategoryType: 'public.app-category.utilities',
 
     // macOS Code Signing (configure with environment variables)
@@ -17,7 +17,7 @@ module.exports = {
 
     // macOS Notarization (requires Apple Developer account)
     osxNotarize: process.env.APPLE_ID ? {
-      appBundleId: 'com.workvpn.desktop',
+      appBundleId: 'com.barqnet.desktop',
       appleId: process.env.APPLE_ID,
       appleIdPassword: process.env.APPLE_ID_PASSWORD,
       teamId: process.env.APPLE_TEAM_ID
@@ -25,10 +25,10 @@ module.exports = {
 
     // Windows metadata
     win32metadata: {
-      CompanyName: 'WorkVPN',
-      ProductName: 'WorkVPN Connect',
-      FileDescription: 'WorkVPN Desktop Client',
-      OriginalFilename: 'WorkVPN.exe'
+      CompanyName: 'BarqNet',
+      ProductName: 'BarqNet Connect',
+      FileDescription: 'BarqNet Desktop Client',
+      OriginalFilename: 'BarqNet.exe'
     }
   },
 
@@ -37,10 +37,10 @@ module.exports = {
     {
       name: '@electron-forge/maker-squirrel',
       config: {
-        name: 'WorkVPN',
-        authors: 'WorkVPN Team',
+        name: 'BarqNet',
+        authors: 'BarqNet Team',
         description: 'Secure VPN client for Windows',
-        iconUrl: 'https://workvpn.com/icon.ico', // TODO: Update with actual URL
+        iconUrl: 'https://barqnet.com/icon.ico', // TODO: Update with actual URL
         setupIcon: './assets/icon.ico',
         loadingGif: './assets/loading.gif' // Optional
       }
@@ -57,8 +57,8 @@ module.exports = {
       name: '@electron-forge/maker-dmg',
       config: {
         format: 'ULFO',
-        name: 'WorkVPN',
-        title: 'WorkVPN Installer',
+        name: 'BarqNet',
+        title: 'BarqNet Installer',
         background: './assets/dmg-background.png', // Optional
         icon: './assets/icon.icns',
         contents: [
@@ -67,8 +67,8 @@ module.exports = {
             y: 220,
             type: 'file',
             path: process.platform === 'darwin' ?
-              '/Applications/WorkVPN.app' :
-              './WorkVPN.app'
+              '/Applications/BarqNet.app' :
+              './BarqNet.app'
           },
           {
             x: 410,
@@ -85,8 +85,8 @@ module.exports = {
       name: '@electron-forge/maker-deb',
       config: {
         options: {
-          maintainer: 'WorkVPN Team',
-          homepage: 'https://workvpn.com',
+          maintainer: 'BarqNet Team',
+          homepage: 'https://barqnet.com',
           icon: './assets/icon.png',
           categories: ['Network', 'Security'],
           section: 'net'
@@ -100,7 +100,7 @@ module.exports = {
       config: {
         options: {
           license: 'MIT',
-          homepage: 'https://workvpn.com'
+          homepage: 'https://barqnet.com'
         }
       }
     }
@@ -113,7 +113,7 @@ module.exports = {
       config: {
         repository: {
           owner: 'your-org',
-          name: 'workvpn-desktop'
+          name: 'barqnet-desktop'
         },
         prerelease: false,
         draft: true

@@ -30,7 +30,7 @@
 ### 1. Core Source Files
 
 #### Application & Main Activity
-- [x] `WorkVPNApplication.kt` - Application class with repository initialization
+- [x] `BarqNetApplication.kt` - Application class with repository initialization
 - [x] `MainActivity.kt` - Jetpack Compose entry point with navigation
 
 #### Models
@@ -65,7 +65,7 @@
   - JSON serialization/deserialization
 
 #### UI Theme
-- [x] `Theme.kt` - Material 3 theme with WorkVPN brand colors
+- [x] `Theme.kt` - Material 3 theme with BarqNet brand colors
   - Purple: #667EEA
   - DarkPurple: #764BA2
   - Green: #10B981 (success)
@@ -93,7 +93,7 @@
   - Delete configuration button
 
 #### Navigation
-- [x] `WorkVPNNavHost.kt` - Compose navigation setup
+- [x] `BarqNetNavHost.kt` - Compose navigation setup
   - Routes: home, import, settings
   - Back stack management
 
@@ -360,7 +360,7 @@ implementation 'androidx.navigation:navigation-compose:2.7.5'
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 # Launch app
-adb shell am start -n com.workvpn.android/.MainActivity
+adb shell am start -n com.barqnet.android/.MainActivity
 ```
 
 ---
@@ -387,7 +387,7 @@ adb shell am start -n com.workvpn.android/.MainActivity
 1. **OVPNParserTest.kt** - 8 unit tests for parser
 2. **VPNConfigRepositoryTest.kt** - 4 unit tests for data layer
 3. **HomeScreenTest.kt** - 4 Espresso UI tests
-4. **appium-tests/workvpn.test.js** - 4 E2E automation scenarios
+4. **appium-tests/barqnet.test.js** - 4 E2E automation scenarios
 
 ---
 
@@ -443,7 +443,7 @@ adb shell am start -n com.workvpn.android/.MainActivity
 
 ### To Build APK
 1. Install Android Studio
-2. Open project: `/Users/hassanalsahli/Desktop/ChameleonVpn/workvpn-android`
+2. Open project: `/Users/hassanalsahli/Desktop/ChameleonVpn/barqnet-android`
 3. Sync Gradle dependencies
 4. Run: `./gradlew assembleDebug`
 5. APK at: `app/build/outputs/apk/debug/app-debug.apk`

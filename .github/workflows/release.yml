@@ -28,19 +28,19 @@ jobs:
           cache: 'gradle'
 
       - name: Grant execute permission for gradlew
-        working-directory: ./workvpn-android
+        working-directory: ./barqnet-android
         run: chmod +x gradlew
 
       - name: Build Android Release APK
-        working-directory: ./workvpn-android
+        working-directory: ./barqnet-android
         run: ./gradlew assembleRelease
 
       - name: Build Android App Bundle (AAB)
-        working-directory: ./workvpn-android
+        working-directory: ./barqnet-android
         run: ./gradlew bundleRelease
 
       - name: Sign APK (if keystore configured)
-        working-directory: ./workvpn-android
+        working-directory: ./barqnet-android
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
@@ -57,13 +57,13 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: android-release-apk
-          path: workvpn-android/app/build/outputs/apk/release/
+          path: barqnet-android/app/build/outputs/apk/release/
 
       - name: Upload Release AAB
         uses: actions/upload-artifact@v3
         with:
           name: android-release-aab
-          path: workvpn-android/app/build/outputs/bundle/release/
+          path: barqnet-android/app/build/outputs/bundle/release/
 
   # Desktop Release Builds (all platforms)
   desktop-release:
@@ -88,7 +88,7 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: workvpn-desktop/package-lock.json
+          cache-dependency-path: barqnet-desktop/package-lock.json
 
       - name: Install OpenVPN (Ubuntu)
         if: runner.os == 'Linux'
@@ -103,22 +103,22 @@ jobs:
         run: choco install openvpn -y
 
       - name: Install dependencies
-        working-directory: ./workvpn-desktop
+        working-directory: ./barqnet-desktop
         run: npm ci
 
       - name: Build Desktop app
-        working-directory: ./workvpn-desktop
+        working-directory: ./barqnet-desktop
         run: npm run build
 
       - name: Package Desktop app (using Electron Forge)
-        working-directory: ./workvpn-desktop
+        working-directory: ./barqnet-desktop
         run: npm run make
 
       - name: Upload Desktop installers
         uses: actions/upload-artifact@v3
         with:
           name: desktop-${{ matrix.platform }}-installers
-          path: workvpn-desktop/out/make/**/*
+          path: barqnet-desktop/out/make/**/*
 
   # iOS Release Build
   ios-release:
@@ -138,20 +138,20 @@ jobs:
         run: sudo gem install cocoapods
 
       - name: Install iOS dependencies
-        working-directory: ./workvpn-ios
+        working-directory: ./barqnet-ios
         run: pod install
 
       - name: Select Xcode version
         run: sudo xcode-select -s /Applications/Xcode_15.0.app/Contents/Developer
 
       - name: Build iOS Release
-        working-directory: ./workvpn-ios
+        working-directory: ./barqnet-ios
         run: |
-          xcodebuild -workspace WorkVPN.xcworkspace \
-                     -scheme WorkVPN \
+          xcodebuild -workspace BarqNet.xcworkspace \
+                     -scheme BarqNet \
                      -configuration Release \
                      -sdk iphoneos \
-                     -archivePath ./build/WorkVPN.xcarchive \
+                     -archivePath ./build/BarqNet.xcarchive \
                      archive \
                      CODE_SIGNING_ALLOWED=NO || echo "Code signing not configured"
 
@@ -159,7 +159,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ios-release-archive
-          path: workvpn-ios/build/WorkVPN.xcarchive
+          path: barqnet-ios/build/BarqNet.xcarchive
 
   # Create GitHub Release
   create-release:
@@ -182,7 +182,7 @@ jobs:
           VERSION=${GITHUB_REF#refs/tags/}
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
           cat > release-notes.md << EOF
-          # WorkVPN $VERSION
+          # BarqNet $VERSION
 
           ## 🚀 What's New
 
@@ -225,7 +225,7 @@ jobs:
 
           ## 📚 Documentation
 
-          See [README.md](https://github.com/yourusername/workvpn/blob/main/README.md) for setup instructions.
+          See [README.md](https://github.com/yourusername/barqnet/blob/main/README.md) for setup instructions.
 
           ---
 

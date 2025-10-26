@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Test All Platforms - WorkVPN
+# Test All Platforms - BarqNet
 # Runs all automated tests across Android, Desktop, and iOS
 #
 
@@ -14,7 +14,7 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${BLUE}  WorkVPN - Test All Platforms${NC}"
+echo -e "${BLUE}  BarqNet - Test All Platforms${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 
@@ -47,8 +47,8 @@ info() {
 #######################################
 section "Testing Android"
 
-if [ -d "$PROJECT_ROOT/workvpn-android" ]; then
-    cd "$PROJECT_ROOT/workvpn-android"
+if [ -d "$PROJECT_ROOT/barqnet-android" ]; then
+    cd "$PROJECT_ROOT/barqnet-android"
 
     info "Running Android unit tests..."
     if ./gradlew test; then
@@ -72,8 +72,8 @@ fi
 #######################################
 section "Testing Desktop"
 
-if [ -d "$PROJECT_ROOT/workvpn-desktop" ]; then
-    cd "$PROJECT_ROOT/workvpn-desktop"
+if [ -d "$PROJECT_ROOT/barqnet-desktop" ]; then
+    cd "$PROJECT_ROOT/barqnet-desktop"
 
     info "Running Desktop tests..."
     if npm test; then
@@ -90,15 +90,15 @@ fi
 #######################################
 section "Testing iOS"
 
-if [ -d "$PROJECT_ROOT/workvpn-ios" ]; then
-    cd "$PROJECT_ROOT/workvpn-ios"
+if [ -d "$PROJECT_ROOT/barqnet-ios" ]; then
+    cd "$PROJECT_ROOT/barqnet-ios"
 
-    if [ -f "WorkVPN.xcworkspace/contents.xcworkspacedata" ]; then
+    if [ -f "BarqNet.xcworkspace/contents.xcworkspacedata" ]; then
         if command -v xcodebuild &> /dev/null; then
             info "Running iOS tests..."
             if xcodebuild test \
-                          -workspace WorkVPN.xcworkspace \
-                          -scheme WorkVPN \
+                          -workspace BarqNet.xcworkspace \
+                          -scheme BarqNet \
                           -sdk iphonesimulator \
                           -destination 'platform=iOS Simulator,name=iPhone 15' 2>&1 | xcpretty; then
                 success "iOS tests passed"

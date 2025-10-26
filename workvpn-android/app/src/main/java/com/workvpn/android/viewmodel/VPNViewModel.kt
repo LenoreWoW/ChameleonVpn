@@ -1,4 +1,4 @@
-package com.workvpn.android.viewmodel
+package com.barqnet.android.viewmodel
 
 import android.app.Application
 import android.content.Context
@@ -6,12 +6,12 @@ import android.content.Intent
 import android.net.VpnService
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.workvpn.android.model.ConnectionState
-import com.workvpn.android.model.VPNConfig
-import com.workvpn.android.model.VPNStats
-import com.workvpn.android.repository.VPNConfigRepository
-import com.workvpn.android.util.OVPNParser
-import com.workvpn.android.vpn.OpenVPNService
+import com.barqnet.android.model.ConnectionState
+import com.barqnet.android.model.VPNConfig
+import com.barqnet.android.model.VPNStats
+import com.barqnet.android.repository.VPNConfigRepository
+import com.barqnet.android.util.OVPNParser
+import com.barqnet.android.vpn.OpenVPNService
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

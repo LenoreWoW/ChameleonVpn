@@ -1,6 +1,6 @@
 //
 //  OTPVerificationView.swift
-//  WorkVPN
+//  BarqNet
 //
 //  OTP verification for onboarding
 //

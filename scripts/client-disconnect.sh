@@ -99,7 +99,7 @@ logger -t vpnmanager "User $USERNAME disconnected after $DURATION_HUMAN (Down: $
 # This is commented out by default - uncomment and configure if needed
 
 # Example (requires database setup):
-# psql -h localhost -U vpnmanager -d chameleonvpn -c \
+# psql -h localhost -U vpnmanager -d barqnet -c \
 #   "INSERT INTO vpn_statistics (username, client_ip, vpn_ip, duration_seconds, bytes_received, bytes_sent, disconnected_at) \
 #    VALUES ('$USERNAME', '$CLIENT_IP', '$VPN_IP', $DURATION, $BYTES_RECV, $BYTES_SENT, NOW())" \
 #   2>&1 >> "$LOG_DIR/db.log"

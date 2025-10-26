@@ -1,8 +1,8 @@
 //
 //  ContentView.swift
-//  WorkVPN
+//  BarqNet
 //
-//  Main view for WorkVPN iOS
+//  Main view for BarqNet iOS
 //
 
 import SwiftUI
@@ -120,7 +120,7 @@ struct ContentView: View {
                     NoConfigView(showingImportConfig: $showingImportConfig)
                 }
             }
-            .navigationTitle("WorkVPN")
+            .navigationTitle("BarqNet")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {

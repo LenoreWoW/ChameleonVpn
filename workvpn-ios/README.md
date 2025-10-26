@@ -1,4 +1,4 @@
-# WorkVPN - iOS Client
+# BarqNet - iOS Client
 
 **Status**: ✅ Production-Ready (100%)
 **Protocol**: OpenVPN
@@ -54,29 +54,29 @@ sudo gem install cocoapods
 
 **Step 2: Install dependencies**
 ```bash
-cd workvpn-ios
+cd barqnet-ios
 pod install
 ```
 
 **Step 3: Open workspace in Xcode**
 ```bash
-open WorkVPN.xcworkspace
+open BarqNet.xcworkspace
 ```
 
 **Step 4: Configure signing**
-1. Select **WorkVPN** target
+1. Select **BarqNet** target
 2. Go to "Signing & Capabilities"
 3. Select your Apple Developer Team
-4. Bundle ID: `com.workvpn.ios` (or your own)
+4. Bundle ID: `com.barqnet.ios` (or your own)
 
 **Step 5: Add VPN capabilities**
-1. **WorkVPN** target:
+1. **BarqNet** target:
    - Add capability: "Personal VPN"
    - Add capability: "Network Extensions"
 
-2. **WorkVPNTunnelExtension** target:
+2. **BarqNetTunnelExtension** target:
    - Select your Team
-   - Bundle ID: `com.workvpn.ios.TunnelExtension`
+   - Bundle ID: `com.barqnet.ios.TunnelExtension`
    - Add capability: "Network Extensions"
    - Add capability: "Packet Tunnel"
 
@@ -100,9 +100,9 @@ open WorkVPN.xcworkspace
 ## 📦 Project Structure
 
 ```
-workvpn-ios/
-├── WorkVPN/                              # Main app target
-│   ├── WorkVPNApp.swift                  # App entry point (@main)
+barqnet-ios/
+├── BarqNet/                              # Main app target
+│   ├── BarqNetApp.swift                  # App entry point (@main)
 │   │
 │   ├── Views/
 │   │   ├── ContentView.swift             # Root view
@@ -128,7 +128,7 @@ workvpn-ios/
 │   │
 │   └── Info.plist
 │
-├── WorkVPNTunnelExtension/               # Network Extension
+├── BarqNetTunnelExtension/               # Network Extension
 │   ├── PacketTunnelProvider.swift        # ✅ OpenVPN tunnel provider
 │   └── Info.plist
 │
@@ -144,7 +144,7 @@ workvpn-ios/
 
 ### PacketTunnelProvider (OpenVPN)
 
-**File**: `WorkVPNTunnelExtension/PacketTunnelProvider.swift`
+**File**: `BarqNetTunnelExtension/PacketTunnelProvider.swift`
 
 **Features**:
 - OpenVPNAdapter library (battle-tested)
@@ -199,8 +199,8 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
 
 ```bash
 xcodebuild test \
-  -workspace WorkVPN.xcworkspace \
-  -scheme WorkVPN \
+  -workspace BarqNet.xcworkspace \
+  -scheme BarqNet \
   -destination 'platform=iOS Simulator,name=iPhone 15 Pro'
 ```
 
@@ -208,10 +208,10 @@ xcodebuild test \
 
 ```bash
 xcodebuild test \
-  -workspace WorkVPN.xcworkspace \
-  -scheme WorkVPN \
+  -workspace BarqNet.xcworkspace \
+  -scheme BarqNet \
   -destination 'platform=iOS Simulator,name=iPhone 15 Pro' \
-  -only-testing:WorkVPNUITests
+  -only-testing:BarqNetUITests
 ```
 
 ### Manual Testing Checklist
@@ -232,11 +232,11 @@ xcodebuild test \
 ### Debug Build
 
 ```bash
-xcodebuild -workspace WorkVPN.xcworkspace \
-           -scheme WorkVPN \
+xcodebuild -workspace BarqNet.xcworkspace \
+           -scheme BarqNet \
            -configuration Debug \
            -destination 'generic/platform=iOS' \
-           -archivePath build/WorkVPN-Debug.xcarchive \
+           -archivePath build/BarqNet-Debug.xcarchive \
            archive \
            CODE_SIGNING_ALLOWED=NO
 ```
@@ -245,16 +245,16 @@ xcodebuild -workspace WorkVPN.xcworkspace \
 - Debug logging enabled
 - No code obfuscation
 - Faster build times
-- Bundle ID: `com.workvpn.ios.debug`
+- Bundle ID: `com.barqnet.ios.debug`
 
 ### Release Build
 
 ```bash
-xcodebuild -workspace WorkVPN.xcworkspace \
-           -scheme WorkVPN \
+xcodebuild -workspace BarqNet.xcworkspace \
+           -scheme BarqNet \
            -configuration Release \
            -destination 'generic/platform=iOS' \
-           -archivePath build/WorkVPN.xcarchive \
+           -archivePath build/BarqNet.xcarchive \
            archive
 ```
 
@@ -276,12 +276,12 @@ platform :ios, '15.0'
 use_frameworks!
 
 # Main app target
-target 'WorkVPN' do
+target 'BarqNet' do
   pod 'OpenVPNAdapter', '~> 0.8.0'
 end
 
 # Tunnel extension target
-target 'WorkVPNTunnelExtension' do
+target 'BarqNetTunnelExtension' do
   pod 'OpenVPNAdapter', '~> 0.8.0'
 end
 ```
@@ -302,7 +302,7 @@ pod update OpenVPNAdapter
 
 ### Info.plist Settings
 
-**WorkVPN/Info.plist** (main app):
+**BarqNet/Info.plist** (main app):
 ```xml
 <key>NSFaceIDUsageDescription</key>
 <string>Authenticate to connect to VPN quickly</string>
@@ -327,7 +327,7 @@ pod update OpenVPNAdapter
 </array>
 ```
 
-**WorkVPNTunnelExtension/Info.plist** (tunnel extension):
+**BarqNetTunnelExtension/Info.plist** (tunnel extension):
 ```xml
 <key>NEProviderClasses</key>
 <dict>
@@ -338,7 +338,7 @@ pod update OpenVPNAdapter
 
 ### Entitlements
 
-**WorkVPN.entitlements** (main app):
+**BarqNet.entitlements** (main app):
 ```xml
 <key>com.apple.developer.networking.networkextension</key>
 <array>
@@ -348,11 +348,11 @@ pod update OpenVPNAdapter
 
 <key>keychain-access-groups</key>
 <array>
-    <string>$(AppIdentifierPrefix)com.workvpn.ios</string>
+    <string>$(AppIdentifierPrefix)com.barqnet.ios</string>
 </array>
 ```
 
-**WorkVPNTunnelExtension.entitlements** (tunnel extension):
+**BarqNetTunnelExtension.entitlements** (tunnel extension):
 ```xml
 <key>com.apple.developer.networking.networkextension</key>
 <array>
@@ -361,7 +361,7 @@ pod update OpenVPNAdapter
 
 <key>keychain-access-groups</key>
 <array>
-    <string>$(AppIdentifierPrefix)com.workvpn.ios</string>
+    <string>$(AppIdentifierPrefix)com.barqnet.ios</string>
 </array>
 ```
 
@@ -373,10 +373,10 @@ pod update OpenVPNAdapter
 
 **Step 1: Archive the app**
 ```bash
-xcodebuild -workspace WorkVPN.xcworkspace \
-           -scheme WorkVPN \
+xcodebuild -workspace BarqNet.xcworkspace \
+           -scheme BarqNet \
            -configuration Release \
-           -archivePath build/WorkVPN.xcarchive \
+           -archivePath build/BarqNet.xcarchive \
            archive
 ```
 
@@ -401,7 +401,7 @@ Create `ExportOptions.plist`:
 Export:
 ```bash
 xcodebuild -exportArchive \
-           -archivePath build/WorkVPN.xcarchive \
+           -archivePath build/BarqNet.xcarchive \
            -exportPath build/TestFlight \
            -exportOptionsPlist ExportOptions.plist
 ```
@@ -409,7 +409,7 @@ xcodebuild -exportArchive \
 **Step 3: Upload to App Store Connect**
 ```bash
 xcrun altool --upload-app \
-             --file build/TestFlight/WorkVPN.ipa \
+             --file build/TestFlight/BarqNet.ipa \
              --type ios \
              --username your@email.com \
              --password app-specific-password
@@ -527,7 +527,7 @@ pod install
 **Issue**: `Network Extension capability not found`
 
 **Solution**: Add capabilities manually
-1. WorkVPN target → Signing & Capabilities
+1. BarqNet target → Signing & Capabilities
 2. Click "+ Capability"
 3. Add "Personal VPN" and "Network Extensions"
 
@@ -548,7 +548,7 @@ pod install
 **Solution**: Reset VPN configurations
 ```
 iOS Settings → General → VPN & Device Management → VPN
-→ Remove all WorkVPN configurations
+→ Remove all BarqNet configurations
 → Re-import .ovpn file in app
 ```
 
@@ -565,7 +565,7 @@ iOS Settings → General → VPN & Device Management → VPN
 **Issue**: "App Group not found"
 
 **Solution**: Configure App Groups
-1. Main app: Add App Group `group.com.workvpn.ios`
+1. Main app: Add App Group `group.com.barqnet.ios`
 2. Tunnel extension: Add same App Group
 3. Share data via UserDefaults or files
 

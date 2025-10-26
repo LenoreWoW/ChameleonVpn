@@ -1,4 +1,4 @@
-# ChameleonVPN Production Readiness Assessment - Document Index
+# BarqNet Production Readiness Assessment - Document Index
 
 **Assessment Date:** October 26, 2025
 **Assessment Type:** Comprehensive Technical Audit
@@ -32,9 +32,9 @@
 3. [TODO_DOCUMENTATION_COMPLETE.md](./TODO_DOCUMENTATION_COMPLETE.md) - Documentation status
 
 📋 **Platform-Specific TODO Docs:**
-1. [workvpn-android/OPENVPN_INTEGRATION_REQUIRED.md](./workvpn-android/OPENVPN_INTEGRATION_REQUIRED.md) - Android VPN integration guide
-2. [workvpn-ios/OPENVPN_LIBRARY_INTEGRATION.md](./workvpn-ios/OPENVPN_LIBRARY_INTEGRATION.md) - iOS VPN integration guide
-3. [workvpn-desktop/CERTIFICATE_PINNING_TODO.md](./workvpn-desktop/CERTIFICATE_PINNING_TODO.md) - Desktop cert pinning guide
+1. [barqnet-android/OPENVPN_INTEGRATION_REQUIRED.md](./barqnet-android/OPENVPN_INTEGRATION_REQUIRED.md) - Android VPN integration guide
+2. [barqnet-ios/OPENVPN_LIBRARY_INTEGRATION.md](./barqnet-ios/OPENVPN_LIBRARY_INTEGRATION.md) - iOS VPN integration guide
+3. [barqnet-desktop/CERTIFICATE_PINNING_TODO.md](./barqnet-desktop/CERTIFICATE_PINNING_TODO.md) - Desktop cert pinning guide
 
 ---
 

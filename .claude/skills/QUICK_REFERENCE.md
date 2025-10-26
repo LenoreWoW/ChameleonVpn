@@ -1,4 +1,4 @@
-# ChameleonVPN Skills - Quick Reference Card
+# BarqNet Skills - Quick Reference Card
 
 **Version:** 1.0.0 | **Date:** 2025-10-26
 
@@ -12,17 +12,17 @@
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  🔧 DEVELOPMENT                                                 │
-│  ├─ chameleon-backend      → Go, PostgreSQL, API               │
-│  ├─ chameleon-client       → Desktop, iOS, Android             │
-│  └─ chameleon-integration  → API contracts, auth flows         │
+│  ├─ barqnet-backend      → Go, PostgreSQL, API               │
+│  ├─ barqnet-client       → Desktop, iOS, Android             │
+│  └─ barqnet-integration  → API contracts, auth flows         │
 │                                                                 │
 │  📝 QUALITY ASSURANCE                                           │
-│  ├─ chameleon-documentation → Docs, specs, guides              │
-│  ├─ chameleon-audit        → Security, quality, performance    │
-│  └─ chameleon-testing      → Unit, integration, E2E tests      │
+│  ├─ barqnet-documentation → Docs, specs, guides              │
+│  ├─ barqnet-audit        → Security, quality, performance    │
+│  └─ barqnet-testing      → Unit, integration, E2E tests      │
 │                                                                 │
 │  🎯 ORCHESTRATION                                               │
-│  └─ chameleon-e2e          → Coordinates all agents            │
+│  └─ barqnet-e2e          → Coordinates all agents            │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -33,21 +33,21 @@
 
 | Need to... | Use Skill |
 |------------|-----------|
-| Add API endpoint | `chameleon-backend` |
-| Update database schema | `chameleon-backend` |
-| Implement JWT auth | `chameleon-backend` |
-| Build UI screen | `chameleon-client` |
-| Add OpenVPN feature | `chameleon-client` |
-| Connect UI to API | `chameleon-integration` |
-| Handle token refresh | `chameleon-integration` |
-| Write API docs | `chameleon-documentation` |
-| Create user guide | `chameleon-documentation` |
-| Security review | `chameleon-audit` |
-| Code quality check | `chameleon-audit` |
-| Write unit tests | `chameleon-testing` |
-| Create E2E tests | `chameleon-testing` |
-| Multi-platform feature | `chameleon-e2e` |
-| Production deploy | `chameleon-e2e` |
+| Add API endpoint | `barqnet-backend` |
+| Update database schema | `barqnet-backend` |
+| Implement JWT auth | `barqnet-backend` |
+| Build UI screen | `barqnet-client` |
+| Add OpenVPN feature | `barqnet-client` |
+| Connect UI to API | `barqnet-integration` |
+| Handle token refresh | `barqnet-integration` |
+| Write API docs | `barqnet-documentation` |
+| Create user guide | `barqnet-documentation` |
+| Security review | `barqnet-audit` |
+| Code quality check | `barqnet-audit` |
+| Write unit tests | `barqnet-testing` |
+| Create E2E tests | `barqnet-testing` |
+| Multi-platform feature | `barqnet-e2e` |
+| Production deploy | `barqnet-e2e` |
 
 ---
 
@@ -55,24 +55,24 @@
 
 ### Simple Task (1 skill)
 ```
-Use chameleon-backend to add GET /v1/user/profile endpoint.
+Use barqnet-backend to add GET /v1/user/profile endpoint.
 ```
 
 ### Medium Task (2-3 skills, let E2E coordinate)
 ```
-Use chameleon-e2e to implement password reset functionality.
+Use barqnet-e2e to implement password reset functionality.
 ```
 
 ### Complex Task (4+ skills, ultrathink)
 ```
-Use chameleon-e2e to implement subscription billing across all platforms.
+Use barqnet-e2e to implement subscription billing across all platforms.
 ```
 
 ---
 
 ## Skill Capabilities
 
-### chameleon-backend
+### barqnet-backend
 **Tech Stack:** Go, PostgreSQL, JWT
 **Locations:** `/Users/hassanalsahli/Desktop/go-hello-main/`
 **Handles:**
@@ -91,16 +91,16 @@ golangci-lint run          # Lint
 
 ---
 
-### chameleon-client
+### barqnet-client
 **Tech Stacks:**
 - Desktop: Electron, TypeScript, React
 - iOS: Swift, SwiftUI
 - Android: Kotlin, Compose
 
 **Locations:**
-- `/Users/hassanalsahli/Desktop/ChameleonVpn/workvpn-desktop/`
-- `/Users/hassanalsahli/Desktop/ChameleonVpn/WorkVPN/`
-- `/Users/hassanalsahli/Desktop/ChameleonVpn/WorkVPNApp/`
+- `/Users/hassanalsahli/Desktop/ChameleonVpn/barqnet-desktop/`
+- `/Users/hassanalsahli/Desktop/ChameleonVpn/BarqNet/`
+- `/Users/hassanalsahli/Desktop/ChameleonVpn/BarqNetApp/`
 
 **Handles:**
 - UI/UX implementation
@@ -115,7 +115,7 @@ npm run dev
 npm test
 
 # iOS
-xcodebuild test -scheme WorkVPN
+xcodebuild test -scheme BarqNet
 
 # Android
 ./gradlew test
@@ -123,7 +123,7 @@ xcodebuild test -scheme WorkVPN
 
 ---
 
-### chameleon-integration
+### barqnet-integration
 **Expertise:** API contracts, HTTP clients, auth flows
 
 **Handles:**
@@ -143,7 +143,7 @@ xcodebuild test -scheme WorkVPN
 
 ---
 
-### chameleon-documentation
+### barqnet-documentation
 **Output Formats:** Markdown, API specs, diagrams
 
 **Handles:**
@@ -162,7 +162,7 @@ xcodebuild test -scheme WorkVPN
 
 ---
 
-### chameleon-audit
+### barqnet-audit
 **Focus Areas:** Security, quality, performance
 
 **Checks:**
@@ -184,7 +184,7 @@ xcodebuild test -scheme WorkVPN
 
 ---
 
-### chameleon-testing
+### barqnet-testing
 **Test Types:** Unit, Integration, E2E, Performance
 
 **Frameworks:**
@@ -214,7 +214,7 @@ xcodebuild test -enableCodeCoverage YES
 
 ---
 
-### chameleon-e2e
+### barqnet-e2e
 **Role:** Multi-agent orchestrator
 
 **Coordinates:**
@@ -237,7 +237,7 @@ xcodebuild test -enableCodeCoverage YES
 
 ### Workflow 1: New API Endpoint
 ```
-chameleon-backend:
+barqnet-backend:
   1. Add handler function
   2. Add route in main.go
   3. Write unit tests
@@ -246,7 +246,7 @@ chameleon-backend:
 
 ### Workflow 2: New UI Feature
 ```
-chameleon-client:
+barqnet-client:
   1. Implement UI (Desktop/iOS/Android)
   2. Connect to backend API
   3. Handle loading/error states
@@ -255,13 +255,13 @@ chameleon-client:
 
 ### Workflow 3: Full-Stack Feature
 ```
-chameleon-e2e orchestrates:
-  1. chameleon-backend: API implementation
-  2. chameleon-integration: API contract
-  3. chameleon-client: UI on all platforms
-  4. chameleon-testing: Integration tests
-  5. chameleon-documentation: User guide
-  6. chameleon-audit: Security review
+barqnet-e2e orchestrates:
+  1. barqnet-backend: API implementation
+  2. barqnet-integration: API contract
+  3. barqnet-client: UI on all platforms
+  4. barqnet-testing: Integration tests
+  5. barqnet-documentation: User guide
+  6. barqnet-audit: Security review
 ```
 
 ---
@@ -269,10 +269,10 @@ chameleon-e2e orchestrates:
 ## Troubleshooting
 
 ### Skill Not Activating?
-Be explicit: `Use chameleon-backend to...`
+Be explicit: `Use barqnet-backend to...`
 
 ### Need Multiple Skills?
-Use E2E: `Use chameleon-e2e to...`
+Use E2E: `Use barqnet-e2e to...`
 
 ### Task Not Clear?
 E2E will analyze and ask questions
@@ -282,11 +282,11 @@ E2E will analyze and ask questions
 ## Quick Tips
 
 1. **Single-platform task** → Use specific skill
-2. **Multi-platform task** → Use `chameleon-e2e`
-3. **Not sure which skill** → Use `chameleon-e2e` (it will delegate)
-4. **Just documentation** → Use `chameleon-documentation`
-5. **Just tests** → Use `chameleon-testing`
-6. **Code review** → Use `chameleon-audit`
+2. **Multi-platform task** → Use `barqnet-e2e`
+3. **Not sure which skill** → Use `barqnet-e2e` (it will delegate)
+4. **Just documentation** → Use `barqnet-documentation`
+5. **Just tests** → Use `barqnet-testing`
+6. **Code review** → Use `barqnet-audit`
 
 ---
 
@@ -296,19 +296,19 @@ E2E will analyze and ask questions
 .claude/skills/
 ├── README.md                    ← Overview
 ├── QUICK_REFERENCE.md           ← This file
-├── chameleon-backend/
+├── barqnet-backend/
 │   └── SKILL.md
-├── chameleon-client/
+├── barqnet-client/
 │   └── SKILL.md
-├── chameleon-integration/
+├── barqnet-integration/
 │   └── SKILL.md
-├── chameleon-documentation/
+├── barqnet-documentation/
 │   └── SKILL.md
-├── chameleon-audit/
+├── barqnet-audit/
 │   └── SKILL.md
-├── chameleon-testing/
+├── barqnet-testing/
 │   └── SKILL.md
-└── chameleon-e2e/
+└── barqnet-e2e/
     └── SKILL.md
 ```
 
@@ -318,7 +318,7 @@ E2E will analyze and ask questions
 
 1. Check skill's `SKILL.md` for detailed documentation
 2. Review examples in skill file
-3. Use `chameleon-e2e` for complex tasks
+3. Use `barqnet-e2e` for complex tasks
 4. Refer to main project docs in `/docs/`
 
 ---

@@ -1,6 +1,6 @@
 //
 //  PacketTunnelProvider.swift
-//  WorkVPNTunnelExtension
+//  BarqNetTunnelExtension
 //
 //  Network Extension tunnel provider for OpenVPN
 //
@@ -43,7 +43,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         else {
             NSLog("[PacketTunnel] ERROR: No configuration found")
             completionHandler(NSError(
-                domain: "WorkVPN",
+                domain: "BarqNet",
                 code: 1,
                 userInfo: [NSLocalizedDescriptionKey: "VPN configuration not found"]
             ))

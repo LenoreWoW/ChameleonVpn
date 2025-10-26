@@ -1,6 +1,6 @@
 //
 //  PhoneNumberView.swift
-//  WorkVPN
+//  BarqNet
 //
 //  Phone number entry for onboarding
 //

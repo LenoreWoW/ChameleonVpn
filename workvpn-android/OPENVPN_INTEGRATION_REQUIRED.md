@@ -14,7 +14,7 @@
 
 ### Current Behavior
 
-**File:** `app/src/main/java/com/workvpn/android/vpn/OpenVPNService.kt`
+**File:** `app/src/main/java/com/barqnet/android/vpn/OpenVPNService.kt`
 **Lines:** 144-149
 
 ```kotlin
@@ -290,7 +290,7 @@ class WireGuardVPNService : VpnService() {
 
             // Create tunnel
             tunnel = object : Tunnel {
-                override fun getName() = "WorkVPN"
+                override fun getName() = "BarqNet"
                 override fun onStateChange(newState: Tunnel.State) {
                     when (newState) {
                         Tunnel.State.UP -> updateState(VPNState.CONNECTED)

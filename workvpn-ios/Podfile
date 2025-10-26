@@ -1,16 +1,16 @@
-# Podfile for WorkVPN iOS
+# Podfile for BarqNet iOS
 
 platform :ios, '15.0'
 use_frameworks!
 
 # Main app target
-target 'WorkVPN' do
+target 'BarqNet' do
   # OpenVPN library for real VPN functionality
   pod 'OpenVPNAdapter', :git => 'https://github.com/ss-abramchuk/OpenVPNAdapter.git', :tag => '0.8.0'
 end
 
 # Network Extension target
-target 'WorkVPNTunnelExtension' do
+target 'BarqNetTunnelExtension' do
   # OpenVPN library (required in extension too)
   pod 'OpenVPNAdapter', :git => 'https://github.com/ss-abramchuk/OpenVPNAdapter.git', :tag => '0.8.0'
 end

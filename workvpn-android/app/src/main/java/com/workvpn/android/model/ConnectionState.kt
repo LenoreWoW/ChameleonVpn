@@ -1,4 +1,4 @@
-package com.workvpn.android.model
+package com.barqnet.android.model
 
 sealed class ConnectionState {
     object Disconnected : ConnectionState()

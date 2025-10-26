@@ -1,4 +1,4 @@
-# 🎉 WorkVPN - ACTUAL Production Readiness Status
+# 🎉 BarqNet - ACTUAL Production Readiness Status
 
 **Last Updated**: 2025-10-15
 **Status**: ✅ **CORE VPN FUNCTIONALITY COMPLETE**
@@ -47,7 +47,7 @@ Your VPN client now has **real, production-ready VPN functionality** on all thre
 - **Before**: Loopback demo (packets went in, came back out)
 - **After**: Real WireGuard encryption + server communication
 
-**File**: `workvpn-android/app/src/main/java/com/workvpn/android/vpn/WireGuardVPNService.kt`
+**File**: `barqnet-android/app/src/main/java/com/barqnet/android/vpn/WireGuardVPNService.kt`
 
 **Dependencies**:
 ```gradle
@@ -58,7 +58,7 @@ implementation 'com.squareup.okhttp3:okhttp:4.12.0' // ✅ Certificate pinning
 
 **Build & Run:**
 ```bash
-cd workvpn-android
+cd barqnet-android
 ./gradlew assembleDebug
 ./gradlew test  # 4 test files, comprehensive coverage
 ```
@@ -111,7 +111,7 @@ sudo apt install openvpn
 
 **Build & Run:**
 ```bash
-cd workvpn-desktop
+cd barqnet-desktop
 npm install
 npm run build
 npm start
@@ -137,7 +137,7 @@ npm start
 **What Was Found:**
 The iOS VPN code was **already production-ready**! OpenVPNAdapter was fully integrated.
 
-**File**: `workvpn-ios/WorkVPNTunnelExtension/PacketTunnelProvider.swift`
+**File**: `barqnet-ios/BarqNetTunnelExtension/PacketTunnelProvider.swift`
 
 **Dependencies**:
 ```ruby
@@ -147,9 +147,9 @@ pod 'OpenVPNAdapter', '~> 0.8.0'  # ✅ Already configured
 
 **Setup (One-Time, 15 Minutes)**:
 ```bash
-cd workvpn-ios
+cd barqnet-ios
 pod install
-open WorkVPN.xcworkspace
+open BarqNet.xcworkspace
 ```
 
 Then in Xcode:
@@ -363,7 +363,7 @@ Encryption: AES-256-GCM or ChaCha20-Poly1305
 
 ### Android
 ```bash
-cd workvpn-android
+cd barqnet-android
 ./gradlew test  # Run unit tests
 ./gradlew connectedAndroidTest  # Run on device
 ```
@@ -376,15 +376,15 @@ cd workvpn-android
 
 ### Desktop
 ```bash
-cd workvpn-desktop
+cd barqnet-desktop
 npm test  # 118 integration tests
 ```
 
 ### iOS
 ```bash
-cd workvpn-ios
+cd barqnet-ios
 # After Xcode setup:
-xcodebuild test -workspace WorkVPN.xcworkspace -scheme WorkVPN
+xcodebuild test -workspace BarqNet.xcworkspace -scheme BarqNet
 ```
 
 ---
@@ -486,14 +486,14 @@ xcodebuild test -workspace WorkVPN.xcworkspace -scheme WorkVPN
 
 ### Android
 ```bash
-cd workvpn-android
+cd barqnet-android
 ./gradlew assembleDebug
 adb install app/build/outputs/apk/debug/app-debug.apk
 ```
 
 ### Desktop
 ```bash
-cd workvpn-desktop
+cd barqnet-desktop
 brew install openvpn  # macOS only
 npm install
 npm start
@@ -501,9 +501,9 @@ npm start
 
 ### iOS
 ```bash
-cd workvpn-ios
+cd barqnet-ios
 pod install
-open WorkVPN.xcworkspace
+open BarqNet.xcworkspace
 # Configure in Xcode, then ⌘ + B
 ```
 
@@ -512,11 +512,11 @@ open WorkVPN.xcworkspace
 ## 📚 DOCUMENTATION INDEX
 
 - `PRODUCTION_READY.md` - This file (truthful status)
-- `workvpn-android/app/src/main/java/com/workvpn/android/vpn/WireGuardVPNService.kt` - Android VPN
-- `workvpn-desktop/src/main/vpn/manager.ts` - Desktop VPN
-- `workvpn-desktop/SETUP.md` - Desktop setup guide
-- `workvpn-ios/WorkVPNTunnelExtension/PacketTunnelProvider.swift` - iOS VPN
-- `workvpn-ios/SETUP.md` - iOS setup guide
+- `barqnet-android/app/src/main/java/com/barqnet/android/vpn/WireGuardVPNService.kt` - Android VPN
+- `barqnet-desktop/src/main/vpn/manager.ts` - Desktop VPN
+- `barqnet-desktop/SETUP.md` - Desktop setup guide
+- `barqnet-ios/BarqNetTunnelExtension/PacketTunnelProvider.swift` - iOS VPN
+- `barqnet-ios/SETUP.md` - iOS setup guide
 - `API_CONTRACT.md` - Backend API specification
 
 ---

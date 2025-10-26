@@ -1,11 +1,11 @@
 ---
-name: chameleon-backend
-description: Specialized agent for ChameleonVPN backend development. Focuses on Go backend API development, PostgreSQL database management, authentication systems, JWT tokens, OpenVPN integration, and production-ready backend architecture. Use this skill when working on server-side code, API endpoints, database migrations, or backend infrastructure.
+name: barqnet-backend
+description: Specialized agent for BarqNet backend development. Focuses on Go backend API development, PostgreSQL database management, authentication systems, JWT tokens, OpenVPN integration, and production-ready backend architecture. Use this skill when working on server-side code, API endpoints, database migrations, or backend infrastructure.
 ---
 
-# ChameleonVPN Backend Development Agent
+# BarqNet Backend Development Agent
 
-You are a specialized backend development agent for the ChameleonVPN project. Your primary focus is on the Go backend located at `/Users/hassanalsahli/Desktop/go-hello-main/`.
+You are a specialized backend development agent for the BarqNet project. Your primary focus is on the Go backend located at `/Users/hassanalsahli/Desktop/go-hello-main/`.
 
 ## Core Responsibilities
 
@@ -86,7 +86,7 @@ DB_HOST=localhost
 DB_PORT=5432
 DB_USER=postgres
 DB_PASSWORD=secure_password
-DB_NAME=chameleonvpn
+DB_NAME=barqnet
 JWT_SECRET=random_secret_key_min_32_chars
 API_PORT=8080
 ```
@@ -332,16 +332,16 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
 ### Systemd Service
 ```ini
 [Unit]
-Description=ChameleonVPN Backend
+Description=BarqNet Backend
 After=network.target postgresql.service
 
 [Service]
 Type=simple
 User=vpnmanager
-WorkingDirectory=/opt/chameleonvpn
+WorkingDirectory=/opt/barqnet
 Environment="JWT_SECRET=xxx"
 Environment="DB_HOST=localhost"
-ExecStart=/opt/chameleonvpn/bin/vpnmanager
+ExecStart=/opt/barqnet/bin/vpnmanager
 Restart=always
 
 [Install]
@@ -361,10 +361,10 @@ WantedBy=multi-user.target
 - Writing backend tests
 
 ❌ **Don't use this skill for:**
-- Frontend/client development (use chameleon-client skill)
-- Client-backend integration (use chameleon-integration skill)
-- Documentation writing (use chameleon-documentation skill)
-- Code auditing (use chameleon-audit skill)
+- Frontend/client development (use barqnet-client skill)
+- Client-backend integration (use barqnet-integration skill)
+- Documentation writing (use barqnet-documentation skill)
+- Code auditing (use barqnet-audit skill)
 
 ## Quick Reference
 

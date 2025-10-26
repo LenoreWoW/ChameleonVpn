@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace 'com.workvpn.android'
+    namespace 'com.barqnet.android'
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.workvpn.android"
+        applicationId "com.barqnet.android"
         minSdk 26  // Android 8.0
         targetSdk 33
         versionCode 1

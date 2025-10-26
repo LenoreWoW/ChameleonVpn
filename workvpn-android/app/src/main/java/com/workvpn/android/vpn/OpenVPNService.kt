@@ -1,4 +1,4 @@
-package com.workvpn.android.vpn
+package com.barqnet.android.vpn
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -9,8 +9,8 @@ import android.net.VpnService
 import android.os.Build
 import android.os.ParcelFileDescriptor
 import androidx.core.app.NotificationCompat
-import com.workvpn.android.MainActivity
-import com.workvpn.android.R
+import com.barqnet.android.MainActivity
+import com.barqnet.android.R
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -113,7 +113,7 @@ class OpenVPNService : VpnService() {
     private fun createVPNInterface(serverAddress: String): ParcelFileDescriptor? {
         return try {
             val builder = Builder()
-                .setSession("WorkVPN")
+                .setSession("BarqNet")
                 .addAddress("10.8.0.2", 24)  // Local VPN IP
                 .addRoute("0.0.0.0", 0)      // Route all traffic
                 .addDnsServer("8.8.8.8")      // Google DNS
@@ -232,7 +232,7 @@ class OpenVPNService : VpnService() {
         )
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("WorkVPN")
+            .setContentTitle("BarqNet")
             .setContentText(message)
             .setSmallIcon(R.drawable.ic_vpn_key)
             .setContentIntent(pendingIntent)
@@ -255,8 +255,8 @@ class OpenVPNService : VpnService() {
 
     companion object {
         private const val TAG = "OpenVPNService"
-        const val ACTION_START_VPN = "com.workvpn.android.START_VPN"
-        const val ACTION_STOP_VPN = "com.workvpn.android.STOP_VPN"
+        const val ACTION_START_VPN = "com.barqnet.android.START_VPN"
+        const val ACTION_STOP_VPN = "com.barqnet.android.STOP_VPN"
         const val EXTRA_CONFIG_CONTENT = "config_content"
 
         private const val CHANNEL_ID = "vpn_service_channel"

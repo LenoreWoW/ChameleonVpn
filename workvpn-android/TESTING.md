@@ -1,6 +1,6 @@
-# WorkVPN Android Testing Guide
+# BarqNet Android Testing Guide
 
-Comprehensive testing guide for WorkVPN Android application, including manual testing, automated tests with Appium MCP, and CI/CD integration.
+Comprehensive testing guide for BarqNet Android application, including manual testing, automated tests with Appium MCP, and CI/CD integration.
 
 ## Table of Contents
 
@@ -45,12 +45,12 @@ Comprehensive testing guide for WorkVPN Android application, including manual te
 
 ```bash
 # Check core source files exist
-ls -la app/src/main/java/com/workvpn/android/MainActivity.kt
-ls -la app/src/main/java/com/workvpn/android/WorkVPNApplication.kt
-ls -la app/src/main/java/com/workvpn/android/model/VPNConfig.kt
-ls -la app/src/main/java/com/workvpn/android/util/OVPNParser.kt
-ls -la app/src/main/java/com/workvpn/android/vpn/OpenVPNService.kt
-ls -la app/src/main/java/com/workvpn/android/viewmodel/VPNViewModel.kt
+ls -la app/src/main/java/com/barqnet/android/MainActivity.kt
+ls -la app/src/main/java/com/barqnet/android/BarqNetApplication.kt
+ls -la app/src/main/java/com/barqnet/android/model/VPNConfig.kt
+ls -la app/src/main/java/com/barqnet/android/util/OVPNParser.kt
+ls -la app/src/main/java/com/barqnet/android/vpn/OpenVPNService.kt
+ls -la app/src/main/java/com/barqnet/android/viewmodel/VPNViewModel.kt
 ```
 
 **Expected**: All files exist (exit code 0)
@@ -139,10 +139,10 @@ grep "kotlinx-serialization" app/build.gradle
 
 ### 3.1 OVPNParser Tests
 
-Create `app/src/test/java/com/workvpn/android/util/OVPNParserTest.kt`:
+Create `app/src/test/java/com/barqnet/android/util/OVPNParserTest.kt`:
 
 ```kotlin
-package com.workvpn.android.util
+package com.barqnet.android.util
 
 import org.junit.Test
 import org.junit.Assert.*
@@ -247,14 +247,14 @@ class OVPNParserTest {
 
 ### 3.2 VPNConfigRepository Tests
 
-Create `app/src/test/java/com/workvpn/android/repository/VPNConfigRepositoryTest.kt`:
+Create `app/src/test/java/com/barqnet/android/repository/VPNConfigRepositoryTest.kt`:
 
 ```kotlin
-package com.workvpn.android.repository
+package com.barqnet.android.repository
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import com.workvpn.android.model.VPNConfig
+import com.barqnet.android.model.VPNConfig
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
@@ -348,15 +348,15 @@ class VPNConfigRepositoryTest {
 
 ### 4.1 HomeScreen Tests
 
-Create `app/src/androidTest/java/com/workvpn/android/ui/HomeScreenTest.kt`:
+Create `app/src/androidTest/java/com/barqnet/android/ui/HomeScreenTest.kt`:
 
 ```kotlin
-package com.workvpn.android.ui
+package com.barqnet.android.ui
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
-import com.workvpn.android.ui.screens.HomeScreen
-import com.workvpn.android.viewmodel.VPNViewModel
+import com.barqnet.android.ui.screens.HomeScreen
+import com.barqnet.android.viewmodel.VPNViewModel
 import org.junit.Rule
 import org.junit.Test
 
@@ -438,7 +438,7 @@ adb devices
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 # Launch app
-adb shell am start -n com.workvpn.android/.MainActivity
+adb shell am start -n com.barqnet.android/.MainActivity
 ```
 
 **Expected**: App launches successfully
@@ -446,7 +446,7 @@ adb shell am start -n com.workvpn.android/.MainActivity
 ### 5.2 UI Verification
 
 - [ ] Gradient background displays (purple to dark purple)
-- [ ] "WorkVPN" title visible at top
+- [ ] "BarqNet" title visible at top
 - [ ] "No VPN Configuration" message shows on first launch
 - [ ] "Import .ovpn File" button visible
 - [ ] Settings icon (gear) in top-right corner
@@ -562,7 +562,7 @@ adb shell getprop net.dns1
 ### 7.2 App Force-Stop
 
 1. Connect to VPN
-2. Force-stop app: `adb shell am force-stop com.workvpn.android`
+2. Force-stop app: `adb shell am force-stop com.barqnet.android`
 3. Check VPN icon in status bar
 
 **Expected**: VPN disconnects when app is force-stopped
@@ -580,7 +580,7 @@ adb shell getprop net.dns1
 
 ```bash
 # Simulate low memory
-adb shell am send-trim-memory com.workvpn.android RUNNING_CRITICAL
+adb shell am send-trim-memory com.barqnet.android RUNNING_CRITICAL
 ```
 
 **Expected**: VPN service survives, connection maintained
@@ -670,7 +670,7 @@ remote vpn.example.com 99999
 
 ```bash
 # Measure cold start time
-adb shell am start -W com.workvpn.android/.MainActivity
+adb shell am start -W com.barqnet.android/.MainActivity
 ```
 
 **Expected**:
@@ -681,7 +681,7 @@ adb shell am start -W com.workvpn.android/.MainActivity
 
 ```bash
 # Monitor memory
-adb shell dumpsys meminfo com.workvpn.android
+adb shell dumpsys meminfo com.barqnet.android
 ```
 
 **Expected**:
@@ -694,7 +694,7 @@ adb shell dumpsys meminfo com.workvpn.android
 2. Run for 1 hour
 3. Check battery stats:
 ```bash
-adb shell dumpsys batterystats com.workvpn.android
+adb shell dumpsys batterystats com.barqnet.android
 ```
 
 **Expected**: Reasonable battery usage (<5% per hour)
@@ -741,7 +741,7 @@ appium --allow-insecure chromedriver_autodownload
   "deviceName": "Android Emulator",
   "automationName": "UiAutomator2",
   "app": "/path/to/app-debug.apk",
-  "appPackage": "com.workvpn.android",
+  "appPackage": "com.barqnet.android",
   "appActivity": ".MainActivity",
   "noReset": false,
   "fullReset": true
@@ -782,7 +782,7 @@ appium --allow-insecure chromedriver_autodownload
 
 ### 10.4 MCP Test Script (JavaScript)
 
-Create `appium-tests/workvpn.test.js`:
+Create `appium-tests/barqnet.test.js`:
 
 ```javascript
 const { remote } = require('webdriverio');
@@ -792,11 +792,11 @@ const capabilities = {
   'appium:automationName': 'UiAutomator2',
   'appium:deviceName': 'Android Emulator',
   'appium:app': '/path/to/app-debug.apk',
-  'appium:appPackage': 'com.workvpn.android',
+  'appium:appPackage': 'com.barqnet.android',
   'appium:appActivity': '.MainActivity',
 };
 
-describe('WorkVPN Android Tests', () => {
+describe('BarqNet Android Tests', () => {
   let driver;
 
   beforeAll(async () => {

@@ -1,4 +1,4 @@
-package com.workvpn.android
+package com.barqnet.android
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -8,22 +8,22 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.workvpn.android.ui.navigation.WorkVPNNavHost
-import com.workvpn.android.ui.theme.WorkVPNTheme
-import com.workvpn.android.viewmodel.RealVPNViewModel
+import com.barqnet.android.ui.navigation.BarqNetNavHost
+import com.barqnet.android.ui.theme.BarqNetTheme
+import com.barqnet.android.viewmodel.RealVPNViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
-            WorkVPNTheme {
+            BarqNetTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
                     val vpnViewModel: RealVPNViewModel = viewModel()
-                    WorkVPNNavHost(vpnViewModel = vpnViewModel)
+                    BarqNetNavHost(vpnViewModel = vpnViewModel)
                 }
             }
         }

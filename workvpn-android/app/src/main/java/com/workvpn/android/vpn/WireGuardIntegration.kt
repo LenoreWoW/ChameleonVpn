@@ -1,4 +1,4 @@
-package com.workvpn.android.vpn
+package com.barqnet.android.vpn
 
 /**
  * WireGuard VPN Integration Guide

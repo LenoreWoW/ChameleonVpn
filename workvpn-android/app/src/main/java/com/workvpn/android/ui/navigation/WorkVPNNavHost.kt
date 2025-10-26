@@ -1,13 +1,13 @@
-package com.workvpn.android.ui.navigation
+package com.barqnet.android.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.workvpn.android.ui.screens.HomeScreen
-import com.workvpn.android.ui.screens.ImportScreen
-import com.workvpn.android.ui.screens.SettingsScreen
-import com.workvpn.android.viewmodel.RealVPNViewModel
+import com.barqnet.android.ui.screens.HomeScreen
+import com.barqnet.android.ui.screens.ImportScreen
+import com.barqnet.android.ui.screens.SettingsScreen
+import com.barqnet.android.viewmodel.RealVPNViewModel
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")
@@ -16,7 +16,7 @@ sealed class Screen(val route: String) {
 }
 
 @Composable
-fun WorkVPNNavHost(vpnViewModel: RealVPNViewModel) {
+fun BarqNetNavHost(vpnViewModel: RealVPNViewModel) {
     val navController = rememberNavController()
 
     NavHost(

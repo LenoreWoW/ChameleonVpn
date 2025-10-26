@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to WorkVPN multi-platform VPN client will be documented in this file.
+All notable changes to BarqNet multi-platform VPN client will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -279,7 +279,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 🎉 **Production-Ready Multi-Platform VPN Client**
 
-After extensive development and testing, WorkVPN 1.0.0 is ready for production use:
+After extensive development and testing, BarqNet 1.0.0 is ready for production use:
 
 - **Real VPN Encryption**: All platforms now use actual OpenVPN encryption (not simulated)
 - **OpenVPN Compatible**: Works with your colleague's OpenVPN backend server
@@ -375,7 +375,7 @@ No known security vulnerabilities.
 - Regular dependency updates via Dependabot
 
 **Reporting Security Issues**:
-Please report security vulnerabilities to: security@workvpn.com (or your configured contact)
+Please report security vulnerabilities to: security@barqnet.com (or your configured contact)
 
 ---
 
@@ -397,8 +397,8 @@ See [MIGRATION.md](MIGRATION.md) for detailed migration instructions (if upgradi
 
 ## Links
 
-- **GitHub Repository**: https://github.com/yourusername/workvpn
-- **Issue Tracker**: https://github.com/yourusername/workvpn/issues
+- **GitHub Repository**: https://github.com/yourusername/barqnet
+- **Issue Tracker**: https://github.com/yourusername/barqnet/issues
 - **Documentation**: [README.md](README.md)
 - **API Contract**: [API_CONTRACT.md](API_CONTRACT.md)
 

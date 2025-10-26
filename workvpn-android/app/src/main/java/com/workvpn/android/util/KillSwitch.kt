@@ -1,4 +1,4 @@
-package com.workvpn.android.util
+package com.barqnet.android.util
 
 import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey

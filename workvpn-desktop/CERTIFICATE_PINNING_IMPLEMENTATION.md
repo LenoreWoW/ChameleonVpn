@@ -98,7 +98,7 @@ CERT_PIN_BACKUP=sha256/BBBB...==
 ### Test 1: Build Verification ✅
 
 ```bash
-cd workvpn-desktop
+cd barqnet-desktop
 npm run build
 ```
 

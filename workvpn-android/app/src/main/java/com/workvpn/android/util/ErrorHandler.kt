@@ -1,8 +1,8 @@
-package com.workvpn.android.util
+package com.barqnet.android.util
 
 import android.content.Context
 import android.widget.Toast
-import com.workvpn.android.BuildConfig
+import com.barqnet.android.BuildConfig
 
 /**
  * Centralized error handling for the VPN app

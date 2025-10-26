@@ -1,6 +1,6 @@
 //
 //  VPNManager.swift
-//  WorkVPN
+//  BarqNet
 //
 //  Manages VPN connection using NetworkExtension
 //
@@ -206,7 +206,7 @@ class VPNManager: ObservableObject {
 
         // Configure provider
         let providerProtocol = NETunnelProviderProtocol()
-        providerProtocol.providerBundleIdentifier = "com.workvpn.ios.WorkVPNTunnelExtension"
+        providerProtocol.providerBundleIdentifier = "com.workvpn.ios.BarqNetTunnelExtension"
         providerProtocol.serverAddress = config.serverAddress
 
         // Pass configuration to tunnel extension
@@ -218,7 +218,7 @@ class VPNManager: ObservableObject {
         ]
 
         manager.protocolConfiguration = providerProtocol
-        manager.localizedDescription = "WorkVPN"
+        manager.localizedDescription = "BarqNet"
         manager.isEnabled = true
 
         // Save configuration

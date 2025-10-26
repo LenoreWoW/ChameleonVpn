@@ -1,4 +1,4 @@
-# Windows Setup Guide for ChameleonVPN
+# Windows Setup Guide for BarqNet
 
 **For Windows Users** - Complete setup and troubleshooting guide
 
@@ -64,7 +64,7 @@ If you want to clone the repository:
 
 ```cmd
 git clone https://github.com/LenoreWoW/ChameleonVpn.git
-cd ChameleonVpn\workvpn-desktop
+cd ChameleonVpn\barqnet-desktop
 npm install
 ```
 
@@ -74,7 +74,7 @@ npm install
 2. Open Command Prompt or PowerShell
 3. Navigate to the folder:
 ```cmd
-cd C:\path\to\ChameleonVpn\workvpn-desktop
+cd C:\path\to\ChameleonVpn\barqnet-desktop
 npm install
 ```
 
@@ -85,7 +85,7 @@ npm install
 ### Standard Mode (May Not Work)
 
 ```cmd
-cd workvpn-desktop
+cd barqnet-desktop
 npm start
 ```
 
@@ -103,12 +103,12 @@ npm start
 2. Select "Command Prompt (Admin)" or "PowerShell (Admin)"
 3. Navigate to project:
 ```cmd
-cd C:\path\to\ChameleonVpn\workvpn-desktop
+cd C:\path\to\ChameleonVpn\barqnet-desktop
 npm start
 ```
 
 **Method 2: Run via Right-Click**
-1. Create a batch file `run-admin.bat` in `workvpn-desktop` folder:
+1. Create a batch file `run-admin.bat` in `barqnet-desktop` folder:
 ```batch
 @echo off
 cd /d "%~dp0"
@@ -149,7 +149,7 @@ pause
 
 1. **Launch App as Administrator:**
 ```cmd
-cd C:\path\to\ChameleonVpn\workvpn-desktop
+cd C:\path\to\ChameleonVpn\barqnet-desktop
 npm start
 ```
 
@@ -171,7 +171,7 @@ npm start
 
 4. **Import VPN Config:**
    - Click "Import .ovpn File"
-   - Navigate to: `C:\path\to\ChameleonVpn\workvpn-desktop\test-config.ovpn`
+   - Navigate to: `C:\path\to\ChameleonVpn\barqnet-desktop\test-config.ovpn`
    - Click "Open"
 
 5. **Test Connection:**
@@ -212,7 +212,7 @@ C:\Program Files (x86)\OpenVPN\bin\openvpn.exe
 2. Run Command Prompt as Administrator
 3. Launch app from admin prompt:
 ```cmd
-cd C:\path\to\ChameleonVpn\workvpn-desktop
+cd C:\path\to\ChameleonVpn\barqnet-desktop
 npm start
 ```
 
@@ -331,7 +331,7 @@ npx electron-builder --windows
 ```
 
 **Output:**
-- `dist/ChameleonVPN Setup.exe` - Installer
+- `dist/BarqNet Setup.exe` - Installer
 - `dist/win-unpacked/` - Portable version
 
 ### Create Portable Version
@@ -399,7 +399,7 @@ Total: ~200 MB RAM
 
 ### Enable Verbose Logging
 
-Edit `workvpn-desktop\src\main\vpn\manager.ts`:
+Edit `barqnet-desktop\src\main\vpn\manager.ts`:
 ```typescript
 const openvpnArgs = [
   '--config', configPath,

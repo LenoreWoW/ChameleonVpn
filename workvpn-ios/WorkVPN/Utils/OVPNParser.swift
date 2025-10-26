@@ -1,6 +1,6 @@
 //
 //  OVPNParser.swift
-//  WorkVPN
+//  BarqNet
 //
 //  Parser for .ovpn configuration files
 //

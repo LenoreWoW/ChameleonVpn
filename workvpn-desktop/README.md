@@ -1,4 +1,4 @@
-# WorkVPN Desktop Client
+# BarqNet Desktop Client
 
 A cross-platform desktop VPN client for Windows and macOS, built with Electron and OpenVPN.
 
@@ -42,7 +42,7 @@ npm start
 
 ### First Run
 
-1. Launch WorkVPN
+1. Launch BarqNet
 2. Click "Import .ovpn File"
 3. Select your OpenVPN configuration file
 4. Click "Connect" to establish VPN connection
@@ -50,7 +50,7 @@ npm start
 ## 📁 Project Structure
 
 ```
-workvpn-desktop/
+barqnet-desktop/
 ├── src/
 │   ├── main/           # Main Electron process
 │   │   ├── index.ts    # Application entry point
@@ -99,8 +99,8 @@ npm run make
 ```
 
 Output locations:
-- **macOS**: `out/make/WorkVPN.dmg`
-- **Windows**: `out/make/WorkVPN Setup.exe`
+- **macOS**: `out/make/BarqNet.dmg`
+- **Windows**: `out/make/BarqNet Setup.exe`
 
 ### Testing
 
@@ -115,7 +115,7 @@ npm test
 
 ### Importing a VPN Config
 
-1. Launch WorkVPN
+1. Launch BarqNet
 2. Click "Import .ovpn File" button
 3. Select your OpenVPN configuration file
 4. The config will be securely stored and encrypted
@@ -140,7 +140,7 @@ The system tray provides quick access to:
 
 Available in the main window:
 - **Auto-connect on startup**: Automatically connect when app launches
-- **Launch at system startup**: Start WorkVPN with your computer
+- **Launch at system startup**: Start BarqNet with your computer
 - **Kill switch**: Block internet when VPN disconnects (security feature)
 
 ## 🏗️ Architecture

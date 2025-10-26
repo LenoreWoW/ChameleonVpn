@@ -37,7 +37,7 @@ function generateEncryptionKey(): string {
     const hash = createHash('sha256')
       .update(machineId)
       .update(appPath)
-      .update('workvpn-v1-encryption')
+      .update('barqnet-v1-encryption')
       .digest('hex');
 
     return hash;
@@ -62,7 +62,7 @@ export class ConfigStore {
 
   constructor() {
     this.store = new Store<StoreSchema>({
-      name: 'workvpn-config',
+      name: 'barqnet-config',
       defaults: {
         activeConfig: null,
         configs: {},

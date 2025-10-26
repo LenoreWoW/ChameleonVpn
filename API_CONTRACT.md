@@ -15,8 +15,8 @@ This document defines the API contract between the VPN clients (Desktop, Android
 ## Base URL
 
 ```
-Production: https://api.workvpn.com/v1
-Staging: https://staging-api.workvpn.com/v1
+Production: https://api.barqnet.com/v1
+Staging: https://staging-api.barqnet.com/v1
 Development: http://localhost:3000/v1
 ```
 
@@ -415,15 +415,15 @@ Development: http://localhost:3000/v1
 
 ### Desktop (Electron)
 - Store tokens in electron-store (encrypted)
-- Location: `workvpn-desktop/src/main/auth/service.ts`
+- Location: `barqnet-desktop/src/main/auth/service.ts`
 
 ### Android (Kotlin)
 - Store tokens in DataStore Preferences (encrypted)
-- Location: `workvpn-android/app/src/main/java/com/workvpn/android/auth/AuthManager.kt`
+- Location: `barqnet-android/app/src/main/java/com/barqnet/android/auth/AuthManager.kt`
 
 ### iOS (Swift)
 - Store tokens in Keychain
-- Location: `workvpn-ios/WorkVPN/Services/AuthManager.swift`
+- Location: `barqnet-ios/BarqNet/Services/AuthManager.swift`
 
 ---
 

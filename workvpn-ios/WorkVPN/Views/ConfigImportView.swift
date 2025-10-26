@@ -1,6 +1,6 @@
 //
 //  ConfigImportView.swift
-//  WorkVPN
+//  BarqNet
 //
 //  View for importing .ovpn configuration files
 //

@@ -1,6 +1,6 @@
-package com.workvpn.android.util
+package com.barqnet.android.util
 
-import com.workvpn.android.model.VPNConfig
+import com.barqnet.android.model.VPNConfig
 
 object OVPNParser {
 

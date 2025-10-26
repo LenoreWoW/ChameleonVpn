@@ -1,4 +1,4 @@
-package com.workvpn.android.ui.theme
+package com.barqnet.android.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -41,7 +41,7 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 @Composable
-fun WorkVPNTheme(
+fun BarqNetTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
