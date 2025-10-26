@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.workvpn.android.ui.navigation.WorkVPNNavHost
 import com.workvpn.android.ui.theme.WorkVPNTheme
-import com.workvpn.android.viewmodel.VPNViewModel
+import com.workvpn.android.viewmodel.RealVPNViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,7 +22,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    val vpnViewModel: VPNViewModel = viewModel()
+                    val vpnViewModel: RealVPNViewModel = viewModel()
                     WorkVPNNavHost(vpnViewModel = vpnViewModel)
                 }
             }

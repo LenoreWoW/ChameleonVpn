@@ -170,11 +170,30 @@ class RealVPNViewModel(application: Application) : AndroidViewModel(application)
      */
     private fun monitorConnectionState() {
         viewModelScope.launch {
-            // TODO: Collect state from RealVPNService
-            // For now: simulate state change after handshake
-            delay(3000)
+            // Poll for service instance and collect real connection state
+            var attempts = 0
+            while (attempts < 30 && isActive) { // 30 second timeout
+                val service = RealVPNService.instance
+                if (service != null) {
+                    // Service is available, monitor its connection state
+                    service.connectionState.collect { state ->
+                        _connectionState.value = when (state) {
+                            "CONNECTED" -> ConnectionState.Connected
+                            "CONNECTING" -> ConnectionState.Connecting
+                            "DISCONNECTING" -> ConnectionState.Disconnecting
+                            else -> ConnectionState.Disconnected
+                        }
+                    }
+                    return@launch
+                }
+                delay(1000)
+                attempts++
+            }
+
+            // Timeout - service never started
             if (_connectionState.value is ConnectionState.Connecting) {
-                _connectionState.value = ConnectionState.Connected
+                _connectionState.value = ConnectionState.Disconnected
+                _errorMessage.value = "Failed to connect to VPN service"
             }
         }
     }
@@ -198,18 +217,14 @@ class RealVPNViewModel(application: Application) : AndroidViewModel(application)
                 val duration = ((System.currentTimeMillis() - connectionStartTime) / 1000).toInt()
 
                 // Get REAL statistics from VPN service
-                // TODO: Implement proper service binding to get real-time stats
-                // For now: this is the structure for real stats
+                val service = RealVPNService.instance
+                val realBytesIn = service?.bytesIn?.value ?: 0L
+                val realBytesOut = service?.bytesOut?.value ?: 0L
 
-                // In production, this would be:
-                // val realBytesIn = vpnService?.bytesIn?.value ?: 0L
-                // val realBytesOut = vpnService?.bytesOut?.value ?: 0L
-
-                // Update stats with REAL data (not fake!)
+                // Update stats with REAL data from service
                 _stats.value = _stats.value.copy(
-                    // TODO: Replace with real values from RealVPNService
-                    // bytesIn = realBytesIn,
-                    // bytesOut = realBytesOut,
+                    bytesIn = realBytesIn,
+                    bytesOut = realBytesOut,
                     duration = duration
                 )
 

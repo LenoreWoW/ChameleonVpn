@@ -22,7 +22,7 @@ import com.workvpn.android.auth.AuthManager
 import com.workvpn.android.model.ConnectionState
 import com.workvpn.android.ui.screens.onboarding.*
 import com.workvpn.android.ui.theme.*
-import com.workvpn.android.viewmodel.VPNViewModel
+import com.workvpn.android.viewmodel.RealVPNViewModel
 import kotlinx.coroutines.launch
 
 enum class OnboardingState {
@@ -36,7 +36,7 @@ enum class OnboardingState {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    vpnViewModel: VPNViewModel,
+    vpnViewModel: RealVPNViewModel,
     onNavigateToSettings: () -> Unit,
     onNavigateToImport: () -> Unit
 ) {
@@ -242,7 +242,7 @@ fun VPNStatusContent(
     config: com.workvpn.android.model.VPNConfig,
     connectionState: ConnectionState,
     stats: com.workvpn.android.model.VPNStats,
-    vpnViewModel: VPNViewModel
+    vpnViewModel: RealVPNViewModel
 ) {
     val context = LocalContext.current
 

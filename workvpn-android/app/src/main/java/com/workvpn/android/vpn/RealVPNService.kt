@@ -82,6 +82,7 @@ class RealVPNService : VpnService() {
 
     override fun onCreate() {
         super.onCreate()
+        instance = this
         createNotificationChannel()
         Log.i(TAG, "RealVPNService created")
     }
@@ -653,6 +654,7 @@ class RealVPNService : VpnService() {
 
     override fun onDestroy() {
         Log.i(TAG, "RealVPNService destroying")
+        instance = null
         isRunning = false
         isConnected = false
         vpnInterface?.close()
@@ -685,5 +687,10 @@ class RealVPNService : VpnService() {
         private const val NOTIFICATION_ID = 1
 
         private const val CONNECTION_TIMEOUT_MS = 30000L // 30 seconds
+
+        // Singleton instance for ViewModel access to StateFlows
+        @Volatile
+        var instance: RealVPNService? = null
+            private set
     }
 }

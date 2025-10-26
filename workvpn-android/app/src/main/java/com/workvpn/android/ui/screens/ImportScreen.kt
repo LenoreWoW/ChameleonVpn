@@ -15,12 +15,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.workvpn.android.viewmodel.VPNViewModel
+import com.workvpn.android.viewmodel.RealVPNViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImportScreen(
-    vpnViewModel: VPNViewModel,
+    vpnViewModel: RealVPNViewModel,
     onNavigateBack: () -> Unit
 ) {
     val context = LocalContext.current

@@ -7,7 +7,7 @@ import androidx.navigation.compose.rememberNavController
 import com.workvpn.android.ui.screens.HomeScreen
 import com.workvpn.android.ui.screens.ImportScreen
 import com.workvpn.android.ui.screens.SettingsScreen
-import com.workvpn.android.viewmodel.VPNViewModel
+import com.workvpn.android.viewmodel.RealVPNViewModel
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")
@@ -16,7 +16,7 @@ sealed class Screen(val route: String) {
 }
 
 @Composable
-fun WorkVPNNavHost(vpnViewModel: VPNViewModel) {
+fun WorkVPNNavHost(vpnViewModel: RealVPNViewModel) {
     val navController = rememberNavController()
 
     NavHost(

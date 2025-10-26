@@ -10,12 +10,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.workvpn.android.viewmodel.VPNViewModel
+import com.workvpn.android.viewmodel.RealVPNViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    vpnViewModel: VPNViewModel,
+    vpnViewModel: RealVPNViewModel,
     onNavigateBack: () -> Unit
 ) {
     var autoConnect by remember { mutableStateOf(false) }
