@@ -1,0 +1,2384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VPN Manager - Management Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.8;
+            font-size: 1.1em;
+        }
+
+        .config-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .config-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .config-item label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #495057;
+        }
+
+        .config-item input {
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .main-content {
+            padding: 20px;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #e9ecef;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 15px 25px;
+            background: #f8f9fa;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: #007bff;
+            color: white;
+        }
+
+        .tab:hover:not(.active) {
+            background: #e9ecef;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            height: 100px;
+            resize: vertical;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #1e7e34;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #138496;
+        }
+
+        .response {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-online {
+            background: #28a745;
+        }
+
+        .status-offline {
+            background: #dc3545;
+        }
+
+        .status-unknown {
+            background: #ffc107;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+        }
+
+        .card h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        /* Interactive Table Styles */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .data-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+
+        .data-table th:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+        }
+
+        .data-table th.sortable::after {
+            content: ' ↕';
+            opacity: 0.5;
+        }
+
+        .data-table th.sort-asc::after {
+            content: ' ↑';
+            opacity: 1;
+        }
+
+        .data-table th.sort-desc::after {
+            content: ' ↓';
+            opacity: 1;
+        }
+
+        .data-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .data-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .data-table tr:nth-child(even):hover {
+            background: #e9ecef;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+
+        .search-filter {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-filter input {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+        }
+
+        .search-filter select {
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            min-width: 150px;
+        }
+
+        .endpoint-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .endpoint-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .endpoint-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .endpoint-name {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1.1em;
+        }
+
+        .endpoint-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-online {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-offline {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-unknown {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .endpoint-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .endpoint-detail {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .endpoint-detail-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 2px;
+        }
+
+        .logs-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .logs-dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 200px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .logs-dropdown-content.show {
+            display: block;
+        }
+
+        .logs-dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            transition: background-color 0.3s;
+        }
+
+        .logs-dropdown-content a:hover {
+            background-color: #f1f1f1;
+        }
+
+        .logs-dropdown-content a.active {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            gap: 10px;
+        }
+
+        .pagination button {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: #e9ecef;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination .current-page {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 VPN Manager</h1>
+            <p>Management Interface</p>
+        </div>
+
+        <div class="config-section">
+            <div class="config-grid">
+                <div class="config-item">
+                    <label for="serverUrl">Management Server URL</label>
+                    <input type="text" id="serverUrl" value="http://192.168.10.248:8080" placeholder="http://management-server:8080">
+                </div>
+                <div class="config-item">
+                    <label for="apiKey">API Key</label>
+                    <input type="password" id="apiKey" placeholder="Enter your API key">
+                </div>
+                <div class="config-item">
+                    <label for="serverId">Server ID</label>
+                    <input type="text" id="serverId" value="endnode-1" placeholder="endnode-1">
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('health')">Health</button>
+                <button class="tab" onclick="showTab('users')">Users</button>
+                <button class="tab" onclick="showTab('endnodes')">End-Nodes</button>
+                <button class="tab" onclick="showTab('sync')">Sync</button>
+                <button class="tab" onclick="showTab('logs')">Logs</button>
+            </div>
+
+            <!-- Health Tab -->
+            <div id="health" class="tab-content active">
+                <div class="section">
+                    <h3>System Health</h3>
+                    <div class="search-filter">
+                        <button class="btn btn-primary" onclick="checkHealth()">Check Management Health</button>
+                        <button class="btn btn-info" onclick="getAPIInfo()">Get API Info</button>
+                        <button class="btn btn-success" onclick="checkAllEndpoints()">Check All Endpoints</button>
+                        <button class="btn btn-info" onclick="refreshEndpoints()">Refresh Endpoints</button>
+                    </div>
+                    <div id="endpointsContainer" style="display: none;">
+                        <h4>Available Endpoints</h4>
+                        <div class="table-container">
+                            <table class="data-table" id="endpointsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Host</th>
+                                        <th>Port</th>
+                                        <th>Status</th>
+                                        <th>Response Time</th>
+                                        <th>Last Check</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="endpointsTableBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="healthResponse" class="response" style="display: none;"></div>
+                </div>
+            </div>
+
+            <!-- Users Tab -->
+            <div id="users" class="tab-content">
+                <div class="section">
+                    <h3>User Management</h3>
+                    <div class="search-filter">
+                        <input type="text" id="userSearch" placeholder="Search users..." onkeyup="filterUsers()">
+                        <select id="userStatusFilter" onchange="filterUsers()">
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                        <select id="userServerFilter" onchange="filterUsers()">
+                            <option value="">All Servers</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="loadUsersTable()">Refresh Users</button>
+                    </div>
+                    <div id="usersTableContainer" class="table-container" style="display: none;">
+                        <table class="data-table" id="usersTable">
+                            <thead>
+                                <tr>
+                                    <th class="sortable" onclick="sortTable('username')">Username</th>
+                                    <th class="sortable" onclick="sortTable('server_id')">Server</th>
+                                    <th class="sortable" onclick="sortTable('port')">Port</th>
+                                    <th class="sortable" onclick="sortTable('protocol')">Protocol</th>
+                                    <th class="sortable" onclick="sortTable('created_at')">Created</th>
+                                    <th class="sortable" onclick="sortTable('status')">Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                            </tbody>
+                        </table>
+                        <div class="pagination" id="usersPagination"></div>
+                    </div>
+                    <div class="grid">
+                        <div class="card">
+                            <h4>Create User</h4>
+                            <div id="endNodeStatus" class="form-group" style="display: none;">
+                                <div class="alert alert-warning" style="background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; border-radius: 4px; padding: 10px; margin-bottom: 10px;">
+                                    <strong>⚠️ No End-Nodes Registered</strong><br>
+                                    You must register an end-node before creating users.
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Username</label>
+                                <input type="text" id="newUsername" placeholder="username">
+                            </div>
+                            <div class="form-group">
+                                <label>Port</label>
+                                <input type="number" id="newPort" value="1194">
+                            </div>
+                            <div class="form-group">
+                                <label>Protocol</label>
+                                <select id="newProtocol">
+                                    <option value="udp">UDP</option>
+                                    <option value="tcp">TCP</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-success" onclick="createUser()" id="createUserBtn">Create User</button>
+                            <button class="btn btn-info btn-sm" onclick="refreshEndNodesData()" style="margin-top: 10px;">Refresh End-Nodes</button>
+                            <button class="btn btn-warning btn-sm" onclick="syncAllUsers()" style="margin-top: 5px;">Sync All Users</button>
+                            <button class="btn btn-info btn-sm" onclick="checkOVPNFiles()" style="margin-top: 5px;">Check OVPN Files</button>
+                            <button class="btn btn-danger btn-sm" onclick="createMissingOVPNFiles()" style="margin-top: 5px;">Create Missing OVPN Files</button>
+                        </div>
+                        <div class="card">
+                            <h4>Quick Actions</h4>
+                            <div class="form-group">
+                                <label>Username</label>
+                                <input type="text" id="deleteUsername" placeholder="username">
+                            </div>
+                            <div class="form-group">
+                                <label>Server (for OVPN download)</label>
+                                <select id="downloadServer" onchange="updateDownloadServer()">
+                                    <option value="">Select Server</option>
+                                </select>
+                            </div>
+                            <div class="table-actions">
+                                <button class="btn btn-danger btn-sm" onclick="deleteUser()">Delete User</button>
+                                <button class="btn btn-info btn-sm" onclick="downloadUserOVPN()">Download OVPN</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="usersResponse" class="response" style="display: none;"></div>
+                </div>
+            </div>
+
+            <!-- End-Nodes Tab -->
+            <div id="endnodes" class="tab-content">
+                <div class="section">
+                    <h3>End-Node Management</h3>
+                    <div class="grid">
+                        <div class="card">
+                            <h4>List End-Nodes</h4>
+                            <button class="btn btn-primary" onclick="listEndNodes()">List All End-Nodes</button>
+                        </div>
+                        <div class="card">
+                            <h4>Register End-Node</h4>
+                            <div class="form-group">
+                                <label>Server ID</label>
+                                <input type="text" id="registerServerId" placeholder="endnode-1">
+                            </div>
+                            <div class="form-group">
+                                <label>Host</label>
+                                <input type="text" id="registerHost" placeholder="192.168.10.217">
+                            </div>
+                            <div class="form-group">
+                                <label>Port</label>
+                                <input type="number" id="registerPort" value="8080">
+                            </div>
+                            <button class="btn btn-success" onclick="registerEndNode()">Register End-Node</button>
+                        </div>
+                        <div class="card">
+                            <h4>Health Check</h4>
+                            <div class="form-group">
+                                <label>Server ID</label>
+                                <input type="text" id="healthServerId" placeholder="endnode-1">
+                            </div>
+                            <button class="btn btn-info" onclick="sendHealthCheck()">Send Health Check</button>
+                        </div>
+                        <div class="card">
+                            <h4>Delete End-Node</h4>
+                            <div class="form-group">
+                                <label>Server ID</label>
+                                <input type="text" id="deleteServerId" placeholder="AlKhor">
+                            </div>
+                            <button class="btn btn-danger" onclick="deleteEndNode()">Delete End-Node</button>
+                        </div>
+                    </div>
+                    <div id="endnodesResponse" class="response" style="display: none;"></div>
+                </div>
+            </div>
+
+            <!-- Sync Tab -->
+            <div id="sync" class="tab-content">
+                <div class="section">
+                    <h3>User Synchronization</h3>
+                    <div class="grid">
+                        <div class="card">
+                            <h4>Sync User</h4>
+                            <div class="form-group">
+                                <label>Username</label>
+                                <input type="text" id="syncUsername" placeholder="username">
+                            </div>
+                            <div class="form-group">
+                                <label>Action</label>
+                                <select id="syncAction">
+                                    <option value="CREATE">Create</option>
+                                    <option value="UPDATE">Update</option>
+                                    <option value="DELETE">Delete</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Port</label>
+                                <input type="number" id="syncPort" value="1194">
+                            </div>
+                            <div class="form-group">
+                                <label>Protocol</label>
+                                <select id="syncProtocol">
+                                    <option value="udp">UDP</option>
+                                    <option value="tcp">TCP</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary" onclick="syncUser()">Sync User</button>
+                        </div>
+                    </div>
+                    <div id="syncResponse" class="response" style="display: none;"></div>
+                </div>
+            </div>
+
+            <!-- Logs Tab -->
+            <div id="logs" class="tab-content">
+                <div class="section">
+                    <h3>System Logs</h3>
+                    <div class="search-filter">
+                        <div class="logs-dropdown">
+                            <button class="btn btn-primary" onclick="toggleLogsDropdown()">Select Log Source ▼</button>
+                            <div id="logsDropdown" class="logs-dropdown-content">
+                                <a href="#" onclick="selectLogSource('management')" id="log-management">Management Server</a>
+                                <a href="#" onclick="selectLogSource('all')" id="log-all">All End-Nodes</a>
+                                <a href="#" onclick="selectLogSource('endnode')" id="log-endnode">Specific End-Node</a>
+                            </div>
+                        </div>
+                        <select id="logEndNodeSelect" style="display: none;" onchange="updateLogSource()">
+                            <option value="">Select End-Node</option>
+                        </select>
+                        <input type="text" id="logSearch" placeholder="Search logs..." onkeyup="filterLogs()">
+                        <select id="logLevelFilter" onchange="filterLogs()">
+                            <option value="">All Levels</option>
+                            <option value="ERROR">Error</option>
+                            <option value="WARN">Warning</option>
+                            <option value="INFO">Info</option>
+                            <option value="DEBUG">Debug</option>
+                        </select>
+                        <input type="number" id="logLimit" value="50" min="1" max="500" placeholder="Limit">
+                        <button class="btn btn-success" onclick="fetchLogs()">Fetch Logs</button>
+                        <button class="btn btn-info" onclick="clearLogs()">Clear</button>
+                    </div>
+                    <div id="logsContainer" style="display: none;">
+                        <div class="search-filter">
+                            <input type="text" id="logSearchFilter" placeholder="Filter logs..." onkeyup="filterLogDisplay()">
+                            <select id="logTimeFilter" onchange="filterLogDisplay()">
+                                <option value="">All Time</option>
+                                <option value="1h">Last Hour</option>
+                                <option value="24h">Last 24 Hours</option>
+                                <option value="7d">Last 7 Days</option>
+                            </select>
+                            <button class="btn btn-primary btn-sm" onclick="exportLogs()">Export Logs</button>
+                        </div>
+                        <div id="logsTableContainer" class="table-container">
+                            <table class="data-table" id="logsTable">
+                                <thead>
+                                    <tr>
+                                        <th class="sortable" onclick="sortLogsTable('timestamp')">Timestamp</th>
+                                        <th class="sortable" onclick="sortLogsTable('level')">Level</th>
+                                        <th class="sortable" onclick="sortLogsTable('server_id')">Server</th>
+                                        <th class="sortable" onclick="sortLogsTable('username')">User</th>
+                                        <th class="sortable" onclick="sortLogsTable('action')">Action</th>
+                                        <th>Message</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="logsTableBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="logsResponse" class="response" style="display: none;"></div>
+                </div>
+            </div>
+
+            <div class="loading" id="loading">
+                <p>Loading...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        let config = {
+            serverUrl: 'http://192.168.10.248:8080',
+            apiKey: '',
+            serverId: 'endnode-1'
+        };
+
+        // Global data storage
+        let usersData = [];
+        let endNodesData = [];
+        let logsData = [];
+        let currentLogSource = 'management';
+        let currentSortColumn = '';
+        let currentSortDirection = 'asc';
+        let currentPage = 1;
+        const itemsPerPage = 10;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateConfig();
+            loadEndNodesForFilters();
+        });
+
+        function updateConfig() {
+            config.serverUrl = document.getElementById('serverUrl').value;
+            config.apiKey = document.getElementById('apiKey').value;
+            config.serverId = document.getElementById('serverId').value;
+        }
+
+        function showTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+            
+            // Update end-node status when users tab is shown
+            if (tabName === 'users') {
+                updateEndNodeStatus();
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('loading').classList.add('show');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.remove('show');
+        }
+
+        function showResponse(elementId, data, isError = false) {
+            const responseElement = document.getElementById(elementId);
+            responseElement.style.display = 'block';
+            
+            if (isError) {
+                responseElement.className = 'response error';
+            } else {
+                responseElement.className = 'response';
+            }
+            
+            responseElement.textContent = JSON.stringify(data, null, 2);
+        }
+
+        async function makeRequest(url, method = 'GET', data = null) {
+            updateConfig();
+            
+            const options = {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+
+            if (config.apiKey) {
+                options.headers['Authorization'] = `Bearer ${config.apiKey}`;
+            }
+
+            if (data) {
+                options.body = JSON.stringify(data);
+            }
+
+            try {
+                const response = await fetch(`${config.serverUrl}${url}`, options);
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${result.message || 'Unknown error'}`);
+                }
+                
+                return result;
+            } catch (error) {
+                throw new Error(`Request failed: ${error.message}`);
+            }
+        }
+
+        // Health functions
+        async function checkHealth() {
+            showLoading();
+            try {
+                const result = await makeRequest('/health');
+                showResponse('healthResponse', result);
+            } catch (error) {
+                showResponse('healthResponse', { error: error.message }, true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function getAPIInfo() {
+            showLoading();
+            try {
+                const result = await makeRequest('/api');
+                showResponse('healthResponse', result);
+            } catch (error) {
+                showResponse('healthResponse', { error: error.message }, true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // User functions
+        async function listUsers() {
+            showLoading();
+            try {
+                const result = await makeRequest('/api/users');
+                showResponse('usersResponse', result);
+            } catch (error) {
+                showResponse('usersResponse', { error: error.message }, true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function createUser() {
+            const username = document.getElementById('newUsername').value;
+            const port = parseInt(document.getElementById('newPort').value);
+            const protocol = document.getElementById('newProtocol').value;
+
+            if (!username) {
+                showResponse('usersResponse', { error: 'Username is required' }, true);
+                return;
+            }
+
+            // Check if any end-nodes are registered
+            if (endNodesData.length === 0) {
+                showResponse('usersResponse', { 
+                    error: 'Cannot create user: No end-nodes are registered. Please register an end-node first before creating users.',
+                    suggestion: 'Go to the "End-Nodes" tab and register an end-node, then return to create users.'
+                }, true);
+                return;
+            }
+
+            showLoading();
+            try {
+                // Get the first available end-node as the target server
+                const targetServerId = endNodesData.length > 0 ? endNodesData[0].name || endNodesData[0].server_id : config.serverId;
+                
+                const data = {
+                    username: username,
+                    ovpn_path: `/var/lib/vpnmanager/clients/${username}.ovpn`,
+                    checksum: 'abc123',
+                    port: port,
+                    protocol: protocol,
+                    target_server_id: targetServerId
+                };
+
+                const result = await makeRequest('/api/users', 'POST', data);
+                showResponse('usersResponse', result);
+                
+                // Refresh the users table if it's visible
+                if (document.getElementById('usersTableContainer').style.display !== 'none') {
+                    await loadUsersTable();
+                }
+            } catch (error) {
+                showResponse('usersResponse', { error: error.message }, true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function deleteUser() {
+            const username = document.getElementById('deleteUsername').value;
+
+            if (!username) {
+                showResponse('usersResponse', { error: 'Username is required' }, true);
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to delete user '${username}'? This will delete the user from the management server and remove OVPN files from all end-nodes.`)) {
+                return;
+            }
+
+            showLoading();
+            try {
+                // First delete from management server
+                const result = await makeRequest(`/api/users/${username}`, 'DELETE');
+                
+                // Then delete OVPN files from all end-nodes
+                if (endNodesData.length > 0) {
+                    let deleteResults = [];
+                    
+                    for (const endNode of endNodesData) {
+                        try {
+                            const endNodeUrl = `http://${endNode.host}:${endNode.port}`;
+                            const response = await fetch(`${endNodeUrl}/api/ovpn/delete/${username}`, {
+                                method: 'DELETE'
+                            });
+
+                            if (response.ok) {
+                                deleteResults.push(`✅ ${username} → ${endNode.name} (OVPN file deleted)`);
+                            } else {
+                                deleteResults.push(`❌ ${username} → ${endNode.name} (${response.status})`);
+                            }
+                        } catch (error) {
+                            deleteResults.push(`❌ ${username} → ${endNode.name} (${error.message})`);
+                        }
+                    }
+                    
+                    showResponse('usersResponse', { 
+                        success: true, 
+                        message: `User ${username} deleted from management server and OVPN files removed from end-nodes.`,
+                        results: deleteResults
+                    });
+                } else {
+                    showResponse('usersResponse', result);
+                }
+                
+                // Refresh the users table if it's visible
+                if (document.getElementById('usersTableContainer').style.display !== 'none') {
+                    await loadUsersTable();
+                }
+            } catch (error) {
+                showResponse('usersResponse', { error: error.message }, true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // End-node functions
+        async function listEndNodes() {
+            showLoading();
+            try {
+                const result = await makeRequest('/api/endnodes');
+                showResponse('endnodesResponse', result);
+            } catch (error) {
+                showResponse('endnodesResponse', { error: error.message }, true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function registerEndNode() {
+            const serverId = document.getElementById('registerServerId').value;
+            const host = document.getElementById('registerHost').value;
+            const port = parseInt(document.getElementById('registerPort').value);
+
+            if (!serverId || !host) {
+                showResponse('endnodesResponse', { error: 'Server ID and Host are required' }, true);
+                return;
+            }
+
+            showLoading();
+            try {
+                const data = {
+                    server_id: serverId,
+                    host: host,
+                    port: port,
+                    status: 'online'
+                };
+
+                const result = await makeRequest('/api/endnodes/register', 'POST', data);
+                showResponse('endnodesResponse', result);
+                
+                // Refresh end-nodes data and update UI
+                await loadEndNodesForFilters();
+            } catch (error) {
+                showResponse('endnodesResponse', { error: error.message }, true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function sendHealthCheck() {
+            const serverId = document.getElementById('healthServerId').value;
+
+            if (!serverId) {
+                showResponse('endnodesResponse', { error: 'Server ID is required' }, true);
+                return;
+            }
+
+            showLoading();
+            try {
+                const data = {
+                    server_id: serverId,
+                    status: 'healthy',
+                    timestamp: Math.floor(Date.now() / 1000),
+                    response_time: 50
+                };
+
+                const result = await makeRequest(`/api/endnodes/${serverId}/health`, 'POST', data);
+                showResponse('endnodesResponse', result);
+            } catch (error) {
+                showResponse('endnodesResponse', { error: error.message }, true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function deleteEndNode() {
+            const serverId = document.getElementById('deleteServerId').value;
+
+            if (!serverId) {
+                showResponse('endnodesResponse', { error: 'Server ID is required' }, true);
+                return;
+            }
+
+            // Confirm deletion
+            if (!confirm(`Are you sure you want to delete end-node '${serverId}'? This action cannot be undone.`)) {
+                return;
+            }
+
+            showLoading();
+            try {
+                const result = await makeRequest(`/api/endnodes/${serverId}/deregister`, 'POST');
+                showResponse('endnodesResponse', result);
+                
+                // Refresh end-nodes data and update UI
+                await loadEndNodesForFilters();
+            } catch (error) {
+                showResponse('endnodesResponse', { error: error.message }, true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Sync functions
+        async function syncUser() {
+            const username = document.getElementById('syncUsername').value;
+            const action = document.getElementById('syncAction').value;
+            const port = parseInt(document.getElementById('syncPort').value);
+            const protocol = document.getElementById('syncProtocol').value;
+
+            if (!username) {
+                showResponse('syncResponse', { error: 'Username is required' }, true);
+                return;
+            }
+
+            showLoading();
+            try {
+                const data = {
+                    action: action,
+                    username: username,
+                    data: {
+                        port: port,
+                        protocol: protocol,
+                        checksum: 'abc123'
+                    }
+                };
+
+                const result = await makeRequest('/api/users/sync', 'POST', data);
+                showResponse('syncResponse', result);
+            } catch (error) {
+                showResponse('syncResponse', { error: error.message }, true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Log functions
+        async function getLogs() {
+            showLoading();
+            try {
+                const result = await makeRequest('/api/logs');
+                showResponse('logsResponse', result);
+            } catch (error) {
+                showResponse('logsResponse', { error: error.message }, true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function getAllLogs() {
+            showLoading();
+            try {
+                const result = await makeRequest('/api/logs?include_endnodes=true');
+                showResponse('logsResponse', result);
+            } catch (error) {
+                showResponse('logsResponse', { error: error.message }, true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function getFilteredLogs() {
+            const serverId = document.getElementById('logServerId').value;
+            const username = document.getElementById('logUsername').value;
+            const limit = document.getElementById('logLimit').value;
+
+            showLoading();
+            try {
+                let url = '/api/logs?';
+                const params = [];
+                
+                if (serverId) params.push(`server_id=${encodeURIComponent(serverId)}`);
+                if (username) params.push(`username=${encodeURIComponent(username)}`);
+                if (limit) params.push(`limit=${limit}`);
+                
+                url += params.join('&');
+                
+                const result = await makeRequest(url);
+                showResponse('logsResponse', result);
+            } catch (error) {
+                showResponse('logsResponse', { error: error.message }, true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // OVPN Download functions
+        async function downloadOVPN() {
+            const username = document.getElementById('downloadUsername').value;
+            const server = document.getElementById('downloadServer').value;
+
+            if (!username || !server) {
+                showResponse('usersResponse', { error: 'Username and Server are required' }, true);
+                return;
+            }
+
+            showLoading();
+            try {
+                updateConfig();
+                
+                // First, get the end-node information from management server
+                const endNodesResponse = await makeRequest('/api/endnodes');
+                if (!endNodesResponse.success) {
+                    throw new Error('Failed to get end-nodes list');
+                }
+                
+                // Find the specific end-node
+                const endNodes = endNodesResponse.data || [];
+                const targetEndNode = endNodes.find(node => node.name === server);
+                
+                if (!targetEndNode) {
+                    throw new Error(`End-node ${server} not found`);
+                }
+                
+                // Download OVPN file from the end-node
+                const endNodeUrl = `http://${targetEndNode.host}:${targetEndNode.port}`;
+                const downloadUrl = `${endNodeUrl}/api/ovpn/${username}`;
+                
+                // Create a temporary link to download the file
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = `${username}_${server}.ovpn`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showResponse('usersResponse', { 
+                    success: true, 
+                    message: `OVPN file download initiated for ${username} from ${server} (${targetEndNode.host})`,
+                    filename: `${username}_${server}.ovpn`,
+                    endnode_url: endNodeUrl
+                });
+            } catch (error) {
+                showResponse('usersResponse', { error: error.message }, true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Enhanced Health Functions
+        async function checkAllEndpoints() {
+            showLoading();
+            try {
+                // Get all end-nodes first
+                const endNodesResult = await makeRequest('/api/endnodes');
+                if (!endNodesResult.success) {
+                    throw new Error('Failed to get end-nodes list');
+                }
+
+                const endNodes = endNodesResult.data || [];
+                const endpointsContainer = document.getElementById('endpointsContainer');
+                const endpointsTableBody = document.getElementById('endpointsTableBody');
+                
+                endpointsContainer.style.display = 'block';
+                endpointsTableBody.innerHTML = '';
+
+                // Check each endpoint and populate table
+                for (const endNode of endNodes) {
+                    const row = document.createElement('tr');
+                    const startTime = Date.now();
+                    
+                    try {
+                        const endNodeUrl = `http://${endNode.host}:${endNode.port}`;
+                        const healthResponse = await fetch(`${endNodeUrl}/health`, {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        
+                        const healthData = await healthResponse.json();
+                        const isOnline = healthResponse.ok;
+                        const responseTime = Date.now() - startTime;
+                        const lastCheck = new Date().toLocaleString();
+                        
+                        const statusClass = isOnline ? 'status-online' : 'status-offline';
+                        const statusText = isOnline ? 'Online' : 'Offline';
+                        
+                        row.innerHTML = `
+                            <td>${endNode.name || endNode.server_id}</td>
+                            <td>${endNode.host}</td>
+                            <td>${endNode.port}</td>
+                            <td><span class="status-indicator ${statusClass}"></span>${statusText}</td>
+                            <td>${responseTime}ms</td>
+                            <td>${lastCheck}</td>
+                            <td>
+                                <div class="table-actions">
+                                    <button class="btn btn-info btn-sm" onclick="testEndpoint('${endNode.host}', ${endNode.port})">Test</button>
+                                    <button class="btn btn-warning btn-sm" onclick="refreshEndpoint('${endNode.host}', ${endNode.port})">Refresh</button>
+                                </div>
+                            </td>
+                        `;
+                    } catch (error) {
+                        const responseTime = Date.now() - startTime;
+                        const lastCheck = new Date().toLocaleString();
+                        
+                        row.innerHTML = `
+                            <td>${endNode.name || endNode.server_id}</td>
+                            <td>${endNode.host}</td>
+                            <td>${endNode.port}</td>
+                            <td><span class="status-indicator status-offline"></span>Offline</td>
+                            <td>${responseTime}ms</td>
+                            <td>${lastCheck}</td>
+                            <td>
+                                <div class="table-actions">
+                                    <button class="btn btn-info btn-sm" onclick="testEndpoint('${endNode.host}', ${endNode.port})">Test</button>
+                                    <button class="btn btn-warning btn-sm" onclick="refreshEndpoint('${endNode.host}', ${endNode.port})">Refresh</button>
+                                </div>
+                            </td>
+                        `;
+                    }
+                    
+                    endpointsTableBody.appendChild(row);
+                }
+                
+                showResponse('healthResponse', { 
+                    success: true, 
+                    message: `Checked ${endNodes.length} endpoints`,
+                    endpoints: endNodes.length
+                });
+            } catch (error) {
+                showResponse('healthResponse', { error: error.message }, true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function createEndpointCard(endNode, isOnline, healthData) {
+            const card = document.createElement('div');
+            card.className = 'endpoint-card';
+            
+            const statusClass = isOnline ? 'status-online' : 'status-offline';
+            const statusText = isOnline ? 'Online' : 'Offline';
+            
+            card.innerHTML = `
+                <div class="endpoint-header">
+                    <div class="endpoint-name">${endNode.name || endNode.server_id}</div>
+                    <div class="endpoint-status ${statusClass}">${statusText}</div>
+                </div>
+                <div class="endpoint-details">
+                    <div class="endpoint-detail">
+                        <div class="endpoint-detail-label">Host</div>
+                        <div>${endNode.host}:${endNode.port}</div>
+                    </div>
+                    <div class="endpoint-detail">
+                        <div class="endpoint-detail-label">Status</div>
+                        <div>${healthData.status || 'Unknown'}</div>
+                    </div>
+                    <div class="endpoint-detail">
+                        <div class="endpoint-detail-label">Last Check</div>
+                        <div>${new Date().toLocaleString()}</div>
+                    </div>
+                    <div class="endpoint-detail">
+                        <div class="endpoint-detail-label">Response Time</div>
+                        <div>${healthData.response_time || 'N/A'}ms</div>
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        async function refreshEndpoints() {
+            await checkAllEndpoints();
+        }
+
+        async function testEndpoint(host, port) {
+            showLoading();
+            try {
+                const endNodeUrl = `http://${host}:${port}`;
+                const startTime = Date.now();
+                
+                const healthResponse = await fetch(`${endNodeUrl}/health`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const responseTime = Date.now() - startTime;
+                const healthData = await healthResponse.json();
+                const isOnline = healthResponse.ok;
+                
+                showResponse('healthResponse', {
+                    success: true,
+                    message: `Endpoint test completed for ${host}:${port}`,
+                    endpoint: `${host}:${port}`,
+                    status: isOnline ? 'Online' : 'Offline',
+                    responseTime: `${responseTime}ms`,
+                    healthData: healthData
+                });
+            } catch (error) {
+                showResponse('healthResponse', { 
+                    error: `Failed to test endpoint ${host}:${port}: ${error.message}` 
+                }, true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function refreshEndpoint(host, port) {
+            showLoading();
+            try {
+                const endNodeUrl = `http://${host}:${port}`;
+                const startTime = Date.now();
+                
+                const healthResponse = await fetch(`${endNodeUrl}/health`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const responseTime = Date.now() - startTime;
+                const healthData = await healthResponse.json();
+                const isOnline = healthResponse.ok;
+                
+                showResponse('healthResponse', {
+                    success: true,
+                    message: `Endpoint refreshed for ${host}:${port}`,
+                    endpoint: `${host}:${port}`,
+                    status: isOnline ? 'Online' : 'Offline',
+                    responseTime: `${responseTime}ms`,
+                    healthData: healthData
+                });
+                
+                // Refresh the endpoints table
+                await checkAllEndpoints();
+            } catch (error) {
+                showResponse('healthResponse', { 
+                    error: `Failed to refresh endpoint ${host}:${port}: ${error.message}` 
+                }, true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Enhanced Users Functions
+        async function loadUsersTable() {
+            showLoading();
+            try {
+                const result = await makeRequest('/api/users');
+                if (result.success && result.data) {
+                    usersData = result.data;
+                    displayUsersTable();
+                    updateServerFilter();
+                    document.getElementById('usersTableContainer').style.display = 'block';
+                } else {
+                    throw new Error('Failed to load users data');
+                }
+            } catch (error) {
+                showResponse('usersResponse', { error: error.message }, true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function displayUsersTable() {
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = '';
+
+            const filteredUsers = getFilteredUsers();
+            const paginatedUsers = getPaginatedUsers(filteredUsers);
+
+            paginatedUsers.forEach(user => {
+                const row = document.createElement('tr');
+                const hasServerId = user.server_id && user.server_id !== 'N/A' && user.server_id !== '';
+                const serverDisplay = user.server_id || '<span style="color: #dc3545; font-style: italic;">Not assigned</span>';
+                const downloadButton = hasServerId ? 
+                    `<button class="btn btn-info btn-sm" onclick="downloadUserOVPNFromTable('${user.username}', '${user.server_id}')">Download</button>` :
+                    `<button class="btn btn-secondary btn-sm" disabled title="User created before end-node registration. Use Quick Actions below to download with specific server.">No Server</button>`;
+                
+                row.innerHTML = `
+                    <td>${user.username}</td>
+                    <td>${serverDisplay}</td>
+                    <td>${user.port || 'N/A'}</td>
+                    <td>${user.protocol || 'N/A'}</td>
+                    <td>${user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}</td>
+                    <td><span class="status-indicator ${user.active ? 'status-online' : 'status-offline'}"></span>${user.active ? 'active' : 'inactive'}</td>
+                    <td>
+                        <div class="table-actions">
+                            <button class="btn btn-danger btn-sm" onclick="deleteUserFromTable('${user.username}')">Delete</button>
+                            ${downloadButton}
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            updatePagination(filteredUsers.length, 'usersPagination');
+        }
+
+        function getFilteredUsers() {
+            const searchTerm = document.getElementById('userSearch').value.toLowerCase();
+            const statusFilter = document.getElementById('userStatusFilter').value;
+            const serverFilter = document.getElementById('userServerFilter').value;
+
+            return usersData.filter(user => {
+                const matchesSearch = !searchTerm || user.username.toLowerCase().includes(searchTerm);
+                const matchesStatus = !statusFilter || user.status === statusFilter;
+                const matchesServer = !serverFilter || user.server_id === serverFilter;
+                
+                return matchesSearch && matchesStatus && matchesServer;
+            });
+        }
+
+        function getPaginatedUsers(users) {
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            return users.slice(startIndex, endIndex);
+        }
+
+        function updatePagination(totalItems, containerId) {
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            const pagination = document.getElementById(containerId);
+            
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+
+            let paginationHTML = '';
+            
+            // Previous button
+            paginationHTML += `<button ${currentPage === 1 ? 'disabled' : ''} onclick="changePage(${currentPage - 1})">Previous</button>`;
+            
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                const isCurrentPage = i === currentPage;
+                paginationHTML += `<button class="${isCurrentPage ? 'current-page' : ''}" onclick="changePage(${i})">${i}</button>`;
+            }
+            
+            // Next button
+            paginationHTML += `<button ${currentPage === totalPages ? 'disabled' : ''} onclick="changePage(${currentPage + 1})">Next</button>`;
+            
+            pagination.innerHTML = paginationHTML;
+        }
+
+        function changePage(page) {
+            currentPage = page;
+            displayUsersTable();
+        }
+
+        function filterUsers() {
+            currentPage = 1;
+            displayUsersTable();
+        }
+
+        function sortTable(column) {
+            if (currentSortColumn === column) {
+                currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSortColumn = column;
+                currentSortDirection = 'asc';
+            }
+
+            usersData.sort((a, b) => {
+                let aVal = a[column] || '';
+                let bVal = b[column] || '';
+                
+                if (typeof aVal === 'string') {
+                    aVal = aVal.toLowerCase();
+                    bVal = bVal.toLowerCase();
+                }
+                
+                if (currentSortDirection === 'asc') {
+                    return aVal > bVal ? 1 : -1;
+                } else {
+                    return aVal < bVal ? 1 : -1;
+                }
+            });
+
+            displayUsersTable();
+            updateSortIndicators();
+        }
+
+        function updateSortIndicators() {
+            document.querySelectorAll('#usersTable th').forEach(th => {
+                th.classList.remove('sort-asc', 'sort-desc');
+            });
+            
+            if (currentSortColumn) {
+                const header = document.querySelector(`#usersTable th[onclick*="${currentSortColumn}"]`);
+                if (header) {
+                    header.classList.add(currentSortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+                }
+            }
+        }
+
+        async function deleteUserFromTable(username) {
+            if (!confirm(`Are you sure you want to delete user '${username}'? This will delete the user from the management server and remove OVPN files from all end-nodes.`)) {
+                return;
+            }
+
+            showLoading();
+            try {
+                // First delete from management server
+                const result = await makeRequest(`/api/users/${username}`, 'DELETE');
+                
+                // Then delete OVPN files from all end-nodes
+                if (endNodesData.length > 0) {
+                    let deleteResults = [];
+                    
+                    for (const endNode of endNodesData) {
+                        try {
+                            const endNodeUrl = `http://${endNode.host}:${endNode.port}`;
+                            const response = await fetch(`${endNodeUrl}/api/ovpn/delete/${username}`, {
+                                method: 'DELETE'
+                            });
+
+                            if (response.ok) {
+                                deleteResults.push(`✅ ${username} → ${endNode.name} (OVPN file deleted)`);
+                            } else {
+                                deleteResults.push(`❌ ${username} → ${endNode.name} (${response.status})`);
+                            }
+                        } catch (error) {
+                            deleteResults.push(`❌ ${username} → ${endNode.name} (${error.message})`);
+                        }
+                    }
+                    
+                    showResponse('usersResponse', { 
+                        success: true, 
+                        message: `User ${username} deleted from management server and OVPN files removed from end-nodes.`,
+                        results: deleteResults
+                    });
+                } else {
+                    showResponse('usersResponse', result);
+                }
+                
+                await loadUsersTable(); // Refresh the table
+            } catch (error) {
+                showResponse('usersResponse', { error: error.message }, true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function downloadUserOVPNFromTable(username, serverId) {
+            if (!serverId || serverId === 'N/A' || serverId === '') {
+                showResponse('usersResponse', { 
+                    error: 'This user was created before any end-nodes were registered. Please sync this user to an end-node first, or use the legacy download method with a specific server.', 
+                    suggestion: 'Use the "Quick Actions" section below to download with a specific server, or sync the user to an end-node first.'
+                }, true);
+                return;
+            }
+
+            showLoading();
+            try {
+                // Get end-node information
+                const endNodesResult = await makeRequest('/api/endnodes');
+                if (!endNodesResult.success) {
+                    throw new Error('Failed to get end-nodes list');
+                }
+                
+                const endNodes = endNodesResult.data || [];
+                const targetEndNode = endNodes.find(node => node.name === serverId || node.server_id === serverId);
+                
+                if (!targetEndNode) {
+                    throw new Error(`End-node ${serverId} not found`);
+                }
+                
+                // Download OVPN file from the end-node
+                const endNodeUrl = `http://${targetEndNode.host}:${targetEndNode.port}`;
+                const downloadUrl = `${endNodeUrl}/api/ovpn/${username}`;
+                
+                // Create a temporary link to download the file
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = `${username}_${serverId}.ovpn`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showResponse('usersResponse', { 
+                    success: true, 
+                    message: `OVPN file download initiated for ${username} from ${serverId}`,
+                    filename: `${username}_${serverId}.ovpn`
+                });
+            } catch (error) {
+                showResponse('usersResponse', { error: error.message }, true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function loadEndNodesForFilters() {
+            try {
+                const result = await makeRequest('/api/endnodes');
+                if (result.success && result.data) {
+                    endNodesData = result.data;
+                    console.log('Loaded end-nodes:', endNodesData); // Debug log
+                    updateServerFilter();
+                    updateLogEndNodeSelect();
+                    updateEndNodeStatus();
+                } else {
+                    console.log('No end-nodes data received:', result);
+                    endNodesData = [];
+                    updateEndNodeStatus();
+                }
+            } catch (error) {
+                console.error('Failed to load end-nodes for filters:', error);
+                endNodesData = [];
+                updateEndNodeStatus();
+            }
+        }
+
+        function updateServerFilter() {
+            const serverFilter = document.getElementById('userServerFilter');
+            const logEndNodeSelect = document.getElementById('logEndNodeSelect');
+            const downloadServer = document.getElementById('downloadServer');
+            
+            // Clear existing options (except first one)
+            serverFilter.innerHTML = '<option value="">All Servers</option>';
+            logEndNodeSelect.innerHTML = '<option value="">Select End-Node</option>';
+            downloadServer.innerHTML = '<option value="">Select Server</option>';
+            
+            endNodesData.forEach(endNode => {
+                const option1 = document.createElement('option');
+                option1.value = endNode.name || endNode.server_id;
+                option1.textContent = endNode.name || endNode.server_id;
+                serverFilter.appendChild(option1);
+                
+                const option2 = document.createElement('option');
+                option2.value = endNode.name || endNode.server_id;
+                option2.textContent = endNode.name || endNode.server_id;
+                logEndNodeSelect.appendChild(option2);
+                
+                const option3 = document.createElement('option');
+                option3.value = endNode.name || endNode.server_id;
+                option3.textContent = endNode.name || endNode.server_id;
+                downloadServer.appendChild(option3);
+            });
+        }
+
+        function updateDownloadServer() {
+            // This function is called when the download server dropdown changes
+            // It can be used to update any related UI elements if needed
+        }
+
+        async function refreshEndNodesData() {
+            console.log('Manually refreshing end-nodes data...');
+            showLoading();
+            try {
+                await loadEndNodesForFilters();
+                showResponse('usersResponse', { 
+                    success: true, 
+                    message: `End-nodes refreshed. Found ${endNodesData.length} end-nodes.`,
+                    endNodes: endNodesData
+                });
+            } catch (error) {
+                showResponse('usersResponse', { error: error.message }, true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function syncAllUsers() {
+            showLoading();
+            try {
+                // Get all users
+                const usersResult = await makeRequest('/api/users');
+                if (!usersResult.success || !usersResult.data) {
+                    throw new Error('Failed to get users list');
+                }
+
+                const users = usersResult.data;
+                if (users.length === 0) {
+                    showResponse('usersResponse', { 
+                        success: true, 
+                        message: 'No users to sync.' 
+                    });
+                    return;
+                }
+
+                // Get all end-nodes
+                const endNodesResult = await makeRequest('/api/endnodes');
+                if (!endNodesResult.success || !endNodesResult.data) {
+                    throw new Error('Failed to get end-nodes list');
+                }
+
+                const endNodes = endNodesResult.data;
+                if (endNodes.length === 0) {
+                    showResponse('usersResponse', { 
+                        success: false, 
+                        error: 'No end-nodes available for sync.' 
+                    }, true);
+                    return;
+                }
+
+                let syncResults = [];
+                
+                // Sync each user to each end-node (original behavior)
+                for (const user of users) {
+                    for (const endNode of endNodes) {
+                        try {
+                            // Create user on end-node
+                            const userData = {
+                                username: user.username,
+                                ovpn_path: `/var/lib/vpnmanager/clients/${user.username}.ovpn`,
+                                checksum: user.checksum || 'abc123',
+                                port: user.port || 1194,
+                                protocol: user.protocol || 'udp',
+                                server_id: endNode.name,
+                                created_by: user.created_by || 'management'
+                            };
+
+                            const endNodeUrl = `http://${endNode.host}:${endNode.port}`;
+                            const response = await fetch(`${endNodeUrl}/api/users`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(userData)
+                            });
+
+                            if (response.ok) {
+                                syncResults.push(`✅ ${user.username} → ${endNode.name}`);
+                            } else {
+                                syncResults.push(`❌ ${user.username} → ${endNode.name} (${response.status})`);
+                            }
+                        } catch (error) {
+                            syncResults.push(`❌ ${user.username} → ${endNode.name} (${error.message})`);
+                        }
+                    }
+                }
+
+                showResponse('usersResponse', { 
+                    success: true, 
+                    message: `User sync completed. ${users.length} users × ${endNodes.length} end-nodes = ${users.length * endNodes.length} sync operations.`,
+                    results: syncResults
+                });
+
+                // Refresh the users table
+                if (document.getElementById('usersTableContainer').style.display !== 'none') {
+                    await loadUsersTable();
+                }
+            } catch (error) {
+                showResponse('usersResponse', { error: error.message }, true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function checkOVPNFiles() {
+            showLoading();
+            try {
+                // Get all users
+                const usersResult = await makeRequest('/api/users');
+                if (!usersResult.success || !usersResult.data) {
+                    throw new Error('Failed to get users list');
+                }
+
+                const users = usersResult.data;
+                if (users.length === 0) {
+                    showResponse('usersResponse', { 
+                        success: true, 
+                        message: 'No users to check.' 
+                    });
+                    return;
+                }
+
+                // Get all end-nodes
+                const endNodesResult = await makeRequest('/api/endnodes');
+                if (!endNodesResult.success || !endNodesResult.data) {
+                    throw new Error('Failed to get end-nodes list');
+                }
+
+                const endNodes = endNodesResult.data;
+                if (endNodes.length === 0) {
+                    showResponse('usersResponse', { 
+                        success: false, 
+                        error: 'No end-nodes available for checking.' 
+                    }, true);
+                    return;
+                }
+
+                let checkResults = [];
+                
+                // Check each user's OVPN file on each end-node
+                for (const user of users) {
+                    for (const endNode of endNodes) {
+                        try {
+                            const endNodeUrl = `http://${endNode.host}:${endNode.port}`;
+                            
+                            // Check if OVPN file exists by trying to download it
+                            const response = await fetch(`${endNodeUrl}/api/ovpn/${user.username}`, {
+                                method: 'GET'
+                            });
+
+                            if (response.ok) {
+                                checkResults.push(`✅ ${user.username} → ${endNode.name} (OVPN file exists)`);
+                            } else if (response.status === 404) {
+                                checkResults.push(`⚠️ ${user.username} → ${endNode.name} (OVPN file not found - needs to be created)`);
+                            } else {
+                                checkResults.push(`❌ ${user.username} → ${endNode.name} (${response.status})`);
+                            }
+                        } catch (error) {
+                            checkResults.push(`❌ ${user.username} → ${endNode.name} (${error.message})`);
+                        }
+                    }
+                }
+
+                showResponse('usersResponse', { 
+                    success: true, 
+                    message: `OVPN file check completed. ${users.length} users × ${endNodes.length} end-nodes = ${users.length * endNodes.length} checks.`,
+                    results: checkResults
+                });
+            } catch (error) {
+                showResponse('usersResponse', { error: error.message }, true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function createMissingOVPNFiles() {
+            showLoading();
+            try {
+                // Get all users
+                const usersResult = await makeRequest('/api/users');
+                if (!usersResult.success || !usersResult.data) {
+                    throw new Error('Failed to get users list');
+                }
+
+                const users = usersResult.data;
+                if (users.length === 0) {
+                    showResponse('usersResponse', { 
+                        success: true, 
+                        message: 'No users to process.' 
+                    });
+                    return;
+                }
+
+                // Get all end-nodes
+                const endNodesResult = await makeRequest('/api/endnodes');
+                if (!endNodesResult.success || !endNodesResult.data) {
+                    throw new Error('Failed to get end-nodes list');
+                }
+
+                const endNodes = endNodesResult.data;
+                if (endNodes.length === 0) {
+                    showResponse('usersResponse', { 
+                        success: false, 
+                        error: 'No end-nodes available.' 
+                    }, true);
+                    return;
+                }
+
+                let createResults = [];
+                
+                // Create OVPN files for each user on each end-node
+                for (const user of users) {
+                    for (const endNode of endNodes) {
+                        try {
+                            const endNodeUrl = `http://${endNode.host}:${endNode.port}`;
+                            
+                            // Create OVPN file on end-node
+                            const ovpnData = {
+                                username: user.username,
+                                port: user.port || 1194,
+                                protocol: user.protocol || 'udp',
+                                server_id: endNode.name,
+                                server_ip: endNode.host,
+                                cert_data: {
+                                    ca: "-----BEGIN CERTIFICATE-----\n[CA Certificate Content]\n-----END CERTIFICATE-----",
+                                    cert: "-----BEGIN CERTIFICATE-----\n[Client Certificate Content]\n-----END CERTIFICATE-----",
+                                    key: "-----BEGIN PRIVATE KEY-----\n[Client Private Key Content]\n-----END PRIVATE KEY-----",
+                                    ta: "-----BEGIN OpenVPN Static key V1-----\n[TLS Auth Key Content]\n-----END OpenVPN Static key V1-----"
+                                }
+                            };
+
+                            const response = await fetch(`${endNodeUrl}/api/ovpn/create`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(ovpnData)
+                            });
+
+                            if (response.ok) {
+                                createResults.push(`✅ ${user.username} → ${endNode.name} (OVPN file created)`);
+                            } else {
+                                const errorText = await response.text();
+                                createResults.push(`❌ ${user.username} → ${endNode.name} (${response.status}: ${errorText})`);
+                            }
+                        } catch (error) {
+                            createResults.push(`❌ ${user.username} → ${endNode.name} (${error.message})`);
+                        }
+                    }
+                }
+
+                showResponse('usersResponse', { 
+                    success: true, 
+                    message: `OVPN file creation completed. ${users.length} users × ${endNodes.length} end-nodes = ${users.length * endNodes.length} operations.`,
+                    results: createResults
+                });
+
+                // Refresh the users table
+                if (document.getElementById('usersTableContainer').style.display !== 'none') {
+                    await loadUsersTable();
+                }
+            } catch (error) {
+                showResponse('usersResponse', { error: error.message }, true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function updateEndNodeStatus() {
+            const endNodeStatus = document.getElementById('endNodeStatus');
+            const createUserBtn = document.getElementById('createUserBtn');
+            
+            console.log('updateEndNodeStatus called, endNodesData.length:', endNodesData.length);
+            console.log('endNodesData:', endNodesData);
+            
+            if (endNodesData.length === 0) {
+                console.log('No end-nodes, disabling user creation');
+                endNodeStatus.style.display = 'block';
+                createUserBtn.disabled = true;
+                createUserBtn.textContent = 'Create User (No End-Nodes)';
+                createUserBtn.className = 'btn btn-secondary';
+            } else {
+                console.log('End-nodes available, enabling user creation');
+                endNodeStatus.style.display = 'none';
+                createUserBtn.disabled = false;
+                createUserBtn.textContent = 'Create User';
+                createUserBtn.className = 'btn btn-success';
+            }
+        }
+
+        function updateLogEndNodeSelect() {
+            const logEndNodeSelect = document.getElementById('logEndNodeSelect');
+            logEndNodeSelect.innerHTML = '<option value="">Select End-Node</option>';
+            
+            endNodesData.forEach(endNode => {
+                const option = document.createElement('option');
+                option.value = endNode.name || endNode.server_id;
+                option.textContent = endNode.name || endNode.server_id;
+                logEndNodeSelect.appendChild(option);
+            });
+        }
+
+        // Enhanced Logs Functions
+        function toggleLogsDropdown() {
+            const dropdown = document.getElementById('logsDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        function selectLogSource(source) {
+            currentLogSource = source;
+            const dropdown = document.getElementById('logsDropdown');
+            const endNodeSelect = document.getElementById('logEndNodeSelect');
+            
+            // Update active state
+            document.querySelectorAll('#logsDropdown a').forEach(link => {
+                link.classList.remove('active');
+            });
+            document.getElementById(`log-${source}`).classList.add('active');
+            
+            // Show/hide end-node selector
+            if (source === 'endnode') {
+                endNodeSelect.style.display = 'inline-block';
+            } else {
+                endNodeSelect.style.display = 'none';
+            }
+            
+            dropdown.classList.remove('show');
+        }
+
+        function updateLogSource() {
+            const endNodeSelect = document.getElementById('logEndNodeSelect');
+            if (endNodeSelect.value) {
+                currentLogSource = 'endnode';
+            }
+        }
+
+        async function fetchLogs() {
+            showLoading();
+            try {
+                let url = '/api/logs?';
+                const params = [];
+                
+                const limit = document.getElementById('logLimit').value;
+                if (limit) params.push(`limit=${limit}`);
+                
+                if (currentLogSource === 'all') {
+                    params.push('include_endnodes=true');
+                } else if (currentLogSource === 'endnode') {
+                    const endNodeId = document.getElementById('logEndNodeSelect').value;
+                    if (endNodeId) {
+                        params.push(`server_id=${encodeURIComponent(endNodeId)}`);
+                    }
+                }
+                
+                url += params.join('&');
+                
+                const result = await makeRequest(url);
+                if (result.success && result.data) {
+                    logsData = result.data;
+                    displayLogsTable();
+                    document.getElementById('logsContainer').style.display = 'block';
+                } else {
+                    throw new Error('Failed to fetch logs');
+                }
+            } catch (error) {
+                showResponse('logsResponse', { error: error.message }, true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function displayLogsTable() {
+            const tbody = document.getElementById('logsTableBody');
+            tbody.innerHTML = '';
+
+            const filteredLogs = getFilteredLogs();
+            
+            filteredLogs.forEach(log => {
+                const row = document.createElement('tr');
+                const timestamp = log.timestamp ? new Date(log.timestamp).toLocaleString() : 'N/A';
+                const level = log.level || 'INFO';
+                const levelClass = level.toLowerCase();
+                
+                row.innerHTML = `
+                    <td>${timestamp}</td>
+                    <td><span class="log-level ${levelClass}">${level}</span></td>
+                    <td>${log.server_id || 'N/A'}</td>
+                    <td>${log.username || 'N/A'}</td>
+                    <td>${log.action || 'N/A'}</td>
+                    <td>${log.message || 'N/A'}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function getFilteredLogs() {
+            const searchTerm = document.getElementById('logSearchFilter').value.toLowerCase();
+            const levelFilter = document.getElementById('logLevelFilter').value;
+            const timeFilter = document.getElementById('logTimeFilter').value;
+            
+            let filtered = logsData;
+            
+            // Search filter
+            if (searchTerm) {
+                filtered = filtered.filter(log => 
+                    (log.message && log.message.toLowerCase().includes(searchTerm)) ||
+                    (log.username && log.username.toLowerCase().includes(searchTerm)) ||
+                    (log.action && log.action.toLowerCase().includes(searchTerm))
+                );
+            }
+            
+            // Level filter
+            if (levelFilter) {
+                filtered = filtered.filter(log => log.level === levelFilter);
+            }
+            
+            // Time filter
+            if (timeFilter) {
+                const now = new Date();
+                const cutoffTime = new Date(now.getTime() - getTimeFilterMs(timeFilter));
+                filtered = filtered.filter(log => {
+                    if (!log.timestamp) return false;
+                    return new Date(log.timestamp) >= cutoffTime;
+                });
+            }
+            
+            return filtered;
+        }
+
+        function getTimeFilterMs(filter) {
+            switch (filter) {
+                case '1h': return 60 * 60 * 1000;
+                case '24h': return 24 * 60 * 60 * 1000;
+                case '7d': return 7 * 24 * 60 * 60 * 1000;
+                default: return 0;
+            }
+        }
+
+        function filterLogs() {
+            displayLogsTable();
+        }
+
+        function filterLogDisplay() {
+            displayLogsTable();
+        }
+
+        function sortLogsTable(column) {
+            if (currentSortColumn === column) {
+                currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSortColumn = column;
+                currentSortDirection = 'asc';
+            }
+
+            logsData.sort((a, b) => {
+                let aVal = a[column] || '';
+                let bVal = b[column] || '';
+                
+                if (column === 'timestamp') {
+                    aVal = new Date(aVal);
+                    bVal = new Date(bVal);
+                } else if (typeof aVal === 'string') {
+                    aVal = aVal.toLowerCase();
+                    bVal = bVal.toLowerCase();
+                }
+                
+                if (currentSortDirection === 'asc') {
+                    return aVal > bVal ? 1 : -1;
+                } else {
+                    return aVal < bVal ? 1 : -1;
+                }
+            });
+
+            displayLogsTable();
+        }
+
+        function clearLogs() {
+            logsData = [];
+            document.getElementById('logsContainer').style.display = 'none';
+            document.getElementById('logsResponse').style.display = 'none';
+        }
+
+        function exportLogs() {
+            if (logsData.length === 0) {
+                alert('No logs to export');
+                return;
+            }
+            
+            const csvContent = convertLogsToCSV(logsData);
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `vpn-logs-${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        }
+
+        function convertLogsToCSV(logs) {
+            const headers = ['Timestamp', 'Level', 'Server', 'Username', 'Action', 'Message'];
+            const csvRows = [headers.join(',')];
+            
+            logs.forEach(log => {
+                const row = [
+                    log.timestamp || '',
+                    log.level || '',
+                    log.server_id || '',
+                    log.username || '',
+                    log.action || '',
+                    (log.message || '').replace(/"/g, '""')
+                ];
+                csvRows.push('"' + row.join('","') + '"');
+            });
+            
+            return csvRows.join('\n');
+        }
+
+        // Legacy function compatibility
+        async function downloadUserOVPN() {
+            const username = document.getElementById('deleteUsername').value;
+            const server = document.getElementById('downloadServer').value;
+
+            if (!username || !server) {
+                showResponse('usersResponse', { error: 'Username and Server are required' }, true);
+                return;
+            }
+
+            showLoading();
+            try {
+                updateConfig();
+                
+                // First, get the end-node information from management server
+                const endNodesResponse = await makeRequest('/api/endnodes');
+                if (!endNodesResponse.success) {
+                    throw new Error('Failed to get end-nodes list');
+                }
+                
+                // Find the specific end-node
+                const endNodes = endNodesResponse.data || [];
+                const targetEndNode = endNodes.find(node => node.name === server);
+                
+                if (!targetEndNode) {
+                    throw new Error(`End-node ${server} not found`);
+                }
+                
+                // Download OVPN file from the end-node
+                const endNodeUrl = `http://${targetEndNode.host}:${targetEndNode.port}`;
+                const downloadUrl = `${endNodeUrl}/api/ovpn/${username}`;
+                
+                // Create a temporary link to download the file
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = `${username}_${server}.ovpn`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showResponse('usersResponse', { 
+                    success: true, 
+                    message: `OVPN file download initiated for ${username} from ${server} (${targetEndNode.host})`,
+                    filename: `${username}_${server}.ovpn`,
+                    endnode_url: endNodeUrl
+                });
+            } catch (error) {
+                showResponse('usersResponse', { error: error.message }, true);
+            } finally {
+                hideLoading();
+            }
+        }
+    </script>
+</body>
+</html>
