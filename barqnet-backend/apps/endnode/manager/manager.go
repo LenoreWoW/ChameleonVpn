@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"vpnmanager/pkg/shared"
+	"barqnet-backend/pkg/shared"
 )
 
 // EndNodeManager manages the end-node operations

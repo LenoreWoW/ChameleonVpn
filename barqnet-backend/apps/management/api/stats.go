@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"vpnmanager/pkg/shared"
+	"barqnet-backend/pkg/shared"
 )
 
 // handleVPNStatus handles VPN connection status updates

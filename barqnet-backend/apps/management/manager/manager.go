@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"vpnmanager/pkg/shared"
+	"barqnet-backend/pkg/shared"
 )
 
 // ManagementManager manages the management server operations

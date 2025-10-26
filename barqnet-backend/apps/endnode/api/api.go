@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"vpnmanager/apps/endnode/manager"
-	"vpnmanager/pkg/shared"
+	"barqnet-backend/apps/endnode/manager"
+	"barqnet-backend/pkg/shared"
 )
 
 // EndNodeAPI handles API requests for the end-node

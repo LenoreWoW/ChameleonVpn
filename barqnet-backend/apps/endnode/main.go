@@ -10,9 +10,9 @@ import (
 	"syscall"
 	"time"
 
-	"vpnmanager/pkg/shared"
-	"vpnmanager/apps/endnode/api"
-	"vpnmanager/apps/endnode/manager"
+	"barqnet-backend/pkg/shared"
+	"barqnet-backend/apps/endnode/api"
+	"barqnet-backend/apps/endnode/manager"
 )
 
 func main() {

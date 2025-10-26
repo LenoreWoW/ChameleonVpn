@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"vpnmanager/pkg/shared"
+	"barqnet-backend/pkg/shared"
 )
 
 // handleVPNLocations handles listing all server locations

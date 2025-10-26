@@ -103,9 +103,9 @@ func ExampleMainIntegration() {
 		"log"
 		"os"
 
-		"vpnmanager/apps/management/api"
-		"vpnmanager/apps/management/manager"
-		"vpnmanager/pkg/shared"
+		"barqnet-backend/apps/management/api"
+		"barqnet-backend/apps/management/manager"
+		"barqnet-backend/pkg/shared"
 	)
 
 	func main() {

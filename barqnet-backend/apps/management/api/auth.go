@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"vpnmanager/pkg/shared"
+	"barqnet-backend/pkg/shared"
 
 	"golang.org/x/crypto/bcrypt"
 )

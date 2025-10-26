@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"vpnmanager/apps/management/manager"
-	"vpnmanager/pkg/shared"
+	"barqnet-backend/apps/management/manager"
+	"barqnet-backend/pkg/shared"
 )
 
 // ManagementAPI handles API requests for the management server

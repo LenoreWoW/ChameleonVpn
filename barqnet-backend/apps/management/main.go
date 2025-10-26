@@ -8,9 +8,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"vpnmanager/pkg/shared"
-	"vpnmanager/apps/management/api"
-	"vpnmanager/apps/management/manager"
+	"barqnet-backend/pkg/shared"
+	"barqnet-backend/apps/management/api"
+	"barqnet-backend/apps/management/manager"
 )
 
 func main() {

@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"vpnmanager/pkg/shared"
+	"barqnet-backend/pkg/shared"
 )
 
 // handleVPNConfig handles VPN configuration requests
