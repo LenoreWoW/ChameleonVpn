@@ -19,18 +19,26 @@ import java.io.FileOutputStream
 import java.nio.ByteBuffer
 
 /**
- * VPN Service that creates a real VPN tunnel
+ * DEPRECATED: This is the OLD loopback simulation service
  *
- * This implementation creates an actual VPN interface and routes traffic.
- * For production OpenVPN integration, see COMPLETE_SETUP_GUIDE.md
+ * ⚠️ WARNING: This service does NOT provide real VPN encryption!
+ * ⚠️ Traffic is just echoed back (loopback simulation)
  *
- * This demonstrates:
- * - Creating VPN interface
- * - Establishing tunnel
- * - Reading/writing packets
- * - Connection state management
- * - Real traffic statistics
+ * FOR PRODUCTION: Use RealVPNService.kt instead
+ *
+ * This is kept for backwards compatibility only.
+ * Migration to RealVPNService is CRITICAL before production release.
+ *
+ * See: RealVPNService.kt for production-ready implementation with:
+ * - AES-256-GCM encryption
+ * - Real server communication
+ * - Actual traffic statistics
+ * - DNS leak protection
+ * - Kill switch
+ *
+ * @deprecated Use RealVPNService for production
  */
+@Deprecated("Use RealVPNService for production with real encryption")
 class OpenVPNService : VpnService() {
 
     private var vpnInterface: ParcelFileDescriptor? = null

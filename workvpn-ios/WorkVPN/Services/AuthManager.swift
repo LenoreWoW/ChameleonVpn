@@ -21,6 +21,7 @@ class AuthManager: ObservableObject {
     private let usersKey = "users"
 
     private init() {
+        migratePasswordHashes()
         loadAuthState()
     }
 
@@ -216,11 +217,13 @@ class AuthManager: ObservableObject {
                 return
             }
 
-            // TODO: CRITICAL - Replace Base64 with PBKDF2 hashing (see documentation above)
-            // Base64 is NOT hashing - it's reversible encoding!
-            let passwordHash = password.data(using: .utf8)?.base64EncodedString() ?? ""
-            users[phoneNumber] = passwordHash
+            // SECURE: Hash password using PBKDF2-HMAC-SHA256
+            guard let passwordHash = PasswordHasher.hash(password: password) else {
+                completion(.failure(NSError(domain: "AuthManager", code: 500, userInfo: [NSLocalizedDescriptionKey: "Failed to hash password"])))
+                return
+            }
 
+            users[phoneNumber] = passwordHash
             self.saveUsersMap(users)
 
             // Auto-login
@@ -244,11 +247,8 @@ class AuthManager: ObservableObject {
                 return
             }
 
-            // TODO: CRITICAL - Replace Base64 with PBKDF2 verification (see createAccount documentation)
-            // This should use: if !PasswordHasher.verify(password: password, hash: storedHash)
-            let passwordHash = password.data(using: .utf8)?.base64EncodedString() ?? ""
-
-            if storedHash != passwordHash {
+            // SECURE: Verify password using PBKDF2-HMAC-SHA256
+            if !PasswordHasher.verify(password: password, hash: storedHash) {
                 completion(.failure(NSError(domain: "AuthManager", code: 401, userInfo: [NSLocalizedDescriptionKey: "Invalid password"])))
                 return
             }
@@ -278,6 +278,58 @@ class AuthManager: ObservableObject {
     private func saveUsersMap(_ users: [String: String]) {
         if let encoded = try? JSONEncoder().encode(users) {
             userDefaults.set(encoded, forKey: usersKey)
+        }
+    }
+
+    /**
+     * Migrate existing Base64-encoded passwords to PBKDF2 hashes
+     *
+     * This function safely migrates legacy password storage to secure hashing.
+     * It's called once on initialization to ensure all passwords are properly hashed.
+     *
+     * Migration Process:
+     * 1. Check each stored hash to identify legacy Base64 format
+     * 2. Decode Base64 to recover plaintext password (ONLY during migration)
+     * 3. Hash with PBKDF2 and replace old hash
+     * 4. Save updated user map
+     *
+     * Security Note: This is the ONLY place where we decode passwords.
+     * After migration, all passwords are irreversibly hashed.
+     */
+    private func migratePasswordHashes() {
+        var users = getUsersMap()
+
+        // Check if migration is needed
+        guard !users.isEmpty else { return }
+
+        var migrationCount = 0
+
+        for (phoneNumber, hash) in users {
+            // Check if this is a legacy Base64 hash (not PBKDF2)
+            if PasswordHasher.isLegacyBase64Hash(hash: hash) {
+                // Attempt to decode the old Base64-encoded password
+                if let passwordData = Data(base64Encoded: hash),
+                   let plaintext = String(data: passwordData, encoding: .utf8),
+                   !plaintext.isEmpty {
+
+                    // Hash with PBKDF2
+                    if let newHash = PasswordHasher.hash(password: plaintext) {
+                        users[phoneNumber] = newHash
+                        migrationCount += 1
+                        NSLog("[AuthManager] Migrated password hash for user (phone ending: ***\(phoneNumber.suffix(4)))")
+                    } else {
+                        NSLog("[AuthManager] WARNING: Failed to hash password during migration for user")
+                    }
+                } else {
+                    NSLog("[AuthManager] WARNING: Failed to decode legacy hash for user")
+                }
+            }
+        }
+
+        // Save migrated hashes if any were updated
+        if migrationCount > 0 {
+            saveUsersMap(users)
+            NSLog("[AuthManager] Successfully migrated \(migrationCount) password(s) from Base64 to PBKDF2")
         }
     }
 }

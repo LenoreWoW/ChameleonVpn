@@ -27,6 +27,7 @@ class VPNManager: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
 
     private init() {
+        migrateConfigToKeychain()
         loadVPNManager()
         setupNotifications()
         loadSavedConfig()
@@ -143,29 +144,45 @@ class VPNManager: ObservableObject {
      */
     private func saveConfig(_ config: VPNConfig) {
         if let encoded = try? JSONEncoder().encode(config) {
-            // TODO: Replace with Keychain storage - see documentation above
-            UserDefaults.standard.set(encoded, forKey: "vpn_config")
-            currentConfig = config
-            hasConfig = true
+            // SECURE: Store VPN config in Keychain instead of UserDefaults
+            let success = KeychainHelper.save(
+                encoded,
+                service: "com.workvpn.ios",
+                account: "vpn_config"
+            )
+
+            if success {
+                currentConfig = config
+                hasConfig = true
+                NSLog("[VPNManager] VPN configuration saved securely to Keychain")
+            } else {
+                NSLog("[VPNManager] ERROR: Failed to save VPN configuration to Keychain")
+            }
         }
     }
 
     private func loadSavedConfig() {
-        if let data = UserDefaults.standard.data(forKey: "vpn_config"),
+        // SECURE: Load VPN config from Keychain instead of UserDefaults
+        if let data = KeychainHelper.load(service: "com.workvpn.ios", account: "vpn_config"),
            let config = try? JSONDecoder().decode(VPNConfig.self, from: data) {
             currentConfig = config
             hasConfig = true
+            NSLog("[VPNManager] VPN configuration loaded from Keychain")
         }
     }
 
     func deleteConfig() {
-        UserDefaults.standard.removeObject(forKey: "vpn_config")
+        // SECURE: Delete VPN config from Keychain instead of UserDefaults
+        _ = KeychainHelper.delete(service: "com.workvpn.ios", account: "vpn_config")
+
         currentConfig = nil
         hasConfig = false
 
         // Remove VPN configuration
         vpnManager?.removeFromPreferences { _ in }
         vpnManager = nil
+
+        NSLog("[VPNManager] VPN configuration deleted from Keychain")
     }
 
     // MARK: - VPN Connection
@@ -304,12 +321,76 @@ class VPNManager: ObservableObject {
 
         connectionDuration = Int(Date().timeIntervalSince(startTime))
 
-        // Get traffic statistics from NetworkExtension tunnel
-        // TODO: Implement actual traffic counting in PacketTunnelProvider
-        // Real implementation requires:
-        // 1. Track bytes in PacketTunnelProvider.readPackets()
-        // 2. Send stats via NEPacketTunnelProvider.setTunnelNetworkSettings()
-        // 3. Read stats here via NEVPNConnection
-        // For now, stats remain at 0 until backend integration is complete
+        // Get traffic statistics from PacketTunnelProvider
+        guard let session = vpnManager?.connection as? NETunnelProviderSession else { return }
+
+        // Request stats from packet tunnel provider
+        do {
+            try session.sendProviderMessage(Data("stats".utf8)) { [weak self] response in
+                guard let response = response,
+                      let stats = try? JSONDecoder().decode(TrafficStats.self, from: response) else {
+                    return
+                }
+
+                DispatchQueue.main.async {
+                    self?.bytesIn = UInt64(stats.bytesIn)
+                    self?.bytesOut = UInt64(stats.bytesOut)
+                }
+            }
+        } catch {
+            NSLog("[VPNManager] Error requesting stats: \(error)")
+        }
     }
+
+    // MARK: - Migration
+
+    /**
+     * Migrate VPN configuration from UserDefaults to Keychain
+     *
+     * This migration ensures existing users' VPN configs are moved to secure storage.
+     * Called once on initialization to safely migrate legacy storage.
+     *
+     * Migration Process:
+     * 1. Check if config exists in UserDefaults (old location)
+     * 2. Save to Keychain (new secure location)
+     * 3. Remove from UserDefaults (cleanup)
+     * 4. Log migration success
+     *
+     * Security Note: This ensures all VPN configs are stored securely in Keychain,
+     * protected by iOS security features (encryption, secure enclave, etc.)
+     */
+    private func migrateConfigToKeychain() {
+        // Check if data exists in old UserDefaults location
+        if let oldData = UserDefaults.standard.data(forKey: "vpn_config") {
+            // Check if it's already in Keychain (avoid duplicate migration)
+            if KeychainHelper.exists(service: "com.workvpn.ios", account: "vpn_config") {
+                // Already migrated, just clean up UserDefaults
+                UserDefaults.standard.removeObject(forKey: "vpn_config")
+                NSLog("[VPNManager] Cleaned up old VPN config from UserDefaults (already in Keychain)")
+                return
+            }
+
+            // Save to Keychain
+            let success = KeychainHelper.save(
+                oldData,
+                service: "com.workvpn.ios",
+                account: "vpn_config"
+            )
+
+            if success {
+                // Remove from UserDefaults
+                UserDefaults.standard.removeObject(forKey: "vpn_config")
+                NSLog("[VPNManager] Successfully migrated VPN config from UserDefaults to Keychain")
+            } else {
+                NSLog("[VPNManager] WARNING: Failed to migrate VPN config to Keychain - keeping in UserDefaults as fallback")
+            }
+        }
+    }
+}
+
+// MARK: - Traffic Statistics
+
+struct TrafficStats: Codable {
+    let bytesIn: Int64
+    let bytesOut: Int64
 }

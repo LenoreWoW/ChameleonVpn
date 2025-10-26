@@ -7,12 +7,12 @@ plugins {
 
 android {
     namespace 'com.workvpn.android'
-    compileSdk 34
+    compileSdk 33
 
     defaultConfig {
         applicationId "com.workvpn.android"
         minSdk 26  // Android 8.0
-        targetSdk 34
+        targetSdk 33
         versionCode 1
         versionName "1.0.0"
 
@@ -20,6 +20,9 @@ android {
         vectorDrawables {
             useSupportLibrary true
         }
+
+        // Enable MultiDex for OpenVPN/WireGuard dependencies
+        multiDexEnabled true
     }
 
     buildTypes {
@@ -95,13 +98,18 @@ dependencies {
     // Navigation
     implementation 'androidx.navigation:navigation-compose:2.7.5'
 
-    // VPN Protocol Support - Both OpenVPN and WireGuard
-    // OpenVPN - Compatible with your colleague's backend
-    // TODO: Fix OpenVPN dependency - 401 Unauthorized from JitPack
-    // implementation 'de.blinkt.openvpn:openvpn-api:0.7.47'
-    // WireGuard - Modern alternative (faster, simpler)
-    // TODO: Fix WireGuard dependency - DEX issues
-    // implementation 'com.wireguard.android:tunnel:1.0.20230706'
+    // MultiDex Support (required for VPN libraries)
+    implementation 'androidx.multidex:multidex:2.0.1'
+
+    // VPN Protocol Support - OpenVPN Implementation
+    // Using ics-openvpn library (open source, well-maintained)
+    // GitHub: https://github.com/schwabe/ics-openvpn
+    // Note: This requires building the VPN service integration manually
+    // For production: Consider using OpenVPN Connect SDK or building ics-openvpn from source
+
+    // Alternative: Use standalone OpenVPN implementation
+    // We'll implement our own OpenVPN client using standard networking APIs
+    // This gives us full control but requires more implementation work
 
     // Coroutines
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'

@@ -3,6 +3,7 @@ import { VPNManager } from './vpn/manager';
 import { ConfigStore } from './store/config';
 import { createTray } from './tray';
 import { createMainWindow } from './window';
+import { initializeCertificatePinning } from './security/init-certificate-pinning';
 
 // API Configuration
 // Set API_BASE_URL environment variable for production deployment
@@ -318,7 +319,14 @@ const updateTrayMenu = (status: any) => {
   tray.setToolTip(status.connected ? 'WorkVPN - Connected' : 'WorkVPN - Disconnected');
 };
 
-app.whenReady().then(init);
+app.whenReady().then(() => {
+  // Initialize certificate pinning BEFORE any network requests
+  // This protects against MITM attacks by validating server certificates
+  initializeCertificatePinning();
+
+  // Then initialize the rest of the application
+  init();
+});
 
 app.on('window-all-closed', () => {
   // Don't quit, keep running in tray

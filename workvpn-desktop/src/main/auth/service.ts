@@ -1,4 +1,6 @@
 import Store from 'electron-store';
+import { CertificatePinning } from '../vpn/certificate-pinning';
+import * as https from 'https';
 
 interface User {
   id: string;
@@ -18,13 +20,14 @@ interface AuthSession {
   verificationToken?: string;
 }
 
-// API-integrated auth service
+// API-integrated auth service with certificate pinning
 // Connects to backend API for authentication
 class AuthService {
   private store: Store;
   private sessions: Map<string, AuthSession>;
   private apiBaseUrl: string;
   private tokenRefreshTimer: NodeJS.Timeout | null = null;
+  private certificatePinning: CertificatePinning;
 
   constructor() {
     this.store = new Store({ name: 'auth' });
@@ -32,6 +35,10 @@ class AuthService {
 
     // API base URL from environment variable or default to localhost
     this.apiBaseUrl = process.env.API_BASE_URL || 'http://localhost:8080';
+
+    // Initialize certificate pinning with production pins
+    this.certificatePinning = new CertificatePinning();
+    this.initializeCertificatePins();
 
     // CRITICAL SECURITY: Enforce HTTPS in production
     if (process.env.NODE_ENV === 'production') {
@@ -49,6 +56,39 @@ class AuthService {
     // Start token refresh timer if user is authenticated
     if (this.isAuthenticated()) {
       this.scheduleTokenRefresh();
+    }
+  }
+
+  /**
+   * Initialize certificate pins for production API server
+   *
+   * TODO: Update these pins with actual production certificate pins
+   * Get pins using: openssl s_client -connect api.chameleonvpn.com:443 < /dev/null | \
+   *   openssl x509 -pubkey -noout | openssl pkey -pubin -outform der | \
+   *   openssl dgst -sha256 -binary | base64
+   */
+  private initializeCertificatePins(): void {
+    try {
+      const apiUrl = new URL(this.apiBaseUrl);
+
+      // Only apply certificate pinning to production domains
+      if (process.env.NODE_ENV === 'production' && apiUrl.protocol === 'https:') {
+        // TODO: Replace with actual production certificate pins
+        // These are placeholder pins - MUST be updated before production deployment
+        const productionPins = [
+          // Primary certificate pin
+          'sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
+          // Backup certificate pin (for rotation)
+          'sha256/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB='
+        ];
+
+        this.certificatePinning.addPin(apiUrl.hostname, productionPins);
+        console.log(`[AUTH] Certificate pinning enabled for ${apiUrl.hostname}`);
+      } else {
+        console.log('[AUTH] Certificate pinning disabled (development mode or HTTP)');
+      }
+    } catch (error) {
+      console.error('[AUTH] Failed to initialize certificate pinning:', error);
     }
   }
 
@@ -152,12 +192,61 @@ class AuthService {
     }
   }
 
+  /**
+   * Secure fetch with certificate pinning support
+   */
+  private async secureFetch(url: string, options: RequestInit = {}): Promise<Response> {
+    const apiUrl = new URL(url);
+
+    // For HTTPS in production, use certificate pinning
+    if (apiUrl.protocol === 'https:' && process.env.NODE_ENV === 'production') {
+      return new Promise((resolve, reject) => {
+        const tlsOptions = this.certificatePinning.getTLSOptions(apiUrl.hostname);
+        const requestOptions = {
+          hostname: apiUrl.hostname,
+          port: apiUrl.port || 443,
+          path: apiUrl.pathname + apiUrl.search,
+          method: options.method || 'GET',
+          headers: options.headers as Record<string, string>,
+          ...tlsOptions
+        };
+
+        const req = https.request(requestOptions, (res) => {
+          let data = '';
+          res.on('data', (chunk) => { data += chunk; });
+          res.on('end', () => {
+            // Create Response-like object
+            resolve({
+              ok: res.statusCode! >= 200 && res.statusCode! < 300,
+              status: res.statusCode!,
+              statusText: res.statusMessage!,
+              headers: res.headers as any,
+              json: async () => JSON.parse(data),
+              text: async () => data
+            } as Response);
+          });
+        });
+
+        req.on('error', reject);
+
+        if (options.body) {
+          req.write(options.body);
+        }
+
+        req.end();
+      });
+    }
+
+    // For development or HTTP, use regular fetch
+    return fetch(url, options);
+  }
+
   private async apiCall<T = any>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<{ success: boolean; data?: T; error?: string }> {
     try {
-      const response = await fetch(`${this.apiBaseUrl}${endpoint}`, {
+      const response = await this.secureFetch(`${this.apiBaseUrl}${endpoint}`, {
         ...options,
         headers: this.getAuthHeaders()
       });
@@ -178,6 +267,14 @@ class AuthService {
     } catch (error) {
       // Network error - graceful degradation
       console.error(`[AUTH] API call failed for ${endpoint}:`, error);
+
+      // Certificate pinning failure
+      if (error instanceof Error && error.message.includes('Certificate pinning')) {
+        return {
+          success: false,
+          error: 'Security error: Server certificate verification failed. Please contact support.'
+        };
+      }
 
       // Check if it's a network error
       if (error instanceof TypeError && error.message.includes('fetch')) {

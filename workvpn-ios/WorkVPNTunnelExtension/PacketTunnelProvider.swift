@@ -6,50 +6,16 @@
 //
 
 import NetworkExtension
-// TODO: Add OpenVPNAdapter when library is available
-// import OpenVPNAdapter
+import OpenVPNAdapter
 
-// MARK: - Stub OpenVPN Classes (Remove when real library is added)
-protocol OpenVPNAdapterDelegate: AnyObject {
-    func openVPNAdapter(_ openVPNAdapter: OpenVPNAdapter, configureTunnelWithNetworkSettings networkSettings: NEPacketTunnelNetworkSettings?, completionHandler: @escaping (Error?) -> Void)
-    func openVPNAdapter(_ openVPNAdapter: OpenVPNAdapter, handleEvent event: OpenVPNAdapterEvent, message: String?)
-    func openVPNAdapter(_ openVPNAdapter: OpenVPNAdapter, handleError error: Error)
-    func openVPNAdapter(_ openVPNAdapter: OpenVPNAdapter, handleLogMessage logMessage: String)
+// MARK: - Traffic Statistics
+
+struct TrafficStats: Codable {
+    let bytesIn: Int64
+    let bytesOut: Int64
 }
 
-enum OpenVPNAdapterEvent {
-    case connected, disconnected, reconnecting
-}
-
-struct OpenVPNConfiguration {
-    init(fileContent: String) throws {
-        // Stub implementation - parse config when library is available
-    }
-}
-
-struct OpenVPNCredentials {
-    // Stub implementation
-}
-
-class OpenVPNAdapter {
-    weak var delegate: OpenVPNAdapterDelegate?
-    
-    func apply(configuration: OpenVPNConfiguration) throws {
-        // Stub implementation
-    }
-    
-    func connect(using credentials: OpenVPNCredentials) {
-        // Stub implementation - simulate connection
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            self.delegate?.openVPNAdapter(self, handleEvent: .connected, message: "Connected")
-        }
-    }
-    
-    func disconnect() {
-        // Stub implementation
-        delegate?.openVPNAdapter(self, handleEvent: .disconnected, message: "Disconnected")
-    }
-}
+// MARK: - PacketTunnelProvider
 
 class PacketTunnelProvider: NEPacketTunnelProvider {
 
@@ -65,6 +31,8 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
     // MARK: - Tunnel Lifecycle
 
     override func startTunnel(options: [String : NSObject]?, completionHandler: @escaping (Error?) -> Void) {
+        NSLog("[PacketTunnel] Starting VPN tunnel...")
+
         self.startHandler = completionHandler
 
         // Get configuration from provider configuration
@@ -73,44 +41,74 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
             let providerConfiguration = providerConfig.providerConfiguration,
             let ovpnContent = providerConfiguration["ovpn"] as? String
         else {
+            NSLog("[PacketTunnel] ERROR: No configuration found")
             completionHandler(NSError(
                 domain: "WorkVPN",
-                code: -1,
-                userInfo: [NSLocalizedDescriptionKey: "Missing OpenVPN configuration"]
+                code: 1,
+                userInfo: [NSLocalizedDescriptionKey: "VPN configuration not found"]
             ))
             return
         }
 
+        // Get credentials if provided
+        let username = providerConfiguration["username"] as? String
+        let password = providerConfiguration["password"] as? String
+
         // Parse and configure OpenVPN
-        do {
-            let configuration = try OpenVPNConfiguration(fileContent: ovpnContent)
-            try vpnAdapter.apply(configuration: configuration)
-        } catch {
-            completionHandler(error)
-            return
+        let configuration = OpenVPNConfiguration()
+        configuration.fileContent = ovpnContent
+
+        if let username = username, let password = password {
+            let credentials = OpenVPNCredentials()
+            credentials.username = username
+            credentials.password = password
+            configuration.username = username
+            configuration.password = password
         }
 
-        // Start connection with custom credentials if provided
-        let credentials = OpenVPNCredentials()
-        // Note: Username/password can be provided via providerConfiguration if needed
+        // Apply configuration and connect
+        do {
+            let properties = try vpnAdapter.apply(configuration: configuration)
+            NSLog("[PacketTunnel] Configuration applied successfully")
 
-        vpnAdapter.connect(using: credentials)
+            // Start OpenVPN connection
+            vpnAdapter.connect(using: nil)
+
+        } catch {
+            NSLog("[PacketTunnel] ERROR applying configuration: \(error)")
+            completionHandler(error)
+        }
     }
 
     override func stopTunnel(with reason: NEProviderStopReason, completionHandler: @escaping () -> Void) {
+        NSLog("[PacketTunnel] Stopping VPN tunnel: \(reason)")
+
         self.stopHandler = completionHandler
 
         vpnAdapter.disconnect()
-
-        // Wait a bit for graceful disconnect
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            completionHandler()
-        }
     }
 
     override func handleAppMessage(_ messageData: Data, completionHandler: ((Data?) -> Void)?) {
-        // Handle messages from the main app if needed
-        completionHandler?(nil)
+        guard let message = String(data: messageData, encoding: .utf8) else {
+            completionHandler?(nil)
+            return
+        }
+
+        if message == "stats" {
+            // Get current traffic statistics
+            let stats = TrafficStats(
+                bytesIn: Int64(vpnAdapter.transportStatistics.bytesIn),
+                bytesOut: Int64(vpnAdapter.transportStatistics.bytesOut)
+            )
+
+            if let data = try? JSONEncoder().encode(stats) {
+                completionHandler?(data)
+            } else {
+                completionHandler?(nil)
+            }
+        } else {
+            completionHandler?(nil)
+        }
     }
 
     override func sleep(completionHandler: @escaping () -> Void) {
@@ -127,53 +125,67 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
 extension PacketTunnelProvider: OpenVPNAdapterDelegate {
 
     func openVPNAdapter(_ openVPNAdapter: OpenVPNAdapter, configureTunnelWithNetworkSettings networkSettings: NEPacketTunnelNetworkSettings?, completionHandler: @escaping (Error?) -> Void) {
-
         // Configure tunnel network settings
-        if let settings = networkSettings {
-            setTunnelNetworkSettings(settings) { error in
-                completionHandler(error)
+        NSLog("[PacketTunnel] Configuring tunnel network settings...")
+
+        setTunnelNetworkSettings(networkSettings) { error in
+            if let error = error {
+                NSLog("[PacketTunnel] ERROR setting network settings: \(error)")
+            } else {
+                NSLog("[PacketTunnel] Network settings configured successfully")
             }
-        } else {
-            completionHandler(nil)
+            completionHandler(error)
         }
     }
 
     func openVPNAdapter(_ openVPNAdapter: OpenVPNAdapter, handleEvent event: OpenVPNAdapterEvent, message: String?) {
+        // Handle OpenVPN events
+        NSLog("[PacketTunnel] Event: \(event)")
 
         switch event {
         case .connected:
-            // Connection established
-            if let startHandler = startHandler {
-                startHandler(nil)
-                self.startHandler = nil
+            NSLog("[PacketTunnel] ✓ VPN CONNECTED")
+
+            // Notify success
+            if let handler = startHandler {
+                handler(nil)
+                startHandler = nil
             }
 
         case .disconnected:
-            // Connection closed
-            if let stopHandler = stopHandler {
-                stopHandler()
-                self.stopHandler = nil
+            NSLog("[PacketTunnel] ✗ VPN DISCONNECTED")
+
+            // Notify stopped
+            if let handler = stopHandler {
+                handler()
+                stopHandler = nil
             }
 
         case .reconnecting:
-            // Attempting to reconnect
-            break
+            NSLog("[PacketTunnel] ↻ VPN RECONNECTING...")
 
-        default:
+        @unknown default:
             break
+        }
+
+        // Log message if provided
+        if let message = message {
+            NSLog("[PacketTunnel] Message: \(message)")
         }
     }
 
     func openVPNAdapter(_ openVPNAdapter: OpenVPNAdapter, handleError error: Error) {
-        // Handle VPN errors
-        if let startHandler = startHandler {
-            startHandler(error)
-            self.startHandler = nil
+        NSLog("[PacketTunnel] ✗ ERROR: \(error.localizedDescription)")
+
+        // Notify failure
+        if let handler = startHandler {
+            handler(error)
+            startHandler = nil
         }
     }
 
     func openVPNAdapter(_ openVPNAdapter: OpenVPNAdapter, handleLogMessage logMessage: String) {
-        // Log VPN messages
-        NSLog("[OpenVPN] %@", logMessage)
+        // Log OpenVPN messages
+        NSLog("[OpenVPN] \(logMessage)")
     }
 }
