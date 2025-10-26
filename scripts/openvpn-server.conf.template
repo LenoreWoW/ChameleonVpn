@@ -1,0 +1,208 @@
+###############################################################################
+# OpenVPN Server Configuration Template
+# ChameleonVPN - Secure Configuration with CRL Support
+#
+# Purpose: Production-ready OpenVPN server configuration with certificate
+#          revocation list (CRL) verification enabled
+#
+# Location: Copy to /etc/openvpn/server.conf
+# Usage: systemctl restart openvpn@server
+###############################################################################
+
+#################################################
+# NETWORK SETTINGS
+#################################################
+
+# Port and protocol
+port 1194
+proto udp
+
+# Device type
+dev tun
+
+# Network topology (subnet is more efficient than net30)
+topology subnet
+
+#################################################
+# CERTIFICATES AND ENCRYPTION
+#################################################
+
+# SSL/TLS root certificate (ca), certificate (cert), and private key (key)
+ca /opt/vpnmanager/easyrsa/pki/ca.crt
+cert /opt/vpnmanager/easyrsa/pki/issued/server.crt
+key /opt/vpnmanager/easyrsa/pki/private/server.key
+
+# Diffie-Hellman parameters
+dh /opt/vpnmanager/easyrsa/pki/dh.pem
+
+# TLS authentication (additional layer of HMAC authentication)
+tls-auth /opt/vpnmanager/easyrsa/pki/ta.key 0
+
+# Cipher to use (AES-256-GCM is recommended for security and performance)
+cipher AES-256-GCM
+auth SHA256
+
+# TLS version (require TLS 1.2 or higher for security)
+tls-version-min 1.2
+
+#################################################
+# CERTIFICATE REVOCATION LIST (CRL) - CRITICAL!
+#################################################
+
+# 🔴 CRITICAL SECURITY SETTING
+# This directive enables Certificate Revocation List checking
+# WITHOUT THIS, REVOKED CERTIFICATES WILL STILL BE ACCEPTED!
+crl-verify /etc/openvpn/crl.pem
+
+# Optional: Check CRL on every connection (not just server startup)
+# Uncomment the line below for maximum security (small performance impact)
+# crl-verify /etc/openvpn/crl.pem 1
+
+#################################################
+# NETWORK CONFIGURATION
+#################################################
+
+# Virtual network address pool
+server 10.8.0.0 255.255.255.0
+
+# Maintain a record of client-virtual IP address associations
+ifconfig-pool-persist /var/log/openvpn/ipp.txt
+
+# Push routes to the client to allow access to internal networks
+# Uncomment and modify as needed for your network
+# push "route 192.168.1.0 255.255.255.0"
+
+# Allow client-to-client communication (optional)
+# client-to-client
+
+# DNS servers to push to clients
+push "dhcp-option DNS 8.8.8.8"
+push "dhcp-option DNS 8.8.4.4"
+
+# Redirect all client traffic through VPN (optional)
+# push "redirect-gateway def1 bypass-dhcp"
+
+#################################################
+# MANAGEMENT INTERFACE
+#################################################
+
+# 🔴 CRITICAL FOR IMMEDIATE USER DISCONNECTION
+# Enable management interface for remote control
+management /var/run/openvpn/server.sock unix
+
+# Require authentication for management interface
+management-client-auth
+
+# Cache management interface log for 5 minutes
+management-log-cache 300
+
+#################################################
+# CLIENT LIFECYCLE HOOKS
+#################################################
+
+# Enable script execution (required for client-connect/disconnect scripts)
+script-security 2
+
+# Client connection script (called when a client connects)
+client-connect /opt/vpnmanager/scripts/client-connect.sh
+
+# Client disconnection script (called when a client disconnects)
+client-disconnect /opt/vpnmanager/scripts/client-disconnect.sh
+
+# Set environment variables for scripts
+setenv PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+#################################################
+# SECURITY HARDENING
+#################################################
+
+# Downgrade privileges after initialization (recommended for security)
+user nobody
+group nogroup
+
+# Persist keys/tun across restarts when using user/group
+persist-key
+persist-tun
+
+# Maximum number of concurrent clients
+max-clients 100
+
+# Connection timeout (seconds) - disconnect idle clients
+keepalive 10 120
+
+# Compression (disabled for security - compression can leak info)
+compress lz4-v2
+push "compress lz4-v2"
+
+# Explicitly disable compression if client requests it (CVE-2019-14899 mitigation)
+# comp-lzo no
+
+#################################################
+# LOGGING
+#################################################
+
+# Logging level (0-9, 3 is good for production, 4-6 for debugging)
+verb 3
+
+# Silence repeating messages (max 20 sequential)
+mute 20
+
+# Log file locations
+status /var/log/openvpn/openvpn-status.log
+log-append /var/log/openvpn/openvpn.log
+
+#################################################
+# PERFORMANCE TUNING (Optional)
+#################################################
+
+# Optimize for throughput
+sndbuf 0
+rcvbuf 0
+
+# Optimize TLS timeout
+tls-timeout 60
+
+# Renegotiate data channel key after this many seconds
+reneg-sec 3600
+
+#################################################
+# ADDITIONAL SECURITY (Optional but Recommended)
+#################################################
+
+# Reject clients with duplicate certificates (prevent certificate sharing)
+duplicate-cn
+
+# Require minimum TLS version
+tls-cipher TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384:TLS-ECDHE-RSA-WITH-AES-128-GCM-SHA256
+
+# Verify client certificate usage
+remote-cert-tls client
+
+# Reject authentication attempts from clients using deprecated protocols
+# tls-crypt /opt/vpnmanager/easyrsa/pki/tc.key
+
+#################################################
+# NOTES AND MAINTENANCE
+#################################################
+
+# Regular Maintenance Tasks:
+# 1. Update CRL after revoking certificates:
+#    cd /opt/vpnmanager/easyrsa && ./easyrsa gen-crl && cp pki/crl.pem /etc/openvpn/
+#
+# 2. Reload OpenVPN to apply CRL changes (doesn't disconnect clients):
+#    pkill -SIGUSR1 openvpn
+#
+# 3. Disconnect specific user:
+#    /opt/vpnmanager/scripts/disconnect-user.sh <username>
+#
+# 4. View active connections:
+#    echo 'status' | nc -U /var/run/openvpn/server.sock
+#
+# 5. Check if CRL is being used:
+#    journalctl -u openvpn@server | grep -i crl
+#
+# For more information: https://openvpn.net/community-resources/reference-manual-for-openvpn-2-6/
+
+###############################################################################
+# END OF CONFIGURATION
+###############################################################################
