@@ -50,6 +50,10 @@ export class OpenVPNManagementInterface extends EventEmitter {
         this.isConnected = true;
         this.emit('connected');
 
+        // Release OpenVPN from hold state (required when --management-hold is set)
+        this.sendCommand('hold release');
+        console.log('[MGMT] Sent hold release command');
+
         // Authenticate if password is set
         if (this.config.password) {
           this.sendCommand(`password ${this.config.password}`);
