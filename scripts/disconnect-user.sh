@@ -1,6 +1,6 @@
 #!/bin/bash
 ###############################################################################
-# VPN User Disconnect Script
+# BarqNet VPN User Disconnect Script
 #
 # Purpose: Disconnects a specific VPN user from all active sessions
 # Usage: ./disconnect-user.sh <username>
@@ -125,11 +125,11 @@ if [ "$DISCONNECTED" = true ]; then
 
     # Log to syslog if available
     if command -v logger &> /dev/null; then
-        logger -t vpnmanager "User $USERNAME disconnected from VPN"
+        logger -t barqnet "User $USERNAME disconnected from VPN"
     fi
 
     # Log to file
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] User $USERNAME disconnected" >> /var/log/vpnmanager/disconnections.log 2>/dev/null || true
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] User $USERNAME disconnected" >> /var/log/barqnet/disconnections.log 2>/dev/null || true
 
     exit 0
 else

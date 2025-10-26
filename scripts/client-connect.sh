@@ -29,7 +29,7 @@ VPN_IP="${ifconfig_pool_remote_ip:-unknown}"
 TIMESTAMP="$(date '+%Y-%m-%d %H:%M:%S')"
 
 # Log directory
-LOG_DIR="/var/log/vpnmanager"
+LOG_DIR="/var/log/barqnet"
 mkdir -p "$LOG_DIR" 2>/dev/null
 
 # Main connection log
@@ -60,7 +60,7 @@ if [ -f "$CRL_FILE" ]; then
             echo "[$TIMESTAMP] REJECTED: Revoked certificate for $USERNAME from $CLIENT_IP" >> "$CONNECTION_LOG"
 
             # Log to syslog
-            logger -t vpnmanager-security "BLOCKED: Revoked certificate for user $USERNAME from $CLIENT_IP"
+            logger -t barqnet-security "BLOCKED: Revoked certificate for user $USERNAME from $CLIENT_IP"
 
             # Reject connection
             exit 1
@@ -75,7 +75,7 @@ fi
 if ! [[ "$USERNAME" =~ ^[a-zA-Z0-9_]+$ ]]; then
     echo "[$TIMESTAMP] SECURITY: Invalid username format - User: $USERNAME, IP: $CLIENT_IP" >> "$SECURITY_LOG"
     echo "[$TIMESTAMP] REJECTED: Invalid username $USERNAME from $CLIENT_IP" >> "$CONNECTION_LOG"
-    logger -t vpnmanager-security "BLOCKED: Invalid username format: $USERNAME from $CLIENT_IP"
+    logger -t barqnet-security "BLOCKED: Invalid username format: $USERNAME from $CLIENT_IP"
     exit 1
 fi
 
@@ -100,7 +100,7 @@ if [ -f "$RATE_LIMIT_FILE" ]; then
         if [ $CONNECTION_COUNT -ge $RATE_LIMIT_COUNT ]; then
             echo "[$TIMESTAMP] SECURITY: Rate limit exceeded - User: $USERNAME, IP: $CLIENT_IP, Count: $CONNECTION_COUNT" >> "$SECURITY_LOG"
             echo "[$TIMESTAMP] REJECTED: Rate limit for $USERNAME from $CLIENT_IP" >> "$CONNECTION_LOG"
-            logger -t vpnmanager-security "BLOCKED: Rate limit exceeded for $USERNAME from $CLIENT_IP"
+            logger -t barqnet-security "BLOCKED: Rate limit exceeded for $USERNAME from $CLIENT_IP"
 
             # Don't reject yet, just log (can enable rejection if needed)
             # exit 1
@@ -122,12 +122,12 @@ echo "$(date +%s)" >> "$RATE_LIMIT_FILE"
 echo "[$TIMESTAMP] CONNECTED: User=$USERNAME, RealIP=$CLIENT_IP:$CLIENT_PORT, VPN_IP=$VPN_IP" >> "$CONNECTION_LOG"
 
 # Log to syslog
-logger -t vpnmanager "User $USERNAME connected from $CLIENT_IP (VPN IP: $VPN_IP)"
+logger -t barqnet "User $USERNAME connected from $CLIENT_IP (VPN IP: $VPN_IP)"
 
 # Optional: Log to database (if database integration is set up)
 # This would require additional setup with database credentials
 # Example (commented out):
-# psql -h localhost -U vpnmanager -d barqnet -c \
+# psql -h localhost -U barqnet -d barqnet -c \
 #   "INSERT INTO vpn_connections (username, client_ip, vpn_ip, connected_at) \
 #    VALUES ('$USERNAME', '$CLIENT_IP', '$VPN_IP', NOW())" 2>&1 >> "$LOG_DIR/db.log"
 

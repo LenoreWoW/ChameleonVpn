@@ -1,4 +1,4 @@
-# VPN Management Scripts
+# BarqNet VPN Management Scripts
 
 This directory contains scripts for managing OpenVPN server operations, specifically for the **CRITICAL SECURITY FIX** addressing the user deletion bug where deleted users remain connected.
 
@@ -25,8 +25,8 @@ crl-verify /etc/openvpn/crl.pem
 management /var/run/openvpn/server.sock unix
 
 # Client lifecycle monitoring
-client-connect /opt/vpnmanager/scripts/client-connect.sh
-client-disconnect /opt/vpnmanager/scripts/client-disconnect.sh
+client-connect /opt/barqnet/scripts/client-connect.sh
+client-disconnect /opt/barqnet/scripts/client-disconnect.sh
 ```
 
 **Deployment:**
@@ -80,25 +80,25 @@ sudo ./disconnect-user.sh alice
 3. **Rate Limiting:** Blocks >5 connections per IP per 60 seconds
 
 **Logs:**
-- `/var/log/vpnmanager/connections.log` - All connections
-- `/var/log/vpnmanager/security.log` - Security events
+- `/var/log/barqnet/connections.log` - All connections
+- `/var/log/barqnet/security.log` - Security events
 - Syslog entries for system monitoring
 
 **Deployment:**
 ```bash
 # Copy to OpenVPN scripts directory
-sudo mkdir -p /opt/vpnmanager/scripts
-sudo cp client-connect.sh /opt/vpnmanager/scripts/
-sudo chmod +x /opt/vpnmanager/scripts/client-connect.sh
+sudo mkdir -p /opt/barqnet/scripts
+sudo cp client-connect.sh /opt/barqnet/scripts/
+sudo chmod +x /opt/barqnet/scripts/client-connect.sh
 
 # Ensure log directory exists
-sudo mkdir -p /var/log/vpnmanager
+sudo mkdir -p /var/log/barqnet
 ```
 
 **OpenVPN Configuration Required:**
 ```conf
 script-security 2
-client-connect /opt/vpnmanager/scripts/client-connect.sh
+client-connect /opt/barqnet/scripts/client-connect.sh
 ```
 
 ---
@@ -117,19 +117,19 @@ client-connect /opt/vpnmanager/scripts/client-connect.sh
 - Cleanup of temporary files
 
 **Logs:**
-- `/var/log/vpnmanager/connections.log` - Human-readable
-- `/var/log/vpnmanager/statistics.log` - Machine-parseable
-- `/var/log/vpnmanager/alerts.log` - Security alerts
+- `/var/log/barqnet/connections.log` - Human-readable
+- `/var/log/barqnet/statistics.log` - Machine-parseable
+- `/var/log/barqnet/alerts.log` - Security alerts
 
 **Deployment:**
 ```bash
-sudo cp client-disconnect.sh /opt/vpnmanager/scripts/
-sudo chmod +x /opt/vpnmanager/scripts/client-disconnect.sh
+sudo cp client-disconnect.sh /opt/barqnet/scripts/
+sudo chmod +x /opt/barqnet/scripts/client-disconnect.sh
 ```
 
 **OpenVPN Configuration Required:**
 ```conf
-client-disconnect /opt/vpnmanager/scripts/client-disconnect.sh
+client-disconnect /opt/barqnet/scripts/client-disconnect.sh
 ```
 
 ---
@@ -149,16 +149,16 @@ client-disconnect /opt/vpnmanager/scripts/client-disconnect.sh
 **Deployment:**
 ```bash
 # Copy script
-sudo cp refresh-crl.sh /opt/vpnmanager/scripts/
-sudo chmod +x /opt/vpnmanager/scripts/refresh-crl.sh
+sudo cp refresh-crl.sh /opt/barqnet/scripts/
+sudo chmod +x /opt/barqnet/scripts/refresh-crl.sh
 
 # Test run
-sudo /opt/vpnmanager/scripts/refresh-crl.sh
+sudo /opt/barqnet/scripts/refresh-crl.sh
 
 # Add to cron (every 15 minutes)
 sudo crontab -e
 # Add this line:
-*/15 * * * * /opt/vpnmanager/scripts/refresh-crl.sh
+*/15 * * * * /opt/barqnet/scripts/refresh-crl.sh
 ```
 
 **Why Every 15 Minutes?**
@@ -167,7 +167,7 @@ sudo crontab -e
 - Standard practice for VPN CRL refresh
 
 **Logs:**
-- `/var/log/vpnmanager/crl.log` - CRL refresh history
+- `/var/log/barqnet/crl.log` - CRL refresh history
 - Syslog entries for monitoring
 
 ---
@@ -213,27 +213,27 @@ sudo systemctl restart openvpn@server
 ### Phase 3: Deploy Scripts (1 week)
 ```bash
 # Create directory structure
-sudo mkdir -p /opt/vpnmanager/scripts
-sudo mkdir -p /var/log/vpnmanager
+sudo mkdir -p /opt/barqnet/scripts
+sudo mkdir -p /var/log/barqnet
 
 # Copy all scripts
-sudo cp disconnect-user.sh /opt/vpnmanager/scripts/
-sudo cp client-connect.sh /opt/vpnmanager/scripts/
-sudo cp client-disconnect.sh /opt/vpnmanager/scripts/
-sudo cp refresh-crl.sh /opt/vpnmanager/scripts/
+sudo cp disconnect-user.sh /opt/barqnet/scripts/
+sudo cp client-connect.sh /opt/barqnet/scripts/
+sudo cp client-disconnect.sh /opt/barqnet/scripts/
+sudo cp refresh-crl.sh /opt/barqnet/scripts/
 
 # Make executable
-sudo chmod +x /opt/vpnmanager/scripts/*.sh
+sudo chmod +x /opt/barqnet/scripts/*.sh
 
 # Test disconnect script
-sudo /opt/vpnmanager/scripts/disconnect-user.sh testuser
+sudo /opt/barqnet/scripts/disconnect-user.sh testuser
 
 # Add lifecycle scripts to OpenVPN config
 sudo nano /etc/openvpn/server.conf
 # Add:
 script-security 2
-client-connect /opt/vpnmanager/scripts/client-connect.sh
-client-disconnect /opt/vpnmanager/scripts/client-disconnect.sh
+client-connect /opt/barqnet/scripts/client-connect.sh
+client-disconnect /opt/barqnet/scripts/client-disconnect.sh
 
 # Restart OpenVPN
 sudo systemctl restart openvpn@server
@@ -249,13 +249,13 @@ sudo systemctl restart openvpn@server
 # Set up CRL auto-refresh
 sudo crontab -e
 # Add:
-*/15 * * * * /opt/vpnmanager/scripts/refresh-crl.sh
+*/15 * * * * /opt/barqnet/scripts/refresh-crl.sh
 
 # Test cron job
-sudo /opt/vpnmanager/scripts/refresh-crl.sh
+sudo /opt/barqnet/scripts/refresh-crl.sh
 
 # Check logs
-sudo tail -f /var/log/vpnmanager/crl.log
+sudo tail -f /var/log/barqnet/crl.log
 ```
 
 **Downtime:** None
@@ -268,7 +268,7 @@ sudo tail -f /var/log/vpnmanager/crl.log
 ### Test 1: Immediate Disconnection
 ```bash
 # 1. Create test user
-sudo /opt/vpnmanager/easyrsa/easyrsa build-client-full testuser nopass
+sudo /opt/barqnet/easyrsa/easyrsa build-client-full testuser nopass
 
 # 2. Connect test user (from client machine)
 # Connect via OpenVPN client
@@ -289,7 +289,7 @@ echo 'status' | sudo nc -U /var/run/openvpn/server.sock | grep testuser
 ### Test 2: CRL Blocking
 ```bash
 # 1. Revoke certificate
-cd /opt/vpnmanager/easyrsa
+cd /opt/barqnet/easyrsa
 ./easyrsa revoke testuser
 
 # 2. Generate CRL
@@ -336,17 +336,17 @@ sudo openssl crl -in /etc/openvpn/crl.pem -noout -text
 
 ### View Connection Logs
 ```bash
-sudo tail -f /var/log/vpnmanager/connections.log
+sudo tail -f /var/log/barqnet/connections.log
 ```
 
 ### View Security Alerts
 ```bash
-sudo tail -f /var/log/vpnmanager/alerts.log
+sudo tail -f /var/log/barqnet/alerts.log
 ```
 
 ### Check CRL Refresh
 ```bash
-sudo tail -f /var/log/vpnmanager/crl.log
+sudo tail -f /var/log/barqnet/crl.log
 ```
 
 ---
@@ -379,7 +379,7 @@ sudo tail -f /var/log/vpnmanager/crl.log
 
 **Solution:**
 1. Check `script-security 2` in OpenVPN config
-2. Verify scripts are executable: `sudo chmod +x /opt/vpnmanager/scripts/*.sh`
+2. Verify scripts are executable: `sudo chmod +x /opt/barqnet/scripts/*.sh`
 3. Check script paths in config match actual locations
 4. Check logs: `sudo tail -f /var/log/openvpn/openvpn.log`
 

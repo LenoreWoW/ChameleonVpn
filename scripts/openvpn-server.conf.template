@@ -28,15 +28,15 @@ topology subnet
 #################################################
 
 # SSL/TLS root certificate (ca), certificate (cert), and private key (key)
-ca /opt/vpnmanager/easyrsa/pki/ca.crt
-cert /opt/vpnmanager/easyrsa/pki/issued/server.crt
-key /opt/vpnmanager/easyrsa/pki/private/server.key
+ca /opt/barqnet/easyrsa/pki/ca.crt
+cert /opt/barqnet/easyrsa/pki/issued/server.crt
+key /opt/barqnet/easyrsa/pki/private/server.key
 
 # Diffie-Hellman parameters
-dh /opt/vpnmanager/easyrsa/pki/dh.pem
+dh /opt/barqnet/easyrsa/pki/dh.pem
 
 # TLS authentication (additional layer of HMAC authentication)
-tls-auth /opt/vpnmanager/easyrsa/pki/ta.key 0
+tls-auth /opt/barqnet/easyrsa/pki/ta.key 0
 
 # Cipher to use (AES-256-GCM is recommended for security and performance)
 cipher AES-256-GCM
@@ -104,10 +104,10 @@ management-log-cache 300
 script-security 2
 
 # Client connection script (called when a client connects)
-client-connect /opt/vpnmanager/scripts/client-connect.sh
+client-connect /opt/barqnet/scripts/client-connect.sh
 
 # Client disconnection script (called when a client disconnects)
-client-disconnect /opt/vpnmanager/scripts/client-disconnect.sh
+client-disconnect /opt/barqnet/scripts/client-disconnect.sh
 
 # Set environment variables for scripts
 setenv PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
@@ -179,7 +179,7 @@ tls-cipher TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384:TLS-ECDHE-RSA-WITH-AES-128-GCM-
 remote-cert-tls client
 
 # Reject authentication attempts from clients using deprecated protocols
-# tls-crypt /opt/vpnmanager/easyrsa/pki/tc.key
+# tls-crypt /opt/barqnet/easyrsa/pki/tc.key
 
 #################################################
 # NOTES AND MAINTENANCE
@@ -187,13 +187,13 @@ remote-cert-tls client
 
 # Regular Maintenance Tasks:
 # 1. Update CRL after revoking certificates:
-#    cd /opt/vpnmanager/easyrsa && ./easyrsa gen-crl && cp pki/crl.pem /etc/openvpn/
+#    cd /opt/barqnet/easyrsa && ./easyrsa gen-crl && cp pki/crl.pem /etc/openvpn/
 #
 # 2. Reload OpenVPN to apply CRL changes (doesn't disconnect clients):
 #    pkill -SIGUSR1 openvpn
 #
 # 3. Disconnect specific user:
-#    /opt/vpnmanager/scripts/disconnect-user.sh <username>
+#    /opt/barqnet/scripts/disconnect-user.sh <username>
 #
 # 4. View active connections:
 #    echo 'status' | nc -U /var/run/openvpn/server.sock

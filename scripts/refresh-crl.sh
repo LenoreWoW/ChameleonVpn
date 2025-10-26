@@ -1,12 +1,12 @@
 #!/bin/bash
 ###############################################################################
-# CRL (Certificate Revocation List) Refresh Script
+# BarqNet CRL (Certificate Revocation List) Refresh Script
 #
 # Purpose: Regenerates the CRL from EasyRSA and signals OpenVPN to reload it
 #          without disconnecting active clients
 #
 # Usage: Run manually or via cron
-# Cron Example: */15 * * * * /opt/vpnmanager/scripts/refresh-crl.sh
+# Cron Example: */15 * * * * /opt/barqnet/scripts/refresh-crl.sh
 #
 # This script should run every 15-30 minutes to ensure revoked certificates
 # are blocked as soon as possible.
@@ -16,11 +16,11 @@ set -e  # Exit on error
 set -u  # Exit on undefined variable
 
 # Configuration
-EASYRSA_DIR="/opt/vpnmanager/easyrsa"
+EASYRSA_DIR="/opt/barqnet/easyrsa"
 EASYRSA_BIN="$EASYRSA_DIR/easyrsa"
 CRL_SOURCE="$EASYRSA_DIR/pki/crl.pem"
 CRL_DEST="/etc/openvpn/crl.pem"
-LOG_FILE="/var/log/vpnmanager/crl.log"
+LOG_FILE="/var/log/barqnet/crl.log"
 TIMESTAMP="$(date '+%Y-%m-%d %H:%M:%S')"
 
 # Create log directory if it doesn't exist
@@ -187,7 +187,7 @@ CRL_MTIME=$(stat -f%Sm -t "%Y-%m-%d %H:%M:%S" "$CRL_DEST" 2>/dev/null || \
 log "CRL refresh complete - Size: ${CRL_SIZE} bytes, Modified: $CRL_MTIME"
 
 # Log to syslog
-logger -t vpnmanager-crl "CRL refreshed successfully ($REVOKED_COUNT revoked certificates)"
+logger -t barqnet-crl "CRL refreshed successfully ($REVOKED_COUNT revoked certificates)"
 
 ###############################################################################
 # STEP 9: Send alerts if configured (optional)

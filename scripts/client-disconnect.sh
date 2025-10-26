@@ -31,7 +31,7 @@ BYTES_SENT="${bytes_sent:-0}"
 TIMESTAMP="$(date '+%Y-%m-%d %H:%M:%S')"
 
 # Log directory
-LOG_DIR="/var/log/vpnmanager"
+LOG_DIR="/var/log/barqnet"
 mkdir -p "$LOG_DIR" 2>/dev/null
 
 # Main connection log
@@ -89,7 +89,7 @@ echo "[$TIMESTAMP] DISCONNECTED: User=$USERNAME, IP=$CLIENT_IP:$CLIENT_PORT, Dur
 echo "[$TIMESTAMP]|$USERNAME|$CLIENT_IP|$VPN_IP|$DURATION|$BYTES_RECV|$BYTES_SENT" >> "$STATS_LOG"
 
 # Log to syslog
-logger -t vpnmanager "User $USERNAME disconnected after $DURATION_HUMAN (Down: $BYTES_RECV_HUMAN, Up: $BYTES_SENT_HUMAN)"
+logger -t barqnet "User $USERNAME disconnected after $DURATION_HUMAN (Down: $BYTES_RECV_HUMAN, Up: $BYTES_SENT_HUMAN)"
 
 ###############################################################################
 # STORE STATISTICS IN DATABASE (Optional)
@@ -99,7 +99,7 @@ logger -t vpnmanager "User $USERNAME disconnected after $DURATION_HUMAN (Down: $
 # This is commented out by default - uncomment and configure if needed
 
 # Example (requires database setup):
-# psql -h localhost -U vpnmanager -d barqnet -c \
+# psql -h localhost -U barqnet -d barqnet -c \
 #   "INSERT INTO vpn_statistics (username, client_ip, vpn_ip, duration_seconds, bytes_received, bytes_sent, disconnected_at) \
 #    VALUES ('$USERNAME', '$CLIENT_IP', '$VPN_IP', $DURATION, $BYTES_RECV, $BYTES_SENT, NOW())" \
 #   2>&1 >> "$LOG_DIR/db.log"
@@ -115,7 +115,7 @@ TOTAL_BYTES=$((BYTES_RECV + BYTES_SENT))
 if [ $TOTAL_BYTES -gt $ALERT_THRESHOLD ]; then
     TOTAL_HUMAN=$(format_bytes $TOTAL_BYTES)
     echo "[$TIMESTAMP] ALERT: High data transfer - User=$USERNAME, Total=$TOTAL_HUMAN" >> "$LOG_DIR/alerts.log"
-    logger -t vpnmanager-alert "High data transfer: $USERNAME transferred $TOTAL_HUMAN"
+    logger -t barqnet-alert "High data transfer: $USERNAME transferred $TOTAL_HUMAN"
 
     # Optional: Send email alert (requires mail setup)
     # echo "User $USERNAME transferred $TOTAL_HUMAN in $DURATION_HUMAN" | \
@@ -127,7 +127,7 @@ LONG_CONNECTION_THRESHOLD=$((24 * 3600))  # 24 hours
 
 if [ $DURATION -gt $LONG_CONNECTION_THRESHOLD ]; then
     echo "[$TIMESTAMP] ALERT: Long connection - User=$USERNAME, Duration=$DURATION_HUMAN" >> "$LOG_DIR/alerts.log"
-    logger -t vpnmanager-alert "Long connection: $USERNAME connected for $DURATION_HUMAN"
+    logger -t barqnet-alert "Long connection: $USERNAME connected for $DURATION_HUMAN"
 fi
 
 ###############################################################################
