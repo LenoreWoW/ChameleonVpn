@@ -55,17 +55,31 @@ class KillSwitch(private val context: Context) {
     /**
      * Activate kill switch - block all non-VPN traffic
      *
-     * Implementation using VpnService.Builder:
-     * 1. Use setBlocking(true) to block until VPN is established
-     * 2. Use allowBypass(false) to prevent apps from bypassing VPN
-     * 3. On Android 8.0+: Use VpnService.Builder.setMetered(false)
+     * TODO: CRITICAL - Kill switch is NOT actually implemented yet!
+     *
+     * Current Status: Only logs activation but doesn't block traffic
+     * Required Implementation:
+     *
+     * 1. In OpenVPNService.kt (or whichever VPN service is used):
+     *    When building VPN interface, add:
+     *
+     *    if (killSwitch.isEnabled()) {
+     *        builder.setBlocking(true)      // Block traffic until VPN connects
+     *        builder.allowBypass(false)     // Prevent apps from bypassing VPN
+     *        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+     *            builder.setMetered(false)  // Don't treat VPN as metered
+     *        }
+     *    }
+     *
+     * 2. Test that traffic is actually blocked when VPN disconnects
+     * 3. Verify on Android 8.0+ (API 26+) where lockdown mode is available
+     *
+     * Estimated Effort: 4-6 hours (implementation + testing)
+     * Priority: HIGH (feature advertised in UI but doesn't work)
      */
     fun activate() {
-        // ✅ Implemented in WireGuardVPNService.kt
-        // Uses VpnService lockdown mode (setBlocking(true) + allowBypass(false))
-        // Blocks all non-VPN traffic when VPN disconnects
-        // Integrated with VPN service for automatic activation
-
+        // TODO: This only logs - doesn't actually block traffic!
+        // See comments above for required implementation
         android.util.Log.d(TAG, "Kill switch activated - traffic will be blocked if VPN disconnects")
     }
 
