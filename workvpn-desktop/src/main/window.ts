@@ -19,8 +19,10 @@ export function createMainWindow(): BrowserWindow {
   // Load the renderer
   mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
 
-  // Always open DevTools for debugging
-  mainWindow.webContents.openDevTools();
+  // Open DevTools in development mode only
+  if (process.env.NODE_ENV !== 'production') {
+    mainWindow.webContents.openDevTools();
+  }
 
   // Log console messages from renderer to main process
   mainWindow.webContents.on('console-message', (_event, _level, message) => {

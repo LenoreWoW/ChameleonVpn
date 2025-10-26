@@ -6,19 +6,34 @@ import { createMainWindow } from './window';
 
 // API Configuration
 // Set API_BASE_URL environment variable for production deployment
-// Default: http://localhost:8080
+// Default: http://localhost:8080 (development only)
 const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:8080';
 
-// Validate API URL format
+// Validate API URL format and enforce HTTPS in production
 try {
-  new URL(API_BASE_URL);
+  const url = new URL(API_BASE_URL);
+
+  // CRITICAL SECURITY: Enforce HTTPS in production
+  if (process.env.NODE_ENV === 'production' && url.protocol !== 'https:') {
+    throw new Error('Production builds MUST use HTTPS. HTTP is insecure and not allowed.');
+  }
 } catch (error) {
-  console.error('[Main] Invalid API_BASE_URL:', API_BASE_URL);
-  console.error('[Main] Falling back to http://localhost:8080');
-  process.env.API_BASE_URL = 'http://localhost:8080';
+  console.error('[Main] Invalid or insecure API_BASE_URL:', API_BASE_URL);
+  console.error('[Main] Error:', (error as Error).message);
+
+  if (process.env.NODE_ENV === 'production') {
+    // In production, fail hard - don't allow insecure connections
+    console.error('[Main] FATAL: Cannot start app with insecure API URL in production');
+    process.exit(1);
+  } else {
+    // In development, fall back to localhost
+    console.error('[Main] Falling back to http://localhost:8080 (development only)');
+    process.env.API_BASE_URL = 'http://localhost:8080';
+  }
 }
 
 console.log('[Main] API Base URL:', API_BASE_URL);
+console.log('[Main] Environment:', process.env.NODE_ENV || 'development');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling
 if (require('electron-squirrel-startup')) {

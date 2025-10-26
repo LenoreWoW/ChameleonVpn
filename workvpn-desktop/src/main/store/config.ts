@@ -1,5 +1,8 @@
 import Store from 'electron-store';
 import { ParsedOVPNConfig } from '../vpn/parser';
+import { createHash } from 'crypto';
+import { machineIdSync } from 'node-machine-id';
+import { app } from 'electron';
 
 interface StoredConfig {
   name: string;
@@ -16,6 +19,44 @@ interface StoreSchema {
   killSwitch: boolean;
 }
 
+/**
+ * Generate a unique encryption key for this installation
+ * Uses machine ID + app path to ensure uniqueness per machine/installation
+ * This prevents the same key being used across all installations
+ */
+function generateEncryptionKey(): string {
+  try {
+    // Get machine-specific identifier
+    const machineId = machineIdSync();
+
+    // Combine with app path for additional entropy
+    const appPath = app.getPath('userData');
+
+    // Create a deterministic hash (same machine = same key)
+    // This ensures the key persists across app restarts
+    const hash = createHash('sha256')
+      .update(machineId)
+      .update(appPath)
+      .update('workvpn-v1-encryption')
+      .digest('hex');
+
+    return hash;
+  } catch (error) {
+    console.error('[ConfigStore] Failed to generate encryption key:', error);
+
+    // Fallback to a random key if machine ID fails
+    // This won't persist but is better than a hardcoded key
+    const fallbackKey = createHash('sha256')
+      .update(app.getPath('userData'))
+      .update(Date.now().toString())
+      .update(Math.random().toString())
+      .digest('hex');
+
+    console.warn('[ConfigStore] Using fallback encryption key (non-persistent)');
+    return fallbackKey;
+  }
+}
+
 export class ConfigStore {
   private store: Store<StoreSchema>;
 
@@ -29,7 +70,7 @@ export class ConfigStore {
         autoStart: false,
         killSwitch: false,
       },
-      encryptionKey: 'workvpn-encryption-key-change-in-production',
+      encryptionKey: generateEncryptionKey(),
     });
   }
 

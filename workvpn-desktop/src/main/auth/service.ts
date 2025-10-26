@@ -33,6 +33,19 @@ class AuthService {
     // API base URL from environment variable or default to localhost
     this.apiBaseUrl = process.env.API_BASE_URL || 'http://localhost:8080';
 
+    // CRITICAL SECURITY: Enforce HTTPS in production
+    if (process.env.NODE_ENV === 'production') {
+      try {
+        const url = new URL(this.apiBaseUrl);
+        if (url.protocol !== 'https:') {
+          throw new Error('Production authentication MUST use HTTPS');
+        }
+      } catch (error) {
+        console.error('[AUTH] FATAL: Insecure API URL in production:', this.apiBaseUrl);
+        throw error;
+      }
+    }
+
     // Start token refresh timer if user is authenticated
     if (this.isAuthenticated()) {
       this.scheduleTokenRefresh();
