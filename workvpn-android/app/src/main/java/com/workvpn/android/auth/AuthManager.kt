@@ -37,10 +37,10 @@ class AuthManager(private val context: Context) {
             // - Generate OTP server-side
             // - Send SMS via Twilio/AWS SNS
             // - Return success to client
-            // For development only:
-            if (BuildConfig.DEBUG) {
-                android.util.Log.d("AuthManager", "DEBUG ONLY - OTP for $phoneNumber: $otp")
-            }
+
+            // OTP logging removed for security - even in debug builds, OTP codes
+            // should not be exposed in logs as they could be intercepted
+            // Production integration: Send OTP via SMS service (Twilio/AWS SNS/etc)
 
             Result.success(Unit)
         } catch (e: Exception) {

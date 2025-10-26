@@ -235,10 +235,9 @@
           <input type="checkbox" id="auto-start-check">
           <span>Launch at system startup</span>
         </label>
-        <label class="checkbox-label">
-          <input type="checkbox" id="kill-switch-check">
-          <span>Kill switch (block internet when disconnected)</span>
-        </label>
+        <!-- Kill switch removed - requires OS-level firewall configuration
+             Will be implemented in future version with proper platform-specific
+             firewall rules (Windows Firewall, macOS PF, Linux iptables) -->
       </div>
     </div>
   </div>

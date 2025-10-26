@@ -37,8 +37,9 @@ class AuthManager: ObservableObject {
 
             self.otpStorage[phoneNumber] = (otp, expiry)
 
-            // In production, send SMS via Twilio/similar
-            print("[AUTH] OTP for \(phoneNumber): \(otp)")
+            // OTP logging removed for security - codes should never be exposed in logs
+            // Production integration: Send OTP via SMS service (Twilio/AWS SNS/etc)
+            // Backend should handle SMS delivery via POST /auth/otp/send
 
             completion(.success(()))
         }

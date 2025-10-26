@@ -113,7 +113,8 @@ const vpnLogoutBtn = document.getElementById('vpn-logout-btn') as HTMLButtonElem
 
 const autoConnectCheck = document.getElementById('auto-connect-check') as HTMLInputElement;
 const autoStartCheck = document.getElementById('auto-start-check') as HTMLInputElement;
-const killSwitchCheck = document.getElementById('kill-switch-check') as HTMLInputElement;
+// Kill switch removed - will be implemented in future version with proper platform-specific firewall rules
+// const killSwitchCheck = document.getElementById('kill-switch-check') as HTMLInputElement;
 
 // ===== Three.js Scene Setup =====
 function initThreeScene() {
@@ -765,7 +766,7 @@ async function handleSettingsChange() {
     await window.vpn.updateSettings({
       autoConnect: autoConnectCheck.checked || false,
       autoStart: autoStartCheck.checked || false,
-      killSwitch: killSwitchCheck.checked || false,
+      killSwitch: false, // Kill switch removed - will be implemented in future version
     });
   } catch (error) {
     console.error('Settings update error:', error);
@@ -796,7 +797,7 @@ async function loadSettings() {
     const settings = await window.vpn.getSettings();
     autoConnectCheck.checked = settings.autoConnect || false;
     autoStartCheck.checked = settings.autoStart || false;
-    killSwitchCheck.checked = settings.killSwitch || false;
+    // Kill switch removed - will be implemented in future version
   } finally {
     isLoadingSettings = false;
   }
@@ -900,7 +901,8 @@ async function initialize() {
 
     autoConnectCheck.addEventListener('change', handleSettingsChange);
     autoStartCheck.addEventListener('change', handleSettingsChange);
-    killSwitchCheck.addEventListener('change', handleSettingsChange);
+    // Kill switch removed - will be implemented in future version
+    // killSwitchCheck.addEventListener('change', handleSettingsChange);
 
     // Listen for status changes
     window.vpn.onStatusChanged((status) => {
