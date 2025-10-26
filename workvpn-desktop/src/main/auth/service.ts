@@ -18,6 +18,7 @@ interface AuthSession {
   phoneNumber: string;
   sessionId?: string;
   verificationToken?: string;
+  devOtpCode?: string; // Development mode OTP code
 }
 
 // API-integrated auth service with certificate pinning
@@ -293,6 +294,28 @@ class AuthService {
 
   async sendOTP(phoneNumber: string): Promise<{ success: boolean; error?: string }> {
     try {
+      // DEVELOPMENT MODE: Generate and log OTP to console
+      if (process.env.NODE_ENV !== 'production') {
+        const devOtpCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+        console.log('\n╔═══════════════════════════════════════════════════════╗');
+        console.log('║         🔐 DEVELOPMENT MODE - OTP CODE              ║');
+        console.log('╠═══════════════════════════════════════════════════════╣');
+        console.log(`║  Phone: ${phoneNumber.padEnd(42)} ║`);
+        console.log(`║  Code:  ${devOtpCode.padEnd(42)} ║`);
+        console.log('╚═══════════════════════════════════════════════════════╝\n');
+
+        // Store in session for verification
+        this.sessions.set(phoneNumber, {
+          phoneNumber,
+          sessionId: 'dev-session-' + Date.now(),
+          devOtpCode
+        });
+
+        return { success: true };
+      }
+
+      // PRODUCTION MODE: Call backend API
       const result = await this.apiCall('/v1/auth/otp/send', {
         method: 'POST',
         body: JSON.stringify({
@@ -324,6 +347,27 @@ class AuthService {
     try {
       const session = this.sessions.get(phoneNumber);
 
+      // DEVELOPMENT MODE: Verify against stored OTP code
+      if (process.env.NODE_ENV !== 'production' && session?.devOtpCode) {
+        if (code === session.devOtpCode) {
+          console.log('[AUTH-DEV] ✅ OTP verified successfully');
+
+          // Generate development verification token
+          const verificationToken = 'dev-token-' + Date.now();
+          this.sessions.set(phoneNumber, {
+            ...session,
+            verificationToken
+          });
+
+          return { success: true };
+        } else {
+          console.log('[AUTH-DEV] ❌ OTP verification failed');
+          console.log(`[AUTH-DEV] Expected: ${session.devOtpCode}, Got: ${code}`);
+          return { success: false, error: 'Invalid OTP code' };
+        }
+      }
+
+      // PRODUCTION MODE: Call backend API
       const result = await this.apiCall('/v1/auth/otp/verify', {
         method: 'POST',
         body: JSON.stringify({
@@ -365,6 +409,37 @@ class AuthService {
         return { success: false, error: 'Phone number not verified. Please verify OTP first.' };
       }
 
+      // DEVELOPMENT MODE: Create mock account
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[AUTH-DEV] ✅ Creating development account');
+
+        // Generate development tokens
+        const devAccessToken = 'dev-access-token-' + Date.now();
+        const devRefreshToken = 'dev-refresh-token-' + Date.now();
+
+        this.saveTokens({
+          accessToken: devAccessToken,
+          refreshToken: devRefreshToken,
+          expiresIn: 3600,
+          tokenIssuedAt: Date.now()
+        });
+
+        this.store.set('currentUser', {
+          id: 'dev-user-' + Date.now(),
+          phoneNumber: phoneNumber
+        });
+
+        // Store password for dev login
+        this.store.set('devPassword', password);
+
+        // Clean up session
+        this.sessions.delete(phoneNumber);
+
+        console.log('[AUTH-DEV] Account created successfully');
+        return { success: true };
+      }
+
+      // PRODUCTION MODE: Call backend API
       const result = await this.apiCall('/v1/auth/register', {
         method: 'POST',
         body: JSON.stringify({
@@ -405,6 +480,33 @@ class AuthService {
 
   async login(phoneNumber: string, password: string): Promise<{ success: boolean; error?: string }> {
     try {
+      // DEVELOPMENT MODE: Validate against stored dev password
+      if (process.env.NODE_ENV !== 'production') {
+        const storedPassword = this.store.get('devPassword') as string;
+        const storedUser = this.store.get('currentUser') as User;
+
+        if (storedPassword && storedPassword === password && storedUser?.phoneNumber === phoneNumber) {
+          console.log('[AUTH-DEV] ✅ Login successful');
+
+          // Generate new development tokens
+          const devAccessToken = 'dev-access-token-' + Date.now();
+          const devRefreshToken = 'dev-refresh-token-' + Date.now();
+
+          this.saveTokens({
+            accessToken: devAccessToken,
+            refreshToken: devRefreshToken,
+            expiresIn: 3600,
+            tokenIssuedAt: Date.now()
+          });
+
+          return { success: true };
+        } else {
+          console.log('[AUTH-DEV] ❌ Login failed - Invalid credentials');
+          return { success: false, error: 'Invalid phone number or password' };
+        }
+      }
+
+      // PRODUCTION MODE: Call backend API
       const result = await this.apiCall('/v1/auth/login', {
         method: 'POST',
         body: JSON.stringify({
