@@ -56,27 +56,32 @@ struct OTPVerificationView: View {
                     .padding(.horizontal, 32)
 
                 // OTP input
-                HStack(spacing: 12) {
-                    ForEach(0..<6, id: \.self) { index in
-                        TextField("", text: $otpDigits[index])
-                            .keyboardType(.numberPad)
-                            .multilineTextAlignment(.center)
-                            .font(.title)
-                            .foregroundColor(.white)
-                            .frame(width: 50, height: 60)
-                            .background(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(otpDigits[index].isEmpty ? Color.cyanBlue.opacity(0.3) : Color.cyanBlue, lineWidth: 2)
-                                    .background(Color.black.opacity(0.4))
-                                    .cornerRadius(12)
-                            )
-                            .focused($focusedField, equals: index)
-                            .onChange(of: otpDigits[index]) { newValue in
-                                handleOTPChange(at: index, newValue: newValue)
-                            }
+                GeometryReader { geometry in
+                    HStack(spacing: 8) {
+                        ForEach(0..<6, id: \.self) { index in
+                            TextField("", text: $otpDigits[index])
+                                .keyboardType(.numberPad)
+                                .multilineTextAlignment(.center)
+                                .font(.title)
+                                .foregroundColor(.white)
+                                .frame(width: min(50, (geometry.size.width - 40 - 40) / 6), height: 60)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(otpDigits[index].isEmpty ? Color.cyanBlue.opacity(0.3) : Color.cyanBlue, lineWidth: 2)
+                                        .background(Color.black.opacity(0.4))
+                                        .cornerRadius(12)
+                                )
+                                .focused($focusedField, equals: index)
+                                .onChange(of: otpDigits[index]) { newValue in
+                                    handleOTPChange(at: index, newValue: newValue)
+                                }
+                        }
                     }
+                    .frame(maxWidth: .infinity)
+                    .position(x: geometry.size.width / 2, y: 30)
                 }
-                .padding(.horizontal, 16)
+                .frame(height: 60)
+                .padding(.horizontal, 32)
 
                 if showError {
                     Text("Invalid code. Please try again.")
