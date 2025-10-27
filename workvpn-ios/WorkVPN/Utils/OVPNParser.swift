@@ -54,9 +54,7 @@ struct OVPNParser {
 
             // Handle inline blocks
             if trimmed.hasPrefix("<") {
-                if let match = trimmed.range(of: #"<(\/?)([
-
-\w-]+)>"#, options: .regularExpression) {
+                if let match = trimmed.range(of: #"<(\/?)([\w-]+)>"#, options: .regularExpression) {
                     let tag = String(trimmed[match])
                     let isClosing = tag.hasPrefix("</")
                     let blockType = tag.replacingOccurrences(of: "<", with: "")
