@@ -118,6 +118,7 @@ SELECT
     l.country_code,
     l.city,
     l.flag_emoji,
+    l.display_order,
     COUNT(DISTINCT s.id) as total_servers,
     COUNT(DISTINCT s.id) FILTER (WHERE s.enabled = true) as active_servers,
     COUNT(DISTINCT u.username) as total_users,
@@ -129,7 +130,7 @@ LEFT JOIN users u ON s.name = u.server_id
 LEFT JOIN vpn_connections vc ON s.name = vc.server_id AND vc.status IN ('connecting', 'connected')
 LEFT JOIN vpn_statistics vs ON s.name = vs.server_id
 WHERE l.enabled = true
-GROUP BY l.location_id, l.name, l.country, l.country_code, l.city, l.flag_emoji
+GROUP BY l.location_id, l.name, l.country, l.country_code, l.city, l.flag_emoji, l.display_order
 ORDER BY l.display_order;
 
 -- Create function to get nearest location based on coordinates
