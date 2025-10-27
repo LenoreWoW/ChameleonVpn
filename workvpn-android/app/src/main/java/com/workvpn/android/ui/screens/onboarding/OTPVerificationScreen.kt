@@ -92,8 +92,10 @@ fun OTPVerificationScreen(
 
             // OTP Input
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
             ) {
                 otpCode.forEachIndexed { index, digit ->
                     BasicTextField(
@@ -122,7 +124,9 @@ fun OTPVerificationScreen(
                             }
                         },
                         modifier = Modifier
-                            .size(56.dp)
+                            .weight(1f)
+                            .aspectRatio(1f)
+                            .widthIn(max = 60.dp)
                             .background(
                                 color = Color.Black.copy(alpha = 0.4f),
                                 shape = RoundedCornerShape(12.dp)

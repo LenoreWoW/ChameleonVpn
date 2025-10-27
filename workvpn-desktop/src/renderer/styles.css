@@ -164,13 +164,20 @@ body {
 
 .otp-input-group {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   justify-content: center;
   margin-bottom: 24px;
+  flex-wrap: nowrap;
+  width: 100%;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .otp-digit {
-  width: 56px;
+  flex: 1;
+  min-width: 40px;
+  max-width: 56px;
   height: 64px;
   padding: 0;
   text-align: center;
