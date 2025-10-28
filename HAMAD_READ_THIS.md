@@ -762,6 +762,89 @@ ls barqnet-backend/migrations/*.sql | wc -l
 
 ---
 
+### Issue 13: PostgreSQL IMMUTABLE Function Error
+
+**Error:** `ERROR: functions in index predicate must be marked IMMUTABLE` during migration 002
+
+**Cause:** Migration 002 had CURRENT_TIMESTAMP in an index WHERE clause (line 102)
+
+**Solution:**
+
+This is already fixed in the latest code! Just pull the update:
+
+```bash
+# Pull latest fixes
+cd ~/ChameleonVpn
+git pull origin main
+
+# Then re-run the migration
+# (See Issue 11 for fresh database setup)
+```
+
+**What was fixed:**
+- Removed `CURRENT_TIMESTAMP` from index predicate
+- Index now only filters on `verified = false`
+- Still efficient, but PostgreSQL-compliant
+
+**Fixed in commit:** `05ddb4e`
+
+---
+
+### Issue 14: Migrations Don't Show in schema_migrations Table
+
+**Error:** Only 1 row shows when checking schema_migrations, but all 4 migrations ran successfully
+
+**Cause:** Migrations 002, 003, 004 were missing INSERT statements to record themselves
+
+**How to verify the issue:**
+
+```bash
+# Check how many migrations are tracked
+sudo -u postgres psql -d barqnet -c "SELECT version FROM schema_migrations ORDER BY version;"
+
+# If you only see 001_initial_schema, you have this issue
+```
+
+**Solution - Already Fixed in Latest Code:**
+
+The migrations are now fixed, but if you already ran them, just add the missing records manually:
+
+```bash
+# Pull latest fixes
+cd ~/ChameleonVpn
+git pull origin main
+
+# Add missing migration records (safe - uses ON CONFLICT DO NOTHING)
+sudo -u postgres psql -d barqnet <<EOF
+INSERT INTO schema_migrations (version) VALUES ('002_add_phone_auth') ON CONFLICT (version) DO NOTHING;
+INSERT INTO schema_migrations (version) VALUES ('003_add_statistics') ON CONFLICT (version) DO NOTHING;
+INSERT INTO schema_migrations (version) VALUES ('004_add_locations') ON CONFLICT (version) DO NOTHING;
+EOF
+
+# Verify all 4 migrations are now tracked
+sudo -u postgres psql -d barqnet -c "SELECT version, applied_at FROM schema_migrations ORDER BY version;"
+```
+
+**Expected output:**
+```
+      version       |         applied_at
+--------------------+----------------------------
+ 001_initial_schema | 2025-10-28 08:24:01.049605
+ 002_add_phone_auth | 2025-10-28 08:30:xx.xxxxxx
+ 003_add_statistics | 2025-10-28 08:30:xx.xxxxxx
+ 004_add_locations  | 2025-10-28 08:30:xx.xxxxxx
+(4 rows)
+```
+
+**Why this matters:**
+- Tracks which migrations have been applied
+- Prevents accidentally re-running migrations
+- Standard database migration best practice
+
+**Fixed in commit:** `5fac6d5`
+
+---
+
 ## 📊 Final Checklist
 
 After completing all tests, you should have verified:
