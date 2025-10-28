@@ -50,29 +50,24 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
             return
         }
 
-        // Get credentials if provided
-        let username = providerConfiguration["username"] as? String
-        let password = providerConfiguration["password"] as? String
+        // Get credentials if provided (for future use with auth-user-pass)
+        let _ = providerConfiguration["username"] as? String
+        let _ = providerConfiguration["password"] as? String
 
         // Parse and configure OpenVPN
         let configuration = OpenVPNConfiguration()
-        configuration.fileContent = ovpnContent
+        configuration.fileContent = Data(ovpnContent.utf8)
 
-        if let username = username, let password = password {
-            let credentials = OpenVPNCredentials()
-            credentials.username = username
-            credentials.password = password
-            configuration.username = username
-            configuration.password = password
-        }
+        // Note: Credentials for auth-user-pass are typically embedded in the .ovpn file
+        // or provided through OpenVPN's management interface
 
         // Apply configuration and connect
         do {
             let properties = try vpnAdapter.apply(configuration: configuration)
             NSLog("[PacketTunnel] Configuration applied successfully")
 
-            // Start OpenVPN connection
-            vpnAdapter.connect(using: nil)
+            // Start OpenVPN connection with packet flow
+            vpnAdapter.connect(using: packetFlow)
 
         } catch {
             NSLog("[PacketTunnel] ERROR applying configuration: \(error)")
