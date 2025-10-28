@@ -110,6 +110,10 @@ COMMENT ON COLUMN users.password_hash IS 'Bcrypt hashed password for phone-based
 COMMENT ON COLUMN users.created_via IS 'Tracks how the user was created: api, phone, admin, etc.';
 COMMENT ON COLUMN users.last_login IS 'Timestamp of last successful login';
 
+-- Record this migration as applied
+INSERT INTO schema_migrations (version) VALUES ('002_add_phone_auth')
+ON CONFLICT (version) DO NOTHING;
+
 -- ============== ROLLBACK DOWN ==============
 
 /*

@@ -185,6 +185,10 @@ COMMENT ON COLUMN server_locations.flag_emoji IS 'Unicode flag emoji for the cou
 COMMENT ON COLUMN server_locations.display_order IS 'Display order for UI sorting (lower numbers first)';
 COMMENT ON COLUMN servers.location_id IS 'Foreign key to server_locations table';
 
+-- Record this migration as applied
+INSERT INTO schema_migrations (version) VALUES ('004_add_locations')
+ON CONFLICT (version) DO NOTHING;
+
 -- ============== ROLLBACK DOWN ==============
 
 /*

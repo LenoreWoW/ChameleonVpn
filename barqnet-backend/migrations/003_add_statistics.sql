@@ -163,6 +163,10 @@ COMMENT ON COLUMN vpn_connections.virtual_ip IS 'VPN-assigned private IP address
 COMMENT ON COLUMN vpn_connections.public_ip IS 'Client public IP address';
 COMMENT ON COLUMN vpn_connections.status IS 'Current connection status: connecting, connected, disconnected, error';
 
+-- Record this migration as applied
+INSERT INTO schema_migrations (version) VALUES ('003_add_statistics')
+ON CONFLICT (version) DO NOTHING;
+
 -- ============== ROLLBACK DOWN ==============
 
 /*
