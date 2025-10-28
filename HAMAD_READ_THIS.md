@@ -128,6 +128,7 @@ go run run_migrations.go
 ```
 Connected to database successfully
 Running migrations...
+✓ Migration 001_initial_schema.sql
 ✓ Migration 002_add_phone_auth.sql
 ✓ Migration 003_add_statistics.sql
 ✓ Migration 004_add_locations.sql
@@ -614,6 +615,149 @@ brew services start postgresql@14
 **Linux:**
 ```bash
 sudo systemctl start postgresql
+```
+
+---
+
+### Issue 9: iOS Build Errors - Color Not Found
+
+**Error:** `Type 'Color' has no member 'cyanBlue'` or similar color errors
+
+**Cause:** You manually renamed the `WorkVPN` folder to `BarqNet`, breaking Xcode file references
+
+**Solution - Clean Setup:**
+
+```bash
+# 1. Delete the iOS folder completely
+cd ~/Desktop/ChameleonVpn
+rm -rf workvpn-ios
+
+# 2. Get fresh copy from GitHub
+git checkout workvpn-ios
+
+# 3. Clean DerivedData
+rm -rf ~/Library/Developer/Xcode/DerivedData/*
+
+# 4. Install dependencies
+cd workvpn-ios
+pod deintegrate
+pod install
+
+# 5. Open the WORKSPACE (not .xcodeproj)
+open WorkVPN.xcworkspace
+```
+
+**⚠️ IMPORTANT:**
+- Do NOT rename the `WorkVPN` folder to `BarqNet`
+- Keep folder names as `WorkVPN` (internal structure)
+- The app will display "BarqNet" branding in the UI automatically
+- Always open `WorkVPN.xcworkspace` NOT `WorkVPN.xcodeproj`
+
+---
+
+### Issue 10: iOS Xcode Duplicate File Errors
+
+**Error:** `Multiple commands produce Info.plist` or `PacketTunnelProvider.stringsdata`
+
+**Cause:** Stale DerivedData from previous builds
+
+**Solution:**
+
+```bash
+# Clean DerivedData
+rm -rf ~/Library/Developer/Xcode/DerivedData/*
+
+# In Xcode
+# 1. Product > Clean Build Folder (Cmd+Shift+K)
+# 2. Restart Xcode
+# 3. Build again (Cmd+B)
+```
+
+---
+
+### Issue 11: Backend Migration Errors - Missing Tables
+
+**Error:** `pq: relation "users" does not exist` or `column "display_order" does not exist`
+
+**Cause:** Database migrations not run, or run in wrong order
+
+**Solution - Fresh Database Setup:**
+
+```bash
+# Windows PowerShell
+$env:PGPASSWORD = "postgres"
+
+# 1. Drop and recreate database
+dropdb -U postgres barqnet
+createdb -U postgres barqnet
+
+# 2. Run ALL migrations in order (CRITICAL!)
+cd barqnet-backend/migrations
+psql -U postgres -d barqnet -f 001_initial_schema.sql
+psql -U postgres -d barqnet -f 002_add_phone_auth.sql
+psql -U postgres -d barqnet -f 003_add_statistics.sql
+psql -U postgres -d barqnet -f 004_add_locations.sql
+
+# 3. Verify all migrations applied
+psql -U postgres -d barqnet -c "SELECT version, applied_at FROM schema_migrations ORDER BY version;"
+
+# Expected: 4 rows showing all migrations
+```
+
+**macOS/Linux:**
+
+```bash
+# 1. Drop and recreate database
+sudo -u postgres dropdb barqnet
+sudo -u postgres createdb barqnet
+
+# 2. Run ALL migrations in order
+cd barqnet-backend/migrations
+sudo -u postgres psql -d barqnet -f 001_initial_schema.sql
+sudo -u postgres psql -d barqnet -f 002_add_phone_auth.sql
+sudo -u postgres psql -d barqnet -f 003_add_statistics.sql
+sudo -u postgres psql -d barqnet -f 004_add_locations.sql
+
+# 3. Verify
+sudo -u postgres psql -d barqnet -c "SELECT version, applied_at FROM schema_migrations ORDER BY version;"
+```
+
+**What the 4 SQL files do:**
+- `001_initial_schema.sql` - Base tables (users, servers, audit_logs)
+- `002_add_phone_auth.sql` - Phone authentication & OTP
+- `003_add_statistics.sql` - VPN connection statistics
+- `004_add_locations.sql` - Geographic server locations
+
+**⚠️ MUST run in order:** 001 → 002 → 003 → 004
+
+---
+
+### Issue 12: SQL Migration Files - Where Are They?
+
+**Question:** "Where are the SQL files? I only see some migrations."
+
+**Answer:**
+
+All **4 SQL migration files** are in: `barqnet-backend/migrations/`
+
+```bash
+# List migrations
+ls -la barqnet-backend/migrations/*.sql
+
+# You should see:
+# 001_initial_schema.sql      ← BASE (MUST RUN FIRST!)
+# 002_add_phone_auth.sql      ← Phone auth
+# 003_add_statistics.sql      ← Statistics
+# 004_add_locations.sql       ← Locations
+```
+
+**Full documentation:** See `barqnet-backend/migrations/QUICKSTART.md`
+
+**Quick verification:**
+
+```bash
+# Count SQL files (should be 4)
+ls barqnet-backend/migrations/*.sql | wc -l
 ```
 
 ---
