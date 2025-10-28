@@ -117,11 +117,14 @@ go build -o management.exe .\apps\management
 # Navigate to migrations folder
 cd migrations
 
-# Set database connection string
-$env:DATABASE_URL = "postgres://barqnet:barqnet123@localhost/barqnet?sslmode=disable"
+# Run migrations using psql (RECOMMENDED)
+psql -U postgres -d barqnet -f 001_initial_schema.sql
+psql -U postgres -d barqnet -f 002_add_phone_auth.sql
+psql -U postgres -d barqnet -f 003_add_statistics.sql
+psql -U postgres -d barqnet -f 004_add_locations.sql
 
-# Run migrations
-go run run_migrations.go
+# Verify all 4 migrations applied
+psql -U postgres -d barqnet -c "SELECT version, applied_at FROM schema_migrations ORDER BY version;"
 ```
 
 **✅ Expected Output:**
@@ -140,8 +143,14 @@ All migrations completed successfully!
 # Go back to backend folder
 cd ..
 
-# Set environment variables
-$env:DATABASE_URL = "postgres://barqnet:barqnet123@localhost/barqnet?sslmode=disable"
+# Set environment variables for database connection
+$env:DB_USER = "postgres"
+$env:DB_PASSWORD = "postgres"
+$env:DB_NAME = "barqnet"
+$env:DB_HOST = "localhost"
+$env:DB_SSLMODE = "disable"
+
+# Set environment variables for backend
 $env:JWT_SECRET = "your-secret-key-change-in-production"
 $env:PORT = "8080"
 $env:ENABLE_OTP_CONSOLE = "true"
@@ -208,15 +217,28 @@ go build -o management ./apps/management
 
 # Run migrations
 cd migrations
-export DATABASE_URL="postgres://barqnet:barqnet123@localhost/barqnet?sslmode=disable"
-go run run_migrations.go
+sudo -u postgres psql -d barqnet -f 001_initial_schema.sql
+sudo -u postgres psql -d barqnet -f 002_add_phone_auth.sql
+sudo -u postgres psql -d barqnet -f 003_add_statistics.sql
+sudo -u postgres psql -d barqnet -f 004_add_locations.sql
+
+# Verify migrations
+sudo -u postgres psql -d barqnet -c "SELECT version, applied_at FROM schema_migrations ORDER BY version;"
 cd ..
 
-# Start server
-export DATABASE_URL="postgres://barqnet:barqnet123@localhost/barqnet?sslmode=disable"
+# Set environment variables for database connection
+export DB_USER="postgres"
+export DB_PASSWORD="postgres"
+export DB_NAME="barqnet"
+export DB_HOST="localhost"
+export DB_SSLMODE="disable"
+
+# Set environment variables for backend
 export JWT_SECRET="your-secret-key-change-in-production"
 export PORT="8080"
 export ENABLE_OTP_CONSOLE="true"
+
+# Start server
 ./management
 ```
 
@@ -842,6 +864,122 @@ sudo -u postgres psql -d barqnet -c "SELECT version, applied_at FROM schema_migr
 - Standard database migration best practice
 
 **Fixed in commit:** `5fac6d5`
+
+---
+
+### Issue 15: Backend Database Connection Error - Wrong User
+
+**Error:** `pq: password authentication failed for user "vpnmanager"`
+
+**Cause:** Backend expects database user "vpnmanager" and database "vpnmanager" by default, but migrations created database "barqnet"
+
+**How to check default configuration:**
+
+The backend uses these defaults if environment variables are not set:
+- Database: `vpnmanager` (not `barqnet`)
+- User: `vpnmanager` (not `postgres`)
+- Password: (empty - must be set)
+
+**Solution - Set Environment Variables (RECOMMENDED):**
+
+```bash
+# Set environment variables to match your database
+export DB_USER="postgres"
+export DB_PASSWORD="your_postgres_password"
+export DB_NAME="barqnet"
+export DB_HOST="localhost"
+export DB_SSLMODE="disable"
+
+# Run backend
+cd ~/ChameleonVpn/barqnet-backend
+./management
+```
+
+**For persistent configuration (Ubuntu/Linux):**
+
+```bash
+# Create environment file
+sudo mkdir -p /etc/barqnet
+sudo nano /etc/barqnet/management.env
+
+# Add these lines:
+export DB_USER="postgres"
+export DB_PASSWORD="your_postgres_password"
+export DB_NAME="barqnet"
+export DB_HOST="localhost"
+export DB_SSLMODE="disable"
+export JWT_SECRET="change-this-in-production"
+export PORT="8080"
+
+# Save and exit (Ctrl+X, Y, Enter)
+
+# Load environment and run
+source /etc/barqnet/management.env
+cd ~/ChameleonVpn/barqnet-backend
+./management
+```
+
+**Alternative - Create vpnmanager database:**
+
+If you prefer to match the backend's defaults:
+
+```bash
+# Create vpnmanager database and user
+sudo -u postgres psql <<EOF
+CREATE DATABASE vpnmanager;
+CREATE USER vpnmanager WITH PASSWORD 'vpnmanager123';
+GRANT ALL PRIVILEGES ON DATABASE vpnmanager TO vpnmanager;
+\c vpnmanager
+GRANT ALL PRIVILEGES ON SCHEMA public TO vpnmanager;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO vpnmanager;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO vpnmanager;
+EOF
+
+# Run migrations on vpnmanager database
+cd ~/ChameleonVpn/barqnet-backend/migrations
+sudo -u postgres psql -d vpnmanager -f 001_initial_schema.sql
+sudo -u postgres psql -d vpnmanager -f 002_add_phone_auth.sql
+sudo -u postgres psql -d vpnmanager -f 003_add_statistics.sql
+sudo -u postgres psql -d vpnmanager -f 004_add_locations.sql
+
+# Set password and run
+export DB_PASSWORD="vpnmanager123"
+cd ~/ChameleonVpn/barqnet-backend
+./management
+```
+
+**Expected output when successful:**
+
+```
+Management server started with ID: management-server
+API server running on port 8080
+Database: localhost:5432/barqnet
+```
+
+**Test the backend:**
+
+```bash
+# In a new terminal
+curl http://localhost:8080/api/health
+
+# Expected response:
+{"status":"healthy","timestamp":1234567890}
+```
+
+**Windows (PowerShell):**
+
+```powershell
+# Set environment variables
+$env:DB_USER = "postgres"
+$env:DB_PASSWORD = "postgres"
+$env:DB_NAME = "barqnet"
+$env:DB_HOST = "localhost"
+$env:DB_SSLMODE = "disable"
+
+# Run backend
+cd barqnet-backend
+.\management.exe
+```
 
 ---
 
