@@ -32,7 +32,8 @@ go run migrations/run_migrations.go \
 # Connect to database
 psql -h localhost -U postgres -d barqnet
 
-# Run migrations in order
+# Run migrations in order (IMPORTANT: Run in sequence!)
+\i migrations/001_initial_schema.sql
 \i migrations/002_add_phone_auth.sql
 \i migrations/003_add_statistics.sql
 \i migrations/004_add_locations.sql
@@ -83,19 +84,26 @@ func main() {
 
 After running migrations, you'll have:
 
-### New Authentication Features
+### Initial Database Schema (001)
+- Users table with authentication and status tracking
+- Servers table for VPN server management
+- Audit logs for system operations
+- Schema migrations tracking table
+- Auto-update triggers for timestamp columns
+
+### New Authentication Features (002)
 - Phone number login support
 - Password hashing for phone users
 - JWT session tracking
 - OTP verification with rate limiting
 
-### New Statistics & Monitoring
+### New Statistics & Monitoring (003)
 - Real-time VPN connection tracking
 - Historical bandwidth usage data
 - Per-user and per-server analytics views
 - Active connection monitoring
 
-### New Geographic Features
+### New Geographic Features (004)
 - 15 pre-populated global server locations
 - Location-to-server mapping
 - Distance calculation function
@@ -112,8 +120,8 @@ After running migrations, verify everything:
 psql -U postgres -d barqnet
 
 -- 1. Check migrations applied
-SELECT version, name, applied_at FROM schema_migrations ORDER BY version;
--- Expected: 3 rows (versions 2, 3, 4)
+SELECT version, applied_at FROM schema_migrations ORDER BY version;
+-- Expected: 4 rows (versions 001_initial_schema, 002_add_phone_auth, 003_add_statistics, 004_add_locations)
 
 -- 2. Verify new columns on users table
 \d users
@@ -318,7 +326,16 @@ ALTER TABLE users DROP COLUMN IF EXISTS last_login;
 ALTER TABLE users DROP COLUMN IF EXISTS created_via;
 ALTER TABLE users DROP COLUMN IF EXISTS password_hash;
 ALTER TABLE users DROP COLUMN IF EXISTS phone_number;
-DELETE FROM schema_migrations WHERE version = 2;
+DELETE FROM schema_migrations WHERE version = '002_add_phone_auth';
+
+-- Rollback 001 (initial schema)
+DROP TRIGGER IF EXISTS update_servers_updated_at ON servers;
+DROP TRIGGER IF EXISTS update_users_updated_at ON users;
+DROP FUNCTION IF EXISTS update_updated_at_column();
+DROP TABLE IF EXISTS audit_logs CASCADE;
+DROP TABLE IF EXISTS servers CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS schema_migrations CASCADE;
 ```
 
 ---
