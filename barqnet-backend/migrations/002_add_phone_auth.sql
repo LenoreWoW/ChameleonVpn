@@ -98,8 +98,9 @@ CREATE INDEX IF NOT EXISTS idx_otp_attempt_type ON otp_attempts(attempt_type);
 CREATE INDEX IF NOT EXISTS idx_otp_ip_address ON otp_attempts(ip_address);
 
 -- Create composite index for active OTP lookup
+-- Note: Only index unverified OTPs for faster active OTP queries
 CREATE INDEX IF NOT EXISTS idx_otp_phone_active ON otp_attempts(phone_number, expires_at, verified)
-WHERE verified = false AND expires_at > CURRENT_TIMESTAMP;
+WHERE verified = false;
 
 -- Add comment to document the migration
 COMMENT ON TABLE user_sessions IS 'Tracks active user sessions with JWT tokens for authentication';
