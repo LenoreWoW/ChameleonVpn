@@ -890,9 +890,28 @@ export DB_NAME="barqnet"
 export DB_HOST="localhost"
 export DB_SSLMODE="disable"
 
-# Run backend
+# Run backend WITHOUT sudo (backend doesn't need root)
 cd ~/ChameleonVpn/barqnet-backend
 ./management
+```
+
+**⚠️ CRITICAL: DO NOT USE sudo**
+
+```bash
+# ❌ WRONG - This will NOT work:
+sudo ./management
+
+# Why? sudo creates a new shell and doesn't preserve environment variables!
+```
+
+**If you MUST use sudo (not recommended):**
+
+```bash
+# Option 1: Use sudo -E to preserve environment
+sudo -E ./management
+
+# Option 2: Set variables inline with sudo
+sudo DB_USER="postgres" DB_PASSWORD="postgres" DB_NAME="barqnet" DB_HOST="localhost" DB_SSLMODE="disable" ./management
 ```
 
 **For persistent configuration (Ubuntu/Linux):**
@@ -980,6 +999,76 @@ $env:DB_SSLMODE = "disable"
 cd barqnet-backend
 .\management.exe
 ```
+
+---
+
+### Issue 16: Backend Still Shows "vpnmanager" Error After Setting Variables
+
+**Error:** `pq: password authentication failed for user "vpnmanager"` even after setting environment variables
+
+**Cause:** Using `sudo` to run the backend, which creates a new shell session without your environment variables
+
+**How to identify:**
+
+```bash
+# You set variables like this:
+export DB_USER="postgres"
+export DB_PASSWORD="postgres"
+export DB_NAME="barqnet"
+
+# But then ran:
+sudo ./management  # ❌ WRONG!
+```
+
+**Solution:**
+
+The backend **DOES NOT need sudo**. Just run it normally:
+
+```bash
+# Set environment variables
+export DB_USER="postgres"
+export DB_PASSWORD="postgres"
+export DB_NAME="barqnet"
+export DB_HOST="localhost"
+export DB_SSLMODE="disable"
+
+# Run WITHOUT sudo
+./management
+```
+
+**Why sudo doesn't work:**
+- `sudo` creates a new shell session with root privileges
+- Your user's environment variables don't transfer to root's session
+- The backend reads environment variables at startup
+- Without variables, it falls back to defaults (vpnmanager/vpnmanager)
+- **The backend doesn't need root privileges anyway!**
+
+**If you absolutely must use sudo:**
+
+```bash
+# Option 1: Use sudo -E (preserve Environment)
+export DB_USER="postgres"
+export DB_PASSWORD="postgres"
+export DB_NAME="barqnet"
+sudo -E ./management
+
+# Option 2: Set variables inline
+sudo DB_USER="postgres" DB_PASSWORD="postgres" DB_NAME="barqnet" DB_HOST="localhost" DB_SSLMODE="disable" ./management
+```
+
+**Quick test to verify environment variables are set:**
+
+```bash
+# Check if variables are set in your current shell
+echo $DB_USER
+echo $DB_NAME
+
+# Expected output:
+# postgres
+# barqnet
+```
+
+**If variables are empty, re-export them before running the backend.**
 
 ---
 
