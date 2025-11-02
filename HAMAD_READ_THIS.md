@@ -314,6 +314,10 @@ npm start
 
 ## 📱 STEP 4: Test iOS Client (iPhone/iPad)
 
+**⚠️ IMPORTANT: READ THIS FIRST!**
+
+**DO NOT RENAME ANY FOLDERS!** Keep all folder names as `WorkVPN`. The app will show "BarqNet" branding automatically in the UI. If you rename `WorkVPN` → `BarqNet`, Xcode will fail with color errors. See Issue 9 if this happens.
+
 **Requirements:**
 - macOS with Xcode 15+
 - iOS device OR iOS Simulator
@@ -641,11 +645,22 @@ sudo systemctl start postgresql
 
 ---
 
-### Issue 9: iOS Build Errors - Color Not Found
+### Issue 9: iOS Build Errors - Color Not Found ⚠️ MOST COMMON ISSUE
 
 **Error:** `Type 'Color' has no member 'cyanBlue'` or similar color errors
 
 **Cause:** You manually renamed the `WorkVPN` folder to `BarqNet`, breaking Xcode file references
+
+**🚨 CRITICAL: THIS IS THE MOST COMMON MISTAKE!**
+
+If you see these errors:
+```
+Type 'Color?' has no member 'cyanBlue'
+Type 'Color' has no member 'grayLight'
+Type 'Color' has no member 'darkBgSecondary'
+```
+
+**You renamed folders! Stop and follow the fix below exactly.**
 
 **Solution - Clean Setup:**
 
