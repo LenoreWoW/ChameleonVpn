@@ -649,7 +649,7 @@ sudo systemctl start postgresql
 
 **Error:** `Type 'Color' has no member 'cyanBlue'` or similar color errors
 
-**Cause:** You manually renamed the `WorkVPN` folder to `BarqNet`, breaking Xcode file references
+**Cause:** You created or renamed a folder to `BarqNet` inside `workvpn-ios/`, breaking Xcode file references
 
 **🚨 CRITICAL: THIS IS THE MOST COMMON MISTAKE!**
 
@@ -660,35 +660,70 @@ Type 'Color' has no member 'grayLight'
 Type 'Color' has no member 'darkBgSecondary'
 ```
 
-**You renamed folders! Stop and follow the fix below exactly.**
+**Or if you see error paths like:**
+```
+/Users/wolf/Desktop/ChameleonVpn/workvpn-ios/BarqNet/BarqNet/Views/VPNStatusView.swift
+```
 
-**Solution - Clean Setup:**
+**The BarqNet folder shouldn't exist! Stop and follow the fix below exactly.**
+
+**Step 1: Verify the Problem**
 
 ```bash
-# 1. Delete the iOS folder completely
+# Check if you have a BarqNet folder (you shouldn't!)
+ls -la ~/Desktop/ChameleonVpn/workvpn-ios/ | grep BarqNet
+
+# If you see "BarqNet" in the output, you have this issue
+# The only folders should be: WorkVPN, WorkVPNTunnelExtension, Pods
+```
+
+**Step 2: Complete Fix**
+
+```bash
+# 1. Navigate to iOS folder
+cd ~/Desktop/ChameleonVpn/workvpn-ios
+
+# 2. Delete BarqNet folder and any BarqNet Xcode files
+rm -rf BarqNet
+rm -rf BarqNet.xcodeproj
+rm -rf BarqNet.xcworkspace
+
+# 3. Delete the iOS folder completely to get a clean state
 cd ~/Desktop/ChameleonVpn
 rm -rf workvpn-ios
 
-# 2. Get fresh copy from GitHub
+# 4. Get fresh copy from GitHub
 git checkout workvpn-ios
 
-# 3. Clean DerivedData
+# 5. Clean DerivedData
 rm -rf ~/Library/Developer/Xcode/DerivedData/*
 
-# 4. Install dependencies
+# 6. Install dependencies
 cd workvpn-ios
 pod deintegrate
 pod install
 
-# 5. Open the WORKSPACE (not .xcodeproj)
+# 7. Open the CORRECT workspace
 open WorkVPN.xcworkspace
 ```
 
-**⚠️ IMPORTANT:**
-- Do NOT rename the `WorkVPN` folder to `BarqNet`
-- Keep folder names as `WorkVPN` (internal structure)
-- The app will display "BarqNet" branding in the UI automatically
-- Always open `WorkVPN.xcworkspace` NOT `WorkVPN.xcodeproj`
+**Step 3: In Xcode**
+
+1. Build the **WorkVPN** target (NOT BarqNet)
+2. The app will show **"BarqNet"** branding in the UI automatically
+3. All folder names stay as **WorkVPN** in the code
+
+**⚠️ WHAT NOT TO DO:**
+- ❌ DO NOT rename `WorkVPN` folder to `BarqNet`
+- ❌ DO NOT create a `BarqNet` folder
+- ❌ DO NOT use Xcode's "Rename Project" feature
+- ❌ DO NOT open `WorkVPN.xcodeproj` (use `.xcworkspace` instead)
+
+**✅ WHAT TO DO:**
+- ✅ Keep all folder names as `WorkVPN` (internal code structure)
+- ✅ Always open `WorkVPN.xcworkspace` (with CocoaPods)
+- ✅ Build and run the `WorkVPN` target
+- ✅ The app displays "BarqNet" automatically in the UI - no renaming needed!
 
 ---
 
