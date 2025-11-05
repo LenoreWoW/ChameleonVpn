@@ -58,6 +58,9 @@ Pods/
 #
 # Add this line if you want to avoid checking in source code from the Xcode workspace
 *.xcworkspace
+# EXCEPTION: CocoaPods projects need the main workspace committed
+!WorkVPN.xcworkspace
+!WorkVPN.xcworkspace/*
 
 # Carthage
 #
