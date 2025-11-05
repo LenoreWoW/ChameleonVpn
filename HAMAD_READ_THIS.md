@@ -323,6 +323,44 @@ npm start
 - iOS device OR iOS Simulator
 - Backend still running
 
+### 4.0: VERIFY NO BarqNet FOLDER EXISTS (DO THIS FIRST!)
+
+**🚨 CRITICAL: Check for BarqNet folder BEFORE building!**
+
+```bash
+# Navigate to iOS folder
+cd ~/Desktop/ChameleonVpn/workvpn-ios
+
+# Check if BarqNet folder exists (it SHOULD NOT!)
+ls -la | grep BarqNet
+
+# If you see "BarqNet" in the output, STOP and run this fix:
+rm -rf BarqNet BarqNet.xcodeproj BarqNet.xcworkspace
+rm -rf ~/Library/Developer/Xcode/DerivedData/*
+
+# Verify only correct folders exist:
+ls -la
+
+# You should ONLY see these folders:
+# - WorkVPN
+# - WorkVPNTunnelExtension
+# - Pods
+# - WorkVPN.xcworkspace
+# - WorkVPN.xcodeproj
+
+# If you see BarqNet, delete the iOS folder and get a fresh copy:
+cd ~/Desktop/ChameleonVpn
+rm -rf workvpn-ios
+git checkout workvpn-ios
+cd workvpn-ios
+```
+
+**✅ Expected:** No BarqNet folder exists, only WorkVPN folders
+
+**If you had to fix the BarqNet folder issue, see Issue 9 for complete cleanup steps.**
+
+---
+
 ### 4.1: Install Dependencies
 ```bash
 # Navigate to iOS client folder
