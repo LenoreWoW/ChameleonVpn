@@ -34,45 +34,58 @@ func NewManagementAPI(manager *manager.ManagementManager) *ManagementAPI {
 func (api *ManagementAPI) Start(port int) error {
 	mux := http.NewServeMux()
 
-	// Health check endpoint
+	// Initialize authentication handler
+	db := api.manager.GetDB()
+	conn := db.GetConnection()
+	otpService := NewMockOTPService() // Use shared.NewLocalOTPService() for production
+	authHandler := NewAuthHandler(conn, otpService)
+
+	// Authentication endpoints (v1 API)
+	mux.HandleFunc("/v1/auth/send-otp", authHandler.HandleSendOTP)
+	mux.HandleFunc("/v1/auth/register", authHandler.HandleRegister)
+	mux.HandleFunc("/v1/auth/login", authHandler.HandleLogin)
+	mux.HandleFunc("/v1/auth/refresh", authHandler.HandleRefresh)
+	mux.HandleFunc("/v1/auth/logout", authHandler.HandleLogout)
+
+	// Health check endpoint (public)
 	mux.HandleFunc("/health", api.handleHealth)
 
 	// API root endpoint
 	mux.HandleFunc("/api", api.handleAPIRoot)
 	mux.HandleFunc("/api/", api.handleAPIRoot)
 
-	// Management endpoints
-	mux.HandleFunc("/api/users", api.handleUsers)
-	mux.HandleFunc("/api/users/", api.handleUserByID)
-	mux.HandleFunc("/api/endnodes", api.handleEndNodes)
-	mux.HandleFunc("/api/endnodes/", api.handleEndNodeOperations)
+	// Management endpoints (protected with JWT)
+	mux.HandleFunc("/api/users", authHandler.JWTAuthMiddleware(api.handleUsers))
+	mux.HandleFunc("/api/users/", authHandler.JWTAuthMiddleware(api.handleUserByID))
+	mux.HandleFunc("/api/endnodes", authHandler.JWTAuthMiddleware(api.handleEndNodes))
+	mux.HandleFunc("/api/endnodes/", authHandler.JWTAuthMiddleware(api.handleEndNodeOperations))
 
-	// End-node registration endpoints
-	mux.HandleFunc("/api/endnodes/register", api.handleEndNodeRegister)
+	// End-node registration endpoints (protected)
+	mux.HandleFunc("/api/endnodes/register", authHandler.JWTAuthMiddleware(api.handleEndNodeRegister))
 
-	// End-node deletion endpoint
-	mux.HandleFunc("/api/endnodes/delete/", api.handleEndNodeDelete)
+	// End-node deletion endpoint (protected)
+	mux.HandleFunc("/api/endnodes/delete/", authHandler.JWTAuthMiddleware(api.handleEndNodeDelete))
 
-	// User sync endpoints
-	mux.HandleFunc("/api/users/sync", api.handleUserSync)
+	// User sync endpoints (protected)
+	mux.HandleFunc("/api/users/sync", authHandler.JWTAuthMiddleware(api.handleUserSync))
 
-	// Logs endpoints
-	mux.HandleFunc("/api/logs", api.handleLogs)
+	// Logs endpoints (protected)
+	mux.HandleFunc("/api/logs", authHandler.JWTAuthMiddleware(api.handleLogs))
 
-	// OVPN download endpoints
-	mux.HandleFunc("/api/ovpn/", api.handleDownloadOVPN)
+	// OVPN download endpoints (protected)
+	mux.HandleFunc("/api/ovpn/", authHandler.JWTAuthMiddleware(api.handleDownloadOVPN))
 
-	// VPN statistics and status endpoints
-	mux.HandleFunc("/vpn/status", api.handleVPNStatus)
-	mux.HandleFunc("/vpn/stats", api.handleVPNStats)
-	mux.HandleFunc("/vpn/stats/", api.handleGetUserStats)
+	// VPN statistics and status endpoints (protected)
+	mux.HandleFunc("/v1/vpn/status", authHandler.JWTAuthMiddleware(api.handleVPNStatus))
+	mux.HandleFunc("/v1/vpn/stats", authHandler.JWTAuthMiddleware(api.handleVPNStats))
+	mux.HandleFunc("/v1/vpn/stats/", authHandler.JWTAuthMiddleware(api.handleGetUserStats))
 
-	// VPN locations endpoints
-	mux.HandleFunc("/vpn/locations", api.handleVPNLocations)
-	mux.HandleFunc("/vpn/locations/", api.handleLocationServers)
+	// VPN locations endpoints (protected)
+	mux.HandleFunc("/v1/vpn/locations", authHandler.JWTAuthMiddleware(api.handleVPNLocations))
+	mux.HandleFunc("/v1/vpn/locations/", authHandler.JWTAuthMiddleware(api.handleLocationServers))
 
-	// VPN configuration endpoint
-	mux.HandleFunc("/vpn/config", api.handleVPNConfig)
+	// VPN configuration endpoint (protected)
+	mux.HandleFunc("/v1/vpn/config", authHandler.JWTAuthMiddleware(api.handleVPNConfig))
 
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%d", port),

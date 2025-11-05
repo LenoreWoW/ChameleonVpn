@@ -34,7 +34,7 @@ func GetJWTSecret() string {
 	return secret
 }
 
-// GenerateJWT generates a new JWT token for a user
+// GenerateJWT generates a new JWT access token for a user (24 hour expiry)
 // Parameters:
 //   - phoneNumber: The user's phone number (used as primary identifier)
 //   - userID: The user's database ID
@@ -46,7 +46,7 @@ func GenerateJWT(phoneNumber string, userID int) (string, error) {
 	}
 
 	secret := GetJWTSecret()
-	expirationTime := time.Now().Add(24 * time.Hour)
+	expirationTime := time.Now().Add(24 * time.Hour) // Access token: 24 hours
 
 	// Create the claims
 	claims := &Claims{
@@ -68,6 +68,46 @@ func GenerateJWT(phoneNumber string, userID int) (string, error) {
 	tokenString, err := token.SignedString([]byte(secret))
 	if err != nil {
 		return "", fmt.Errorf("failed to sign token: %v", err)
+	}
+
+	return tokenString, nil
+}
+
+// GenerateRefreshToken generates a new JWT refresh token for a user (7 day expiry)
+// Refresh tokens have longer expiry and are used to obtain new access tokens
+// Parameters:
+//   - phoneNumber: The user's phone number (used as primary identifier)
+//   - userID: The user's database ID
+//
+// Returns: JWT refresh token string and error
+func GenerateRefreshToken(phoneNumber string, userID int) (string, error) {
+	if phoneNumber == "" {
+		return "", fmt.Errorf("phone number cannot be empty")
+	}
+
+	secret := GetJWTSecret()
+	expirationTime := time.Now().Add(7 * 24 * time.Hour) // Refresh token: 7 days
+
+	// Create the claims
+	claims := &Claims{
+		PhoneNumber: phoneNumber,
+		UserID:      userID,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			NotBefore: jwt.NewNumericDate(time.Now()),
+			Issuer:    "barqnet-auth-refresh",
+			Subject:   phoneNumber,
+		},
+	}
+
+	// Create token with claims
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	// Sign the token with the secret
+	tokenString, err := token.SignedString([]byte(secret))
+	if err != nil {
+		return "", fmt.Errorf("failed to sign refresh token: %v", err)
 	}
 
 	return tokenString, nil

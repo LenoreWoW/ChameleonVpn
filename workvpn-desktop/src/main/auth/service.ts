@@ -63,34 +63,36 @@ class AuthService {
   /**
    * Initialize certificate pins for production API server
    *
-   * TODO: Update these pins with actual production certificate pins
-   * Get pins using: openssl s_client -connect api.chameleonvpn.com:443 < /dev/null | \
+   * DISABLED FOR MVP: Certificate pinning requires actual production certificates
+   * Enable this after obtaining real certificate hashes from production API server
+   *
+   * To generate pins: openssl s_client -connect api.chameleonvpn.com:443 < /dev/null | \
    *   openssl x509 -pubkey -noout | openssl pkey -pubin -outform der | \
    *   openssl dgst -sha256 -binary | base64
    */
   private initializeCertificatePins(): void {
+    // DISABLED FOR MVP: Certificate pinning requires real production certificates
+    // TODO: Enable after obtaining actual certificate pins from production server
+    console.log('[AUTH] Certificate pinning DISABLED (MVP - no production certs yet)');
+
+    // Uncomment and update when ready for production:
+    /*
     try {
       const apiUrl = new URL(this.apiBaseUrl);
 
-      // Only apply certificate pinning to production domains
       if (process.env.NODE_ENV === 'production' && apiUrl.protocol === 'https:') {
-        // TODO: Replace with actual production certificate pins
-        // These are placeholder pins - MUST be updated before production deployment
         const productionPins = [
-          // Primary certificate pin
-          'sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
-          // Backup certificate pin (for rotation)
-          'sha256/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB='
+          'sha256/REAL_PRIMARY_CERTIFICATE_PIN_HERE',
+          'sha256/REAL_BACKUP_CERTIFICATE_PIN_HERE'
         ];
 
         this.certificatePinning.addPin(apiUrl.hostname, productionPins);
         console.log(`[AUTH] Certificate pinning enabled for ${apiUrl.hostname}`);
-      } else {
-        console.log('[AUTH] Certificate pinning disabled (development mode or HTTP)');
       }
     } catch (error) {
       console.error('[AUTH] Failed to initialize certificate pinning:', error);
     }
+    */
   }
 
   private getAuthHeaders(): HeadersInit {
@@ -164,7 +166,7 @@ class AuthService {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          refreshToken: tokens.refreshToken
+          token: tokens.refreshToken // Backend expects "token" field
         })
       });
 
@@ -176,11 +178,12 @@ class AuthService {
 
       const data = await response.json();
 
-      if (data.success && data.accessToken) {
+      // Backend returns tokens in data object
+      if (data.success && data.data?.accessToken && data.data?.refreshToken) {
         this.saveTokens({
-          accessToken: data.accessToken,
-          refreshToken: tokens.refreshToken,
-          expiresIn: data.expiresIn,
+          accessToken: data.data.accessToken,
+          refreshToken: data.data.refreshToken,
+          expiresIn: data.data.expiresIn || 86400,
           tokenIssuedAt: Date.now()
         });
         return true;
@@ -397,20 +400,21 @@ class AuthService {
     }
   }
 
-  async createAccount(phoneNumber: string, password: string): Promise<{ success: boolean; error?: string }> {
+  async createAccount(phoneNumber: string, password: string, otpCode: string): Promise<{ success: boolean; error?: string }> {
     try {
       // Validate password strength
       if (password.length < 8) {
         return { success: false, error: 'Password must be at least 8 characters' };
       }
 
-      const session = this.sessions.get(phoneNumber);
-      if (!session?.verificationToken) {
-        return { success: false, error: 'Phone number not verified. Please verify OTP first.' };
-      }
-
       // DEVELOPMENT MODE: Create mock account
       if (process.env.NODE_ENV !== 'production') {
+        // Verify OTP in dev mode
+        const session = this.sessions.get(phoneNumber);
+        if (!session?.devOtpCode || session.devOtpCode !== otpCode) {
+          return { success: false, error: 'Invalid OTP code' };
+        }
+
         console.log('[AUTH-DEV] ✅ Creating development account');
 
         // Generate development tokens
@@ -429,9 +433,6 @@ class AuthService {
           phoneNumber: phoneNumber
         });
 
-        // Store password for dev login
-        this.store.set('devPassword', password);
-
         // Clean up session
         this.sessions.delete(phoneNumber);
 
@@ -439,13 +440,13 @@ class AuthService {
         return { success: true };
       }
 
-      // PRODUCTION MODE: Call backend API
+      // PRODUCTION MODE: Call backend API with OTP code
       const result = await this.apiCall('/v1/auth/register', {
         method: 'POST',
         body: JSON.stringify({
-          phoneNumber,
-          password,
-          verificationToken: session.verificationToken
+          phone_number: phoneNumber,
+          password: password,
+          otp: otpCode
         })
       });
 
@@ -480,13 +481,12 @@ class AuthService {
 
   async login(phoneNumber: string, password: string): Promise<{ success: boolean; error?: string }> {
     try {
-      // DEVELOPMENT MODE: Validate against stored dev password
+      // DEVELOPMENT MODE: Use stored dev user
       if (process.env.NODE_ENV !== 'production') {
-        const storedPassword = this.store.get('devPassword') as string;
         const storedUser = this.store.get('currentUser') as User;
 
-        if (storedPassword && storedPassword === password && storedUser?.phoneNumber === phoneNumber) {
-          console.log('[AUTH-DEV] ✅ Login successful');
+        if (storedUser?.phoneNumber === phoneNumber) {
+          console.log('[AUTH-DEV] ✅ Login successful (dev mode - no password check)');
 
           // Generate new development tokens
           const devAccessToken = 'dev-access-token-' + Date.now();
@@ -501,17 +501,17 @@ class AuthService {
 
           return { success: true };
         } else {
-          console.log('[AUTH-DEV] ❌ Login failed - Invalid credentials');
-          return { success: false, error: 'Invalid phone number or password' };
+          console.log('[AUTH-DEV] ❌ Login failed - User not found');
+          return { success: false, error: 'Account not found. Please register first.' };
         }
       }
 
-      // PRODUCTION MODE: Call backend API
+      // PRODUCTION MODE: Call backend API with snake_case fields
       const result = await this.apiCall('/v1/auth/login', {
         method: 'POST',
         body: JSON.stringify({
-          phoneNumber,
-          password
+          phone_number: phoneNumber,
+          password: password
         })
       });
 

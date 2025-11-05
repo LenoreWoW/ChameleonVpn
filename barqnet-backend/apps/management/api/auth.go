@@ -181,26 +181,37 @@ func (h *AuthHandler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Generate JWT token
-	token, err := shared.GenerateJWT(req.PhoneNumber, userID)
+	// Generate access and refresh tokens
+	accessToken, err := shared.GenerateJWT(req.PhoneNumber, userID)
 	if err != nil {
-		log.Printf("[AUTH] Failed to generate JWT: %v", err)
+		log.Printf("[AUTH] Failed to generate access token: %v", err)
 		h.sendError(w, "Failed to generate authentication token", http.StatusInternalServerError)
+		return
+	}
+
+	// Generate refresh token (longer expiry)
+	refreshToken, err := shared.GenerateRefreshToken(req.PhoneNumber, userID)
+	if err != nil {
+		log.Printf("[AUTH] Failed to generate refresh token: %v", err)
+		h.sendError(w, "Failed to generate refresh token", http.StatusInternalServerError)
 		return
 	}
 
 	// Log successful registration
 	h.logAuditEvent("USER_REGISTERED", req.PhoneNumber, "User registered successfully", r.RemoteAddr)
 
-	// Send success response
+	// Send success response with proper token structure
 	response := AuthResponse{
 		Success: true,
 		Message: "User registered successfully",
-		Token:   token,
 		Data: map[string]interface{}{
-			"user_id":      userID,
-			"phone_number": req.PhoneNumber,
-			"created_at":   time.Now().Unix(),
+			"user": map[string]interface{}{
+				"id":           userID,
+				"phone_number": req.PhoneNumber,
+			},
+			"accessToken":  accessToken,
+			"refreshToken": refreshToken,
+			"expiresIn":    86400, // 24 hours in seconds
 		},
 	}
 
@@ -273,26 +284,37 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		// Non-critical error, continue
 	}
 
-	// Generate JWT token
-	token, err := shared.GenerateJWT(req.PhoneNumber, userID)
+	// Generate access and refresh tokens
+	accessToken, err := shared.GenerateJWT(req.PhoneNumber, userID)
 	if err != nil {
-		log.Printf("[AUTH] Failed to generate JWT: %v", err)
+		log.Printf("[AUTH] Failed to generate access token: %v", err)
 		h.sendError(w, "Failed to generate authentication token", http.StatusInternalServerError)
+		return
+	}
+
+	// Generate refresh token (longer expiry)
+	refreshToken, err := shared.GenerateRefreshToken(req.PhoneNumber, userID)
+	if err != nil {
+		log.Printf("[AUTH] Failed to generate refresh token: %v", err)
+		h.sendError(w, "Failed to generate refresh token", http.StatusInternalServerError)
 		return
 	}
 
 	// Log successful login
 	h.logAuditEvent("LOGIN_SUCCESS", req.PhoneNumber, "User logged in successfully", r.RemoteAddr)
 
-	// Send success response
+	// Send success response with proper token structure
 	response := AuthResponse{
 		Success: true,
 		Message: "Login successful",
-		Token:   token,
 		Data: map[string]interface{}{
-			"user_id":      userID,
-			"phone_number": req.PhoneNumber,
-			"login_time":   time.Now().Unix(),
+			"user": map[string]interface{}{
+				"id":           userID,
+				"phone_number": req.PhoneNumber,
+			},
+			"accessToken":  accessToken,
+			"refreshToken": refreshToken,
+			"expiresIn":    86400, // 24 hours in seconds
 		},
 	}
 
@@ -301,7 +323,7 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 // HandleRefresh handles JWT token refresh
-// POST /auth/refresh
+// POST /v1/auth/refresh
 func (h *AuthHandler) HandleRefresh(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		h.sendError(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -315,28 +337,42 @@ func (h *AuthHandler) HandleRefresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if req.Token == "" {
-		h.sendError(w, "Token is required", http.StatusBadRequest)
+		h.sendError(w, "Refresh token is required", http.StatusBadRequest)
 		return
 	}
 
-	// Refresh the token
-	newToken, err := shared.RefreshJWT(req.Token)
+	// Validate the refresh token
+	claims, err := shared.ValidateJWT(req.Token)
 	if err != nil {
-		h.sendError(w, fmt.Sprintf("Failed to refresh token: %v", err), http.StatusUnauthorized)
+		h.sendError(w, fmt.Sprintf("Invalid refresh token: %v", err), http.StatusUnauthorized)
 		return
 	}
 
-	// Extract phone number for logging (optional)
-	phoneNumber, _ := shared.ExtractPhoneNumber(newToken)
-	h.logAuditEvent("TOKEN_REFRESHED", phoneNumber, "JWT token refreshed", r.RemoteAddr)
+	// Generate new access token with same user data
+	newAccessToken, err := shared.GenerateJWT(claims.PhoneNumber, claims.UserID)
+	if err != nil {
+		h.sendError(w, "Failed to generate new access token", http.StatusInternalServerError)
+		return
+	}
 
-	// Send success response
+	// Generate new refresh token
+	newRefreshToken, err := shared.GenerateRefreshToken(claims.PhoneNumber, claims.UserID)
+	if err != nil {
+		h.sendError(w, "Failed to generate new refresh token", http.StatusInternalServerError)
+		return
+	}
+
+	// Log token refresh
+	h.logAuditEvent("TOKEN_REFRESHED", claims.PhoneNumber, "Tokens refreshed successfully", r.RemoteAddr)
+
+	// Send success response with new tokens
 	response := AuthResponse{
 		Success: true,
-		Message: "Token refreshed successfully",
-		Token:   newToken,
+		Message: "Tokens refreshed successfully",
 		Data: map[string]interface{}{
-			"refreshed_at": time.Now().Unix(),
+			"accessToken":  newAccessToken,
+			"refreshToken": newRefreshToken,
+			"expiresIn":    86400, // 24 hours
 		},
 	}
 
@@ -427,15 +463,19 @@ func (h *AuthHandler) HandleSendOTP(w http.ResponseWriter, r *http.Request) {
 	// Log OTP sent event
 	h.logAuditEvent("OTP_SENT", req.PhoneNumber, "OTP sent to phone number", r.RemoteAddr)
 
-	// Send success response
+	// Send success response (NEVER include OTP in response for security)
 	response := AuthResponse{
 		Success: true,
-		Message: "OTP sent successfully",
+		Message: "OTP sent successfully. Please check your phone.",
 		Data: map[string]interface{}{
 			"phone_number": req.PhoneNumber,
-			"otp":          otp, // In production, NEVER send OTP in response!
 			"expires_in":   300, // 5 minutes
 		},
+	}
+
+	// In development, log OTP to console for testing (already done in mock service)
+	if otp != "" {
+		log.Printf("[AUTH-DEV] OTP for %s: %s (expires in 5 minutes)", req.PhoneNumber, otp)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
