@@ -319,11 +319,10 @@ class AuthService {
       }
 
       // PRODUCTION MODE: Call backend API
-      const result = await this.apiCall('/v1/auth/otp/send', {
+      const result = await this.apiCall('/v1/auth/send-otp', {
         method: 'POST',
         body: JSON.stringify({
-          phoneNumber,
-          countryCode: 'US' // TODO: Extract from phone number or make configurable
+          phone_number: phoneNumber
         })
       });
 
@@ -355,11 +354,10 @@ class AuthService {
         if (code === session.devOtpCode) {
           console.log('[AUTH-DEV] ✅ OTP verified successfully');
 
-          // Generate development verification token
-          const verificationToken = 'dev-token-' + Date.now();
+          // Store verified OTP in session for use during registration
           this.sessions.set(phoneNumber, {
             ...session,
-            verificationToken
+            verificationToken: code // Store the actual OTP code
           });
 
           return { success: true };
@@ -370,28 +368,18 @@ class AuthService {
         }
       }
 
-      // PRODUCTION MODE: Call backend API
-      const result = await this.apiCall('/v1/auth/otp/verify', {
-        method: 'POST',
-        body: JSON.stringify({
-          phoneNumber,
-          otp: code,
-          sessionId: session?.sessionId
-        })
+      // PRODUCTION MODE: No separate verify endpoint
+      // OTP is verified during registration (/v1/auth/register endpoint)
+      // Just store the OTP code for later use in registration
+      if (!code || code.length !== 6) {
+        return { success: false, error: 'Invalid OTP format' };
+      }
+
+      this.sessions.set(phoneNumber, {
+        phoneNumber,
+        sessionId: session?.sessionId,
+        verificationToken: code // Store OTP for registration
       });
-
-      if (!result.success) {
-        return { success: false, error: result.error };
-      }
-
-      // Save verification token for account creation
-      if (result.data?.verificationToken) {
-        this.sessions.set(phoneNumber, {
-          phoneNumber,
-          sessionId: session?.sessionId,
-          verificationToken: result.data.verificationToken
-        });
-      }
 
       return { success: true };
     } catch (error) {
