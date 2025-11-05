@@ -362,15 +362,33 @@ cd workvpn-ios
 ---
 
 ### 4.1: Install Dependencies
+
+**IMPORTANT: If you've already run `pod install` before, you MUST reinstall to get the latest Podfile fixes:**
+
 ```bash
 # Navigate to iOS client folder
 cd workvpn-ios
 
-# Install CocoaPods dependencies
+# Remove old pod installation (if exists)
+pod deintegrate
+rm -rf Pods Podfile.lock
+
+# Install CocoaPods dependencies with correct configuration
 pod install
 ```
 
-**✅ Expected:** Pods install successfully
+**✅ Expected Output:**
+```
+Analyzing dependencies
+Downloading dependencies
+Installing OpenVPNAdapter (latest from master)
+Generating Pods project
+Integrating client project
+
+Pod installation complete! There is 1 dependency from the Podfile.
+```
+
+**⚠️ If you see warnings about "base configuration not set", see Issue 17**
 
 ### 4.2: Open in Xcode
 ```bash
@@ -1157,6 +1175,77 @@ echo $DB_NAME
 ```
 
 **If variables are empty, re-export them before running the backend.**
+
+---
+
+### Issue 17: iOS Podfile Has Wrong Target Names
+
+**Error:** CocoaPods can't find targets, or OpenVPN library not linking correctly
+
+**Cause:** Podfile target names don't match actual Xcode project targets
+
+**How to identify:**
+
+When running `pod install`, you might see warnings like:
+```
+[!] CocoaPods did not set the base configuration of your project because...
+```
+
+Or build errors about missing OpenVPNAdapter symbols.
+
+**What was wrong:**
+
+The Podfile had incorrect target names:
+- `target 'BarqNet' do` ❌ (should be `WorkVPN`)
+- `target 'BarqNetTunnelExtension' do` ❌ (should be `WorkVPNTunnelExtension`)
+
+This prevented CocoaPods from correctly linking the OpenVPN library to the app.
+
+**Solution - Already Fixed in Latest Code:**
+
+```bash
+# Pull the latest fix
+cd ~/Desktop/ChameleonVpn
+git pull origin main
+
+# Reinstall pods with correct configuration
+cd workvpn-ios
+pod deintegrate
+rm -rf Pods Podfile.lock
+pod install
+
+# Clean Xcode cache
+rm -rf ~/Library/Developer/Xcode/DerivedData/*
+
+# Open workspace and rebuild
+open WorkVPN.xcworkspace
+```
+
+**What was fixed:**
+
+1. **Target names corrected:**
+   - `BarqNet` → `WorkVPN`
+   - `BarqNetTunnelExtension` → `WorkVPNTunnelExtension`
+
+2. **OpenVPNAdapter updated:**
+   - From: `tag => '0.8.0'` (2021 version)
+   - To: `branch => 'master'` (latest stable)
+   - Includes iOS 15+ improvements and bug fixes
+
+**After fixing:**
+```bash
+# Verify pods installed correctly
+pod install
+
+# Should see:
+# - Analyzing dependencies
+# - Downloading dependencies
+# - Installing OpenVPNAdapter (latest)
+# - Generating Pods project
+# Pod installation complete! 1 pod installed
+```
+
+**Fixed in commit:** `528eede`
 
 ---
 
