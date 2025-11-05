@@ -3,6 +3,8 @@ import { ParsedOVPNConfig } from '../vpn/parser';
 import { createHash } from 'crypto';
 import { machineIdSync } from 'node-machine-id';
 import { app } from 'electron';
+import * as fs from 'fs';
+import * as path from 'path';
 
 interface StoredConfig {
   name: string;
@@ -61,17 +63,48 @@ export class ConfigStore {
   private store: Store<StoreSchema>;
 
   constructor() {
-    this.store = new Store<StoreSchema>({
-      name: 'barqnet-config',
-      defaults: {
-        activeConfig: null,
-        configs: {},
-        autoConnect: false,
-        autoStart: false,
-        killSwitch: false,
-      },
-      encryptionKey: generateEncryptionKey(),
-    });
+    try {
+      this.store = new Store<StoreSchema>({
+        name: 'barqnet-config',
+        defaults: {
+          activeConfig: null,
+          configs: {},
+          autoConnect: false,
+          autoStart: false,
+          killSwitch: false,
+        },
+        encryptionKey: generateEncryptionKey(),
+      });
+    } catch (error) {
+      console.error('[ConfigStore] Error loading config file, it may be corrupted:', error);
+      console.log('[ConfigStore] Clearing corrupted config and starting fresh...');
+
+      // Delete the corrupted config file
+      try {
+        const configPath = path.join(app.getPath('userData'), 'barqnet-config.json');
+        if (fs.existsSync(configPath)) {
+          fs.unlinkSync(configPath);
+          console.log('[ConfigStore] Deleted corrupted config file');
+        }
+      } catch (deleteError) {
+        console.error('[ConfigStore] Could not delete corrupted file:', deleteError);
+      }
+
+      // Try again with fresh config
+      this.store = new Store<StoreSchema>({
+        name: 'barqnet-config',
+        defaults: {
+          activeConfig: null,
+          configs: {},
+          autoConnect: false,
+          autoStart: false,
+          killSwitch: false,
+        },
+        encryptionKey: generateEncryptionKey(),
+      });
+
+      console.log('[ConfigStore] Successfully initialized with fresh config');
+    }
   }
 
   saveConfig(name: string, content: string, parsed: ParsedOVPNConfig): void {
