@@ -337,7 +337,7 @@ func (api *ManagementAPI) getConnectionHistory(username string) ([]shared.VPNCon
 }
 
 // validateJWTToken validates the JWT token and returns the username
-// This is a placeholder implementation - replace with actual JWT validation
+// Uses actual JWT validation with signature verification
 func (api *ManagementAPI) validateJWTToken(r *http.Request) (string, error) {
 	// Get token from Authorization header
 	authHeader := r.Header.Get("Authorization")
@@ -353,17 +353,14 @@ func (api *ManagementAPI) validateJWTToken(r *http.Request) (string, error) {
 
 	token := parts[1]
 
-	// TODO: Implement actual JWT validation here
-	// For now, we'll extract username from query parameter as a fallback
-	// In production, this should validate the JWT signature and extract claims
-	username := r.URL.Query().Get("username")
-	if username == "" {
-		// Try to get from request context or decode the token
-		// This is a simplified version - implement proper JWT decoding
-		return "", fmt.Errorf("unable to extract username from token: %s", token)
+	// Validate JWT token using shared validation function
+	claims, err := shared.ValidateJWT(token)
+	if err != nil {
+		return "", fmt.Errorf("invalid or expired token: %v", err)
 	}
 
-	return username, nil
+	// Return phone number from validated claims
+	return claims.PhoneNumber, nil
 }
 
 // isAdmin checks if a user has admin privileges
