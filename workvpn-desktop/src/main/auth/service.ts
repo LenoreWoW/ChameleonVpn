@@ -553,8 +553,10 @@ class AuthService {
     // Check if token is expired
     const expiresAt = tokens.tokenIssuedAt + (tokens.expiresIn * 1000);
     if (Date.now() >= expiresAt) {
-      // Token expired, try to refresh
-      this.refreshAccessToken();
+      // Token expired
+      // NOTE: Don't auto-refresh here (causes race condition)
+      // Refresh is handled by automatic timer (scheduleTokenRefresh)
+      // Or explicitly by API calls that get 401 responses
       return false;
     }
 

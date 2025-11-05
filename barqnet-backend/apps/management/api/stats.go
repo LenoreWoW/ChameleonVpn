@@ -196,13 +196,23 @@ func (api *ManagementAPI) handleGetUserStats(w http.ResponseWriter, r *http.Requ
 }
 
 // updateConnectionStatus updates the VPN connection status in the database
+// Uses UPSERT pattern to prevent infinite row growth
 func (api *ManagementAPI) updateConnectionStatus(username, status, serverID, ipAddress string) error {
 	db := api.manager.GetDB()
 	conn := db.GetConnection()
 
+	// UPSERT: Insert new or update existing connection state
+	// Prevents database from growing infinitely with duplicate rows
 	query := `
-		INSERT INTO vpn_connections (username, status, server_id, ip_address, connected_at, disconnected_at, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO vpn_connections (username, status, server_id, ip_address, connected_at, disconnected_at, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $7)
+		ON CONFLICT (username, server_id)
+		DO UPDATE SET
+			status = EXCLUDED.status,
+			ip_address = EXCLUDED.ip_address,
+			connected_at = EXCLUDED.connected_at,
+			disconnected_at = EXCLUDED.disconnected_at,
+			updated_at = EXCLUDED.updated_at
 	`
 
 	var connectedAt, disconnectedAt interface{}

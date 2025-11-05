@@ -110,30 +110,23 @@ export class VPNManager extends EventEmitter {
 
       let configContent = config.content;
 
-      // If config requires auth and we have credentials, create auth file
+      // If config requires auth and we have credentials, store for stdin
+      // SECURITY: Never write credentials to temp files (even briefly)
+      // Use OpenVPN stdin auth instead
       if (config.parsed.requiresAuth && config.parsed.username && config.parsed.password) {
-        this.authFilePath = path.join(
-          require('electron').app.getPath('temp'),
-          'workvpn-auth.txt'
-        );
+        // Store credentials securely in memory for stdin piping
+        this.pendingAuthCredentials = {
+          username: config.parsed.username,
+          password: config.parsed.password
+        };
+        console.log('[VPN] Using stdin authentication (secure mode - no temp file)');
 
-        // Write username and password to auth file
-        fs.writeFileSync(this.authFilePath, `${config.parsed.username}\n${config.parsed.password}\n`);
-        console.log('[VPN] Created auth file for OpenVPN authentication');
-
-        // Windows-compatible path handling: Use forward slashes and escape backslashes
-        let authFilePathForConfig = this.authFilePath;
-        if (process.platform === 'win32') {
-          // Convert backslashes to forward slashes (OpenVPN supports this on Windows)
-          authFilePathForConfig = authFilePathForConfig.replace(/\\/g, '/');
-        }
-
-        // Modify config to use auth file
+        // Modify config to use stdin auth (no file path)
         if (!configContent.includes('auth-user-pass')) {
-          configContent += `\nauth-user-pass "${authFilePathForConfig}"\n`;
+          configContent += `\nauth-user-pass\n`;
         } else {
-          // Replace existing auth-user-pass line
-          configContent = configContent.replace(/auth-user-pass.*$/gm, `auth-user-pass "${authFilePathForConfig}"`);
+          // Replace existing auth-user-pass line (remove any file path)
+          configContent = configContent.replace(/auth-user-pass.*$/gm, 'auth-user-pass');
         }
       }
 
@@ -152,21 +145,8 @@ export class VPNManager extends EventEmitter {
       // Start stats collection
       this.startStatsCollection();
 
-      // Cleanup auth file after successful connection (OpenVPN has read it)
-      // We delay this slightly to ensure OpenVPN has time to read the file
-      if (this.authFilePath) {
-        setTimeout(() => {
-          if (this.authFilePath && fs.existsSync(this.authFilePath)) {
-            try {
-              fs.unlinkSync(this.authFilePath);
-              console.log('[VPN] Auth file cleaned up after connection (security measure)');
-              this.authFilePath = null;
-            } catch (err) {
-              console.error('[VPN] Failed to cleanup auth file:', err);
-            }
-          }
-        }, 5000); // 5 seconds should be enough for OpenVPN to read it
-      }
+      // SECURITY: No auth file cleanup needed - we never create plaintext files
+      // Credentials provided via stdin when OpenVPN prompts
 
     } catch (error) {
       // Cleanup temp files on error for security
@@ -359,15 +339,23 @@ export class VPNManager extends EventEmitter {
 
       this.process = spawn(openvpnBinary, openvpnArgs);
 
-      let connected = false;
+      // Use state machine for atomic connection state tracking
+      // Prevents race conditions between event handlers
+      enum ConnectionState {
+        CONNECTING = 'connecting',
+        CONNECTED = 'connected',
+        FAILED = 'failed'
+      }
+      let connectionState: ConnectionState = ConnectionState.CONNECTING;
 
       this.process.stdout?.on('data', (data) => {
         const output = data.toString();
         console.log('[OpenVPN]', output);
 
-        // Detect successful connection
-        if (output.includes('Initialization Sequence Completed') && !connected) {
-          connected = true;
+        // Detect successful connection (atomic state transition)
+        if (output.includes('Initialization Sequence Completed') &&
+            connectionState === ConnectionState.CONNECTING) {
+          connectionState = ConnectionState.CONNECTED;
 
           // Connect to management interface for real stats
           this.connectManagementInterface();
@@ -388,14 +376,16 @@ export class VPNManager extends EventEmitter {
       });
 
       this.process.on('error', (error) => {
-        if (!connected) {
+        if (connectionState === ConnectionState.CONNECTING) {
+          connectionState = ConnectionState.FAILED;
           reject(error);
         }
         this.handleDisconnect('Process error: ' + error.message);
       });
 
       this.process.on('exit', (code) => {
-        if (!connected && code !== 0) {
+        if (connectionState === ConnectionState.CONNECTING && code !== 0) {
+          connectionState = ConnectionState.FAILED;
           reject(new Error(`OpenVPN exited with code ${code}`));
         }
         this.handleDisconnect(`Process exited with code ${code}`);

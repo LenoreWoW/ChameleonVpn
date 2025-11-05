@@ -22,15 +22,27 @@ type JWTConfig struct {
 }
 
 // GetJWTSecret returns the JWT secret from environment variable
-// or returns a default value for development (should never be used in production)
+// CRITICAL: Fails hard if JWT_SECRET not set (production safety)
 func GetJWTSecret() string {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
-		// SECURITY WARNING: This is only for development
-		// In production, JWT_SECRET must be set as an environment variable
-		fmt.Println("WARNING: JWT_SECRET not set, using insecure default. Set JWT_SECRET environment variable in production!")
-		return "insecure-default-secret-change-in-production"
+		// PRODUCTION SAFETY: Never fall back to insecure default
+		// Application must fail to start if JWT_SECRET not configured
+		panic("FATAL: JWT_SECRET environment variable not set. Set JWT_SECRET before starting the server.")
 	}
+
+	// Validate minimum secret length (256 bits = 32 characters)
+	if len(secret) < 32 {
+		panic(fmt.Sprintf("FATAL: JWT_SECRET must be at least 32 characters long (got %d). Use a strong random secret.", len(secret)))
+	}
+
+	// DEVELOPMENT MODE ONLY: Allow bypass for testing
+	if secret == "insecure-default-secret-change-in-production" {
+		fmt.Println("⚠️  WARNING: Using insecure default JWT_SECRET - FOR DEVELOPMENT ONLY!")
+		fmt.Println("⚠️  Set a strong JWT_SECRET in production!")
+		return secret
+	}
+
 	return secret
 }
 

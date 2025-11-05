@@ -69,6 +69,9 @@ type LocalOTPService struct {
 	// rateLimitStore maps phone number to rate limit tracking
 	rateLimitStore map[string]*RateLimitEntry
 
+	// stopCh is used to signal the cleanup goroutine to stop
+	stopCh chan struct{}
+
 	// Configuration
 	OTPExpiry          time.Duration // Default: 10 minutes
 	RateLimitWindow    time.Duration // Default: 1 hour
@@ -81,13 +84,14 @@ func NewLocalOTPService() *LocalOTPService {
 	service := &LocalOTPService{
 		otpStore:           make(map[string]*OTPEntry),
 		rateLimitStore:     make(map[string]*RateLimitEntry),
+		stopCh:             make(chan struct{}),
 		OTPExpiry:          10 * time.Minute,
 		RateLimitWindow:    1 * time.Hour,
 		RateLimitMax:       5,
 		MaxVerifyAttempts:  3,
 	}
 
-	// Start background cleanup goroutine
+	// Start background cleanup goroutine (can be stopped with Stop())
 	go service.cleanupRoutine()
 
 	return service
@@ -150,37 +154,38 @@ func (s *LocalOTPService) Verify(phoneNumber, code string) bool {
 		return false
 	}
 
-	// Increment attempt counter
-	entry.Attempts++
-
-	// Check if max attempts exceeded
-	if entry.Attempts > s.MaxVerifyAttempts {
+	// Check if max attempts already exceeded
+	if entry.Attempts >= s.MaxVerifyAttempts {
 		delete(s.otpStore, phoneNumber)
 		return false
 	}
 
-	// Verify code
+	// Verify code BEFORE incrementing attempts
+	// This prevents counting successful attempts and fixes race condition
 	if entry.Code == code {
 		// Success - remove OTP to prevent reuse
 		delete(s.otpStore, phoneNumber)
 		return true
 	}
 
-	// Update entry with incremented attempts
+	// ONLY increment on FAILURE (atomic operation under mutex)
+	entry.Attempts++
 	s.otpStore[phoneNumber] = entry
 
 	return false
 }
 
 // GenerateOTP creates a cryptographically secure 6-digit OTP code
+// CRITICAL: Panics if crypto random fails (never degrade security)
 func (s *LocalOTPService) GenerateOTP() string {
 	// Generate a random number between 0 and 999999
 	max := big.NewInt(1000000)
 	n, err := rand.Int(rand.Reader, max)
 	if err != nil {
-		// Fallback to timestamp-based generation (less secure)
-		log.Printf("[OTP-WARNING] Failed to generate secure random: %v", err)
-		n = big.NewInt(time.Now().UnixNano() % 1000000)
+		// SECURITY: Never fall back to insecure generation
+		// If crypto random fails, system is fundamentally broken
+		log.Printf("[OTP-FATAL] Failed to generate secure random OTP: %v", err)
+		panic(fmt.Sprintf("FATAL: Cryptographic random number generation failed: %v. System cannot operate securely.", err))
 	}
 
 	// Format as 6-digit string with leading zeros
@@ -210,13 +215,26 @@ func (s *LocalOTPService) Cleanup() {
 }
 
 // cleanupRoutine runs periodic cleanup in the background
+// Stops when Stop() is called or service is garbage collected
 func (s *LocalOTPService) cleanupRoutine() {
 	ticker := time.NewTicker(5 * time.Minute)
 	defer ticker.Stop()
 
-	for range ticker.C {
-		s.Cleanup()
+	for {
+		select {
+		case <-ticker.C:
+			s.Cleanup()
+		case <-s.stopCh:
+			log.Println("[OTP] Cleanup goroutine stopped")
+			return
+		}
 	}
+}
+
+// Stop gracefully stops the OTP service cleanup goroutine
+// Should be called when shutting down the application
+func (s *LocalOTPService) Stop() {
+	close(s.stopCh)
 }
 
 // checkRateLimit verifies if the phone number has exceeded rate limits
