@@ -1,5 +1,8 @@
 # Podfile for BarqNet iOS
 
+# Specify the Xcode project explicitly
+project 'WorkVPN.xcodeproj'
+
 platform :ios, '15.0'
 use_frameworks!
 
