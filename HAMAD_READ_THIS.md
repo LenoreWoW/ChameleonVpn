@@ -41,6 +41,19 @@ cd ChameleonVpn
 ```
 
 ### **2. Start Backend (Go)**
+
+**Option A: Automated Setup (Recommended)**
+```bash
+cd barqnet-backend
+
+# Run automated database setup (creates DB, user, permissions, migrations)
+./setup_database.sh
+
+# Export the environment variables it displays, then:
+./management
+```
+
+**Option B: Manual Setup**
 ```bash
 cd barqnet-backend
 
@@ -48,24 +61,26 @@ cd barqnet-backend
 brew install postgresql@14  # macOS
 sudo apt install postgresql # Linux
 
-# Create database
-createdb barqnet
+# Setup database with proper permissions
+sudo -u postgres psql <<EOF
+CREATE USER barqnet WITH PASSWORD 'barqnet123';
+CREATE DATABASE barqnet OWNER barqnet;
+GRANT ALL PRIVILEGES ON DATABASE barqnet TO barqnet;
+GRANT ALL PRIVILEGES ON SCHEMA public TO barqnet;
+EOF
 
 # Run migrations
 cd migrations
-psql -d barqnet -f 001_initial_schema.sql
-psql -d barqnet -f 002_add_phone_auth.sql
-psql -d barqnet -f 003_add_statistics.sql
-psql -d barqnet -f 004_add_locations.sql
-psql -d barqnet -f 005_add_token_blacklist.sql
+for f in *.sql; do sudo -u postgres psql -d barqnet -f "$f"; done
 cd ..
 
 # Set environment variables
 export JWT_SECRET="$(openssl rand -base64 32)"
 export DB_NAME="barqnet"
-export DB_USER="postgres"
-export DB_PASSWORD="postgres"
-export REDIS_HOST="localhost"  # Optional - for rate limiting
+export DB_USER="barqnet"
+export DB_PASSWORD="barqnet123"
+export DB_HOST="localhost"
+export DB_SSLMODE="disable"
 
 # Build and run
 go build -o management ./apps/management
@@ -73,6 +88,7 @@ go build -o management ./apps/management
 ```
 
 **Expected**: Server starts on port 8080
+**Troubleshooting**: See `barqnet-backend/DATABASE_TROUBLESHOOTING.md`
 
 ### **3. Test Desktop App (Electron)**
 ```bash
@@ -135,7 +151,14 @@ cd workvpn-android
    - ✅ Comprehensive test suites
    - ✅ Deployment automation scripts
 
-**Total**: +11,000 lines of production code, 100+ KB documentation
+5. **Latest Fixes (November 6, 2025)**
+   - ✅ OTP authentication bug fixed (account creation blocked after wrong OTP)
+   - ✅ Database permission issues resolved
+   - ✅ Automated database setup script added
+   - ✅ Complete database troubleshooting guide
+   - ✅ Documentation cleanup (49 → 12 essential docs)
+
+**Total**: +12,000 lines of production code, 100+ KB documentation
 
 ---
 
@@ -211,16 +234,35 @@ cd workvpn-android
 - Historical implementation docs
 
 **Backend Docs** (in `barqnet-backend/`):
+- `DATABASE_TROUBLESHOOTING.md` - Complete PostgreSQL setup guide
+- `setup_database.sh` - Automated database setup script
+- `fix_permissions.sql` - Permission fix for existing databases
 - Rate limiting documentation (4 files)
 - Token revocation documentation (4 files)
 - API examples and tests
 
 **Desktop Docs** (in `workvpn-desktop/`):
 - Certificate pinning guides (4 files)
+- Authentication flow documentation
 
 ---
 
 ## 🆘 Common Issues & Solutions
+
+### **Backend Database Issues**
+
+```bash
+# Error: "permission denied for schema public"
+# Solution: Run automated setup script
+cd barqnet-backend
+./setup_database.sh
+
+# OR manually fix permissions:
+sudo -u postgres psql -d barqnet -f fix_permissions.sql
+
+# For complete troubleshooting:
+cat barqnet-backend/DATABASE_TROUBLESHOOTING.md
+```
 
 ### **Backend Won't Start**
 
@@ -230,11 +272,26 @@ export JWT_SECRET="$(openssl rand -base64 32)"
 
 # Error: "Database connection failed"
 export DB_NAME="barqnet"
-export DB_USER="postgres"
-export DB_PASSWORD="postgres"
+export DB_USER="barqnet"
+export DB_PASSWORD="barqnet123"
+export DB_HOST="localhost"
+export DB_SSLMODE="disable"
 
 # Error: "Port 8080 already in use"
 lsof -ti:8080 | xargs kill  # macOS/Linux
+```
+
+### **Desktop Authentication Issues**
+
+```bash
+# Issue: "Account creation fails after wrong OTP"
+# Solution: Already fixed! Pull latest code:
+git pull origin main
+cd workvpn-desktop
+npm install
+npm start
+
+# The OTP code is now properly passed to account creation
 ```
 
 ### **iOS Pod Install Fails**
@@ -244,15 +301,6 @@ lsof -ti:8080 | xargs kill  # macOS/Linux
 # Already fixed! Just pull latest code:
 git pull origin main
 pod install
-```
-
-### **Desktop TypeScript Errors**
-
-```bash
-# Already fixed! Just pull latest code:
-git pull origin main
-npm install
-npm start
 ```
 
 ### **Android Build Fails**
@@ -317,11 +365,16 @@ npm start
 
 **You know it's working when:**
 
+✅ Database setup completes without errors (run `./setup_database.sh`)
 ✅ Backend responds to http://localhost:8080/health
 ✅ Desktop app opens and shows login screen
-✅ iOS app builds in Xcode
-✅ Android app builds in Android Studio
-✅ Authentication works (send OTP → register → login)
+✅ iOS app builds in Xcode (⌘B succeeds)
+✅ Android app builds in Android Studio (Gradle sync succeeds)
+✅ Authentication flow works end-to-end:
+   - Send OTP to phone number
+   - Verify OTP code (can retry if wrong)
+   - Create account with password
+   - Login successfully
 ✅ All tests pass
 
 **Time to first success**: ~15-30 minutes
