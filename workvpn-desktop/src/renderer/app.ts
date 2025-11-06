@@ -21,7 +21,7 @@ interface VPNApi {
   // Auth API
   sendOTP: (phoneNumber: string) => Promise<{ success: boolean; error?: string }>;
   verifyOTP: (phoneNumber: string, code: string) => Promise<{ success: boolean; error?: string }>;
-  createAccount: (phoneNumber: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  createAccount: (phoneNumber: string, password: string, otpCode: string) => Promise<{ success: boolean; error?: string }>;
   login: (phoneNumber: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   isAuthenticated: () => Promise<boolean>;
@@ -39,6 +39,7 @@ let currentStatus: any = null;
 let currentStats: any = null;
 let currentConfig: any = null;
 let currentPhoneNumber: string = '';
+let currentOTPCode: string = ''; // Store verified OTP code for account creation
 let threeScene: ThreeScene | null = null;
 let isLoadingSettings: boolean = false;
 
@@ -319,6 +320,10 @@ async function handleOTPVerify() {
     if (result.success) {
       console.log('[OTP] Verification successful, transitioning to password creation...');
 
+      // Store the verified OTP code for account creation
+      currentOTPCode = code;
+      console.log('[OTP] Stored OTP code for account creation');
+
       try {
         // Ensure password creation state exists
         if (!passwordCreationState) {
@@ -441,11 +446,18 @@ async function handlePasswordSubmit() {
 
   try {
     console.log('[Password] Creating account for:', currentPhoneNumber);
-    const result = await window.vpn.createAccount(currentPhoneNumber, password);
+    console.log('[Password] Using OTP code:', currentOTPCode);
+    const result = await window.vpn.createAccount(currentPhoneNumber, password, currentOTPCode);
     console.log('[Password] createAccount result:', result);
 
     if (result.success) {
       console.log('[Password] Account created successfully! Transitioning to main app...');
+
+      // Clear sensitive data
+      currentOTPCode = '';
+      passwordInput.value = '';
+      passwordConfirmInput.value = '';
+
       // Account created! Show success animation then go to main app
       gsap.to(passwordCreationState, {
         scale: 0.95,
