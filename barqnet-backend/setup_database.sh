@@ -78,7 +78,33 @@ cd ..
 echo -e "${GREEN}✓ Migrations complete${NC}"
 echo ""
 
-echo -e "${YELLOW}Step 7: Verifying database setup...${NC}"
+echo -e "${YELLOW}Step 7: Fixing table ownership...${NC}"
+sudo -u postgres psql -d ${DB_NAME} <<EOF
+-- Change ownership of all tables to barqnet user
+DO \$\$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public')
+    LOOP
+        EXECUTE 'ALTER TABLE ' || quote_ident(r.tablename) || ' OWNER TO ${DB_USER}';
+    END LOOP;
+
+    FOR r IN (SELECT sequence_name FROM information_schema.sequences WHERE sequence_schema = 'public')
+    LOOP
+        EXECUTE 'ALTER SEQUENCE ' || quote_ident(r.sequence_name) || ' OWNER TO ${DB_USER}';
+    END LOOP;
+
+    FOR r IN (SELECT table_name FROM information_schema.views WHERE table_schema = 'public')
+    LOOP
+        EXECUTE 'ALTER VIEW ' || quote_ident(r.table_name) || ' OWNER TO ${DB_USER}';
+    END LOOP;
+END \$\$;
+EOF
+echo -e "${GREEN}✓ Ownership fixed${NC}"
+echo ""
+
+echo -e "${YELLOW}Step 8: Verifying database setup...${NC}"
 sudo -u postgres psql -d ${DB_NAME} -c "\dt" | grep -q "users" && \
 echo -e "${GREEN}✓ Tables created successfully${NC}" || \
 echo -e "${RED}✗ Warning: Some tables may not exist${NC}"

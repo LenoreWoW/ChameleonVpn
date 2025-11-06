@@ -84,7 +84,48 @@ EOF
 
 ---
 
-## Error 3: "database 'barqnet' does not exist"
+## Error 3: "must be owner of table servers" or similar ownership errors
+
+**Cause**: Tables were created by postgres user but barqnet user is trying to modify them
+
+**Solution - Fix table ownership**:
+
+```bash
+# Quick fix - run the ownership fix script
+cd barqnet-backend
+sudo -u postgres psql -d barqnet -f fix_table_ownership.sql
+```
+
+Or manually:
+
+```bash
+sudo -u postgres psql -d barqnet <<EOF
+-- Change ownership of all tables
+DO \$\$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public')
+    LOOP
+        EXECUTE 'ALTER TABLE ' || quote_ident(r.tablename) || ' OWNER TO barqnet';
+    END LOOP;
+
+    FOR r IN (SELECT sequence_name FROM information_schema.sequences WHERE sequence_schema = 'public')
+    LOOP
+        EXECUTE 'ALTER SEQUENCE ' || quote_ident(r.sequence_name) || ' OWNER TO barqnet';
+    END LOOP;
+END \$\$;
+EOF
+```
+
+Then restart the backend:
+```bash
+./management
+```
+
+---
+
+## Error 4: "database 'barqnet' does not exist"
 
 **Solution**:
 ```bash
@@ -93,7 +134,7 @@ sudo -u postgres psql -c "CREATE DATABASE barqnet OWNER barqnet;"
 
 ---
 
-## Error 4: "role 'barqnet' does not exist"
+## Error 5: "role 'barqnet' does not exist"
 
 **Solution**:
 ```bash
@@ -102,7 +143,7 @@ sudo -u postgres psql -c "CREATE USER barqnet WITH PASSWORD 'barqnet123';"
 
 ---
 
-## Error 5: "FATAL: Peer authentication failed"
+## Error 6: "FATAL: Peer authentication failed"
 
 **Cause**: PostgreSQL is configured to use peer authentication (Unix socket)
 
