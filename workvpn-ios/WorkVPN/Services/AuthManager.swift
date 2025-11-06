@@ -2,7 +2,7 @@
 //  AuthManager.swift
 //  BarqNet
 //
-//  Authentication manager for phone number + OTP onboarding
+//  Authentication manager with backend API integration
 //
 
 import Foundation
@@ -14,322 +14,201 @@ class AuthManager: ObservableObject {
     @Published var isAuthenticated = false
     @Published var currentUser: String?
 
-    private var otpStorage: [String: (otp: String, expiry: Date)] = [:]
-    private let userDefaults = UserDefaults.standard
-
+    private let apiClient = APIClient.shared
+    private let keychainService = "com.barqnet.ios"
     private let currentUserKey = "current_user"
-    private let usersKey = "users"
+
+    // OTP session storage (temporary, in-memory only)
+    private var otpSessions: [String: OTPSession] = [:]
+
+    struct OTPSession {
+        let phoneNumber: String
+        let sessionId: String?
+        let verificationToken: String?
+        let timestamp: Date
+    }
 
     private init() {
-        migratePasswordHashes()
         loadAuthState()
     }
 
     private func loadAuthState() {
-        // Load persisted authentication state
-        currentUser = userDefaults.string(forKey: currentUserKey)
-        isAuthenticated = currentUser != nil
+        // Check if we have valid tokens in keychain
+        if apiClient.hasValidToken() {
+            // Load current user from keychain
+            if let userData = KeychainHelper.load(service: keychainService, account: currentUserKey),
+               let phoneNumber = String(data: userData, encoding: .utf8) {
+                self.currentUser = phoneNumber
+                self.isAuthenticated = true
+                NSLog("[AuthManager] Restored authentication state for user: ***\(phoneNumber.suffix(4))")
+            }
+        }
     }
 
     func sendOTP(phoneNumber: String, completion: @escaping (Result<Void, Error>) -> Void) {
-        DispatchQueue.main.async {
-            let otp = String(format: "%06d", Int.random(in: 100000...999999))
-            let expiry = Date().addingTimeInterval(10 * 60) // 10 minutes
+        NSLog("[AuthManager] Sending OTP to phone: ***\(phoneNumber.suffix(4))")
 
-            self.otpStorage[phoneNumber] = (otp, expiry)
+        apiClient.sendOTP(phoneNumber: phoneNumber) { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self = self else { return }
 
-            // OTP logging removed for security - codes should never be exposed in logs
-            // Production integration: Send OTP via SMS service (Twilio/AWS SNS/etc)
-            // Backend should handle SMS delivery via POST /auth/otp/send
+                switch result {
+                case .success(let sessionId):
+                    // Store session information
+                    self.otpSessions[phoneNumber] = OTPSession(
+                        phoneNumber: phoneNumber,
+                        sessionId: sessionId,
+                        verificationToken: nil,
+                        timestamp: Date()
+                    )
+                    NSLog("[AuthManager] OTP sent successfully")
+                    completion(.success(()))
 
-            completion(.success(()))
+                case .failure(let error):
+                    NSLog("[AuthManager] Failed to send OTP: \(error.localizedDescription)")
+                    completion(.failure(error))
+                }
+            }
         }
     }
 
     func verifyOTP(phoneNumber: String, code: String, completion: @escaping (Result<Void, Error>) -> Void) {
-        DispatchQueue.main.async {
-            guard let otpData = self.otpStorage[phoneNumber] else {
-                completion(.failure(NSError(domain: "AuthManager", code: 404, userInfo: [NSLocalizedDescriptionKey: "No OTP session found"])))
-                return
-            }
+        NSLog("[AuthManager] Verifying OTP for phone: ***\(phoneNumber.suffix(4))")
 
-            if Date() > otpData.expiry {
-                self.otpStorage.removeValue(forKey: phoneNumber)
-                completion(.failure(NSError(domain: "AuthManager", code: 401, userInfo: [NSLocalizedDescriptionKey: "OTP expired"])))
-                return
-            }
+        guard code.count == 6, code.rangeOfCharacter(from: CharacterSet.decimalDigits.inverted) == nil else {
+            let error = NSError(domain: "AuthManager", code: 400, userInfo: [NSLocalizedDescriptionKey: "Invalid OTP format. Must be 6 digits."])
+            completion(.failure(error))
+            return
+        }
 
-            if otpData.otp != code {
-                completion(.failure(NSError(domain: "AuthManager", code: 401, userInfo: [NSLocalizedDescriptionKey: "Invalid OTP code"])))
-                return
-            }
+        let session = otpSessions[phoneNumber]
 
-            completion(.success(()))
+        apiClient.verifyOTP(phoneNumber: phoneNumber, code: code, sessionId: session?.sessionId) { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+
+                switch result {
+                case .success(let verificationToken):
+                    // Update session with verification token
+                    self.otpSessions[phoneNumber] = OTPSession(
+                        phoneNumber: phoneNumber,
+                        sessionId: session?.sessionId,
+                        verificationToken: verificationToken ?? code,
+                        timestamp: Date()
+                    )
+                    NSLog("[AuthManager] OTP verified successfully")
+                    completion(.success(()))
+
+                case .failure(let error):
+                    NSLog("[AuthManager] OTP verification failed: \(error.localizedDescription)")
+                    completion(.failure(error))
+                }
+            }
         }
     }
 
-    /**
-     * Create user account
-     *
-     * TODO: CRITICAL SECURITY - Replace Base64 with proper password hashing!
-     *
-     * Current Status: ❌ INSECURE - Using Base64 encoding (NOT hashing!)
-     * - Base64 is NOT a hashing algorithm - it's just encoding
-     * - Base64 is REVERSIBLE - anyone can decode it to get plaintext password
-     * - Example: "password123" → "cGFzc3dvcmQxMjM=" (easily decoded)
-     * - This is a CRITICAL security vulnerability (CVSS 8.1 - HIGH)
-     *
-     * Required Implementation: Replace with PBKDF2 password hashing
-     *
-     * 1. Add PBKDF2 helper class:
-     *
-     *    import CryptoKit
-     *
-     *    class PasswordHasher {
-     *        static func hash(password: String) -> String? {
-     *            guard let passwordData = password.data(using: .utf8) else { return nil }
-     *
-     *            // Generate random salt (16 bytes)
-     *            var salt = Data(count: 16)
-     *            _ = salt.withUnsafeMutableBytes { SecRandomCopyBytes(kSecRandomDefault, 16, $0.baseAddress!) }
-     *
-     *            // PBKDF2 with SHA256, 100,000 iterations
-     *            let hash = try? PBKDF2.deriveKey(
-     *                password: passwordData,
-     *                salt: salt,
-     *                iterations: 100_000,
-     *                keyLength: 32
-     *            )
-     *
-     *            // Combine salt + hash for storage
-     *            guard let hashData = hash else { return nil }
-     *            let combined = salt + hashData
-     *            return combined.base64EncodedString()
-     *        }
-     *
-     *        static func verify(password: String, hash: String) -> Bool {
-     *            guard let passwordData = password.data(using: .utf8),
-     *                  let storedData = Data(base64Encoded: hash),
-     *                  storedData.count >= 48 else { return false }
-     *
-     *            // Extract salt (first 16 bytes) and hash (remaining bytes)
-     *            let salt = storedData.prefix(16)
-     *            let storedHash = storedData.suffix(from: 16)
-     *
-     *            // Hash the provided password with extracted salt
-     *            let computedHash = try? PBKDF2.deriveKey(
-     *                password: passwordData,
-     *                salt: salt,
-     *                iterations: 100_000,
-     *                keyLength: 32
-     *            )
-     *
-     *            return computedHash == storedHash
-     *        }
-     *
-     *        // Helper for PBKDF2 (iOS 13+)
-     *        struct PBKDF2 {
-     *            static func deriveKey(password: Data, salt: Data, iterations: Int, keyLength: Int) throws -> Data {
-     *                var derivedKeyData = Data(count: keyLength)
-     *                let derivationStatus = derivedKeyData.withUnsafeMutableBytes { derivedKeyBytes in
-     *                    salt.withUnsafeBytes { saltBytes in
-     *                        password.withUnsafeBytes { passwordBytes in
-     *                            CCKeyDerivationPBKDF(
-     *                                CCPBKDFAlgorithm(kCCPBKDF2),
-     *                                passwordBytes.baseAddress?.assumingMemoryBound(to: Int8.self),
-     *                                password.count,
-     *                                saltBytes.baseAddress?.assumingMemoryBound(to: UInt8.self),
-     *                                salt.count,
-     *                                CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA256),
-     *                                UInt32(iterations),
-     *                                derivedKeyBytes.baseAddress?.assumingMemoryBound(to: UInt8.self),
-     *                                keyLength
-     *                            )
-     *                        }
-     *                    }
-     *                }
-     *                guard derivationStatus == kCCSuccess else {
-     *                    throw NSError(domain: "PasswordHasher", code: Int(derivationStatus))
-     *                }
-     *                return derivedKeyData
-     *            }
-     *        }
-     *    }
-     *
-     * 2. Import CommonCrypto in bridging header (if needed):
-     *    #import <CommonCrypto/CommonCrypto.h>
-     *
-     * 3. Replace Base64 encoding:
-     *
-     *    // BEFORE (INSECURE):
-     *    let passwordHash = password.data(using: .utf8)?.base64EncodedString() ?? ""
-     *
-     *    // AFTER (SECURE):
-     *    guard let passwordHash = PasswordHasher.hash(password: password) else {
-     *        completion(.failure(NSError(...)))
-     *        return
-     *    }
-     *
-     * 4. Update login verification (line 106-108):
-     *
-     *    // BEFORE (INSECURE):
-     *    let passwordHash = password.data(using: .utf8)?.base64EncodedString() ?? ""
-     *    if storedHash != passwordHash { ... }
-     *
-     *    // AFTER (SECURE):
-     *    if !PasswordHasher.verify(password: password, hash: storedHash) { ... }
-     *
-     * 5. Add migration for existing users:
-     *
-     *    func migratePasswordHashes() {
-     *        var users = getUsersMap()
-     *        var migrated = false
-     *
-     *        for (phone, hash) in users {
-     *            // Check if hash is old Base64 format (short length, no salt)
-     *            if hash.count < 64 {
-     *                // Decode old Base64 to get plaintext (ONLY during migration!)
-     *                if let passwordData = Data(base64Encoded: hash),
-     *                   let plaintext = String(data: passwordData, encoding: .utf8),
-     *                   let newHash = PasswordHasher.hash(password: plaintext) {
-     *                    users[phone] = newHash
-     *                    migrated = true
-     *                }
-     *            }
-     *        }
-     *
-     *        if migrated {
-     *            saveUsersMap(users)
-     *            NSLog("Migrated password hashes to PBKDF2")
-     *        }
-     *    }
-     *
-     * Estimated Effort: 2-3 hours (implementation + testing + migration)
-     * Priority: CRITICAL (High severity security vulnerability)
-     * CVSS Score: 8.1 (HIGH) - Cleartext storage of sensitive information
-     */
     func createAccount(phoneNumber: String, password: String, completion: @escaping (Result<Void, Error>) -> Void) {
-        DispatchQueue.main.async {
-            var users = self.getUsersMap()
+        NSLog("[AuthManager] Creating account for phone: ***\(phoneNumber.suffix(4))")
 
-            if users[phoneNumber] != nil {
-                completion(.failure(NSError(domain: "AuthManager", code: 409, userInfo: [NSLocalizedDescriptionKey: "Account already exists"])))
-                return
+        // Validate password
+        guard password.count >= 8 else {
+            let error = NSError(domain: "AuthManager", code: 400, userInfo: [NSLocalizedDescriptionKey: "Password must be at least 8 characters"])
+            completion(.failure(error))
+            return
+        }
+
+        // Get OTP code from session
+        guard let session = otpSessions[phoneNumber],
+              let otpCode = session.verificationToken else {
+            let error = NSError(domain: "AuthManager", code: 400, userInfo: [NSLocalizedDescriptionKey: "OTP verification required before registration"])
+            completion(.failure(error))
+            return
+        }
+
+        apiClient.register(phoneNumber: phoneNumber, password: password, otpCode: otpCode) { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+
+                switch result {
+                case .success(let (tokens, user)):
+                    // Save current user to keychain
+                    let phoneToStore = user?.phoneNumber ?? phoneNumber
+                    if let userData = phoneToStore.data(using: .utf8) {
+                        _ = KeychainHelper.save(userData, service: self.keychainService, account: self.currentUserKey)
+                    }
+
+                    // Update auth state
+                    self.currentUser = phoneToStore
+                    self.isAuthenticated = true
+
+                    // Clean up OTP session
+                    self.otpSessions.removeValue(forKey: phoneNumber)
+
+                    NSLog("[AuthManager] Account created successfully")
+                    completion(.success(()))
+
+                case .failure(let error):
+                    NSLog("[AuthManager] Account creation failed: \(error.localizedDescription)")
+                    completion(.failure(error))
+                }
             }
-
-            // SECURE: Hash password using PBKDF2-HMAC-SHA256
-            guard let passwordHash = PasswordHasher.hash(password: password) else {
-                completion(.failure(NSError(domain: "AuthManager", code: 500, userInfo: [NSLocalizedDescriptionKey: "Failed to hash password"])))
-                return
-            }
-
-            users[phoneNumber] = passwordHash
-            self.saveUsersMap(users)
-
-            // Auto-login
-            self.userDefaults.set(phoneNumber, forKey: self.currentUserKey)
-            self.currentUser = phoneNumber
-            self.isAuthenticated = true
-
-            // Clean up OTP
-            self.otpStorage.removeValue(forKey: phoneNumber)
-
-            completion(.success(()))
         }
     }
 
     func login(phoneNumber: String, password: String, completion: @escaping (Result<Void, Error>) -> Void) {
-        DispatchQueue.main.async {
-            let users = self.getUsersMap()
+        NSLog("[AuthManager] Logging in user: ***\(phoneNumber.suffix(4))")
 
-            guard let storedHash = users[phoneNumber] else {
-                completion(.failure(NSError(domain: "AuthManager", code: 404, userInfo: [NSLocalizedDescriptionKey: "Account not found"])))
-                return
+        apiClient.login(phoneNumber: phoneNumber, password: password) { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+
+                switch result {
+                case .success(let (tokens, user)):
+                    // Save current user to keychain
+                    let phoneToStore = user?.phoneNumber ?? phoneNumber
+                    if let userData = phoneToStore.data(using: .utf8) {
+                        _ = KeychainHelper.save(userData, service: self.keychainService, account: self.currentUserKey)
+                    }
+
+                    // Update auth state
+                    self.currentUser = phoneToStore
+                    self.isAuthenticated = true
+
+                    NSLog("[AuthManager] Login successful")
+                    completion(.success(()))
+
+                case .failure(let error):
+                    NSLog("[AuthManager] Login failed: \(error.localizedDescription)")
+                    completion(.failure(error))
+                }
             }
-
-            // SECURE: Verify password using PBKDF2-HMAC-SHA256
-            if !PasswordHasher.verify(password: password, hash: storedHash) {
-                completion(.failure(NSError(domain: "AuthManager", code: 401, userInfo: [NSLocalizedDescriptionKey: "Invalid password"])))
-                return
-            }
-
-            self.userDefaults.set(phoneNumber, forKey: self.currentUserKey)
-            self.currentUser = phoneNumber
-            self.isAuthenticated = true
-
-            completion(.success(()))
         }
     }
 
     func logout() {
-        userDefaults.removeObject(forKey: currentUserKey)
-        currentUser = nil
-        isAuthenticated = false
-    }
+        NSLog("[AuthManager] Logging out user")
 
-    private func getUsersMap() -> [String: String] {
-        guard let usersData = userDefaults.data(forKey: usersKey),
-              let users = try? JSONDecoder().decode([String: String].self, from: usersData) else {
-            return [:]
-        }
-        return users
-    }
+        // Clear current user from keychain
+        _ = KeychainHelper.delete(service: keychainService, account: currentUserKey)
 
-    private func saveUsersMap(_ users: [String: String]) {
-        if let encoded = try? JSONEncoder().encode(users) {
-            userDefaults.set(encoded, forKey: usersKey)
-        }
-    }
+        // Call API to logout and clear tokens
+        apiClient.logout { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self = self else { return }
 
-    /**
-     * Migrate existing Base64-encoded passwords to PBKDF2 hashes
-     *
-     * This function safely migrates legacy password storage to secure hashing.
-     * It's called once on initialization to ensure all passwords are properly hashed.
-     *
-     * Migration Process:
-     * 1. Check each stored hash to identify legacy Base64 format
-     * 2. Decode Base64 to recover plaintext password (ONLY during migration)
-     * 3. Hash with PBKDF2 and replace old hash
-     * 4. Save updated user map
-     *
-     * Security Note: This is the ONLY place where we decode passwords.
-     * After migration, all passwords are irreversibly hashed.
-     */
-    private func migratePasswordHashes() {
-        var users = getUsersMap()
+                self.currentUser = nil
+                self.isAuthenticated = false
 
-        // Check if migration is needed
-        guard !users.isEmpty else { return }
+                // Clear OTP sessions
+                self.otpSessions.removeAll()
 
-        var migrationCount = 0
-
-        for (phoneNumber, hash) in users {
-            // Check if this is a legacy Base64 hash (not PBKDF2)
-            if PasswordHasher.isLegacyBase64Hash(hash: hash) {
-                // Attempt to decode the old Base64-encoded password
-                if let passwordData = Data(base64Encoded: hash),
-                   let plaintext = String(data: passwordData, encoding: .utf8),
-                   !plaintext.isEmpty {
-
-                    // Hash with PBKDF2
-                    if let newHash = PasswordHasher.hash(password: plaintext) {
-                        users[phoneNumber] = newHash
-                        migrationCount += 1
-                        NSLog("[AuthManager] Migrated password hash for user (phone ending: ***\(phoneNumber.suffix(4)))")
-                    } else {
-                        NSLog("[AuthManager] WARNING: Failed to hash password during migration for user")
-                    }
-                } else {
-                    NSLog("[AuthManager] WARNING: Failed to decode legacy hash for user")
+                switch result {
+                case .success:
+                    NSLog("[AuthManager] Logout successful")
+                case .failure(let error):
+                    NSLog("[AuthManager] Logout completed (API call failed: \(error.localizedDescription))")
                 }
             }
-        }
-
-        // Save migrated hashes if any were updated
-        if migrationCount > 0 {
-            saveUsersMap(users)
-            NSLog("[AuthManager] Successfully migrated \(migrationCount) password(s) from Base64 to PBKDF2")
         }
     }
 }

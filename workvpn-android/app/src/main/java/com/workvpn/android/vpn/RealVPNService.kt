@@ -82,7 +82,6 @@ class RealVPNService : VpnService() {
 
     override fun onCreate() {
         super.onCreate()
-        instance = this
         createNotificationChannel()
         Log.i(TAG, "RealVPNService created")
     }
@@ -159,6 +158,9 @@ class RealVPNService : VpnService() {
                 isConnected = true
                 _connectionState.value = "CONNECTED"
                 updateNotification("VPN Connected - Traffic Encrypted")
+
+                // Update global state for ViewModel access
+                VpnServiceConnection.updateGlobalState("CONNECTED", 0L, 0L)
 
                 // Start packet processing with encryption
                 launch { processOutgoingPackets() }
@@ -323,6 +325,13 @@ class RealVPNService : VpnService() {
                     totalBytesSent += length
                     _bytesOut.value = totalBytesSent
 
+                    // Update global state
+                    VpnServiceConnection.updateGlobalState(
+                        _connectionState.value,
+                        totalBytesReceived,
+                        totalBytesSent
+                    )
+
                     // CRITICAL: Encrypt packet
                     val plaintext = buffer.array().copyOf(length)
                     val encrypted = encryptPacket(plaintext)
@@ -372,6 +381,13 @@ class RealVPNService : VpnService() {
                     // Update statistics
                     totalBytesReceived += bytesRead
                     _bytesIn.value = totalBytesReceived
+
+                    // Update global state
+                    VpnServiceConnection.updateGlobalState(
+                        _connectionState.value,
+                        totalBytesReceived,
+                        totalBytesSent
+                    )
 
                     // CRITICAL: Decrypt packet
                     val encrypted = buffer.array().copyOf(bytesRead)
@@ -530,6 +546,9 @@ class RealVPNService : VpnService() {
                 _bytesOut.value = 0
                 _errorMessage.value = null
 
+                // Update global state
+                VpnServiceConnection.updateGlobalState("DISCONNECTED", 0L, 0L)
+
                 totalBytesReceived = 0
                 totalBytesSent = 0
                 packetsDropped = 0
@@ -654,12 +673,15 @@ class RealVPNService : VpnService() {
 
     override fun onDestroy() {
         Log.i(TAG, "RealVPNService destroying")
-        instance = null
         isRunning = false
         isConnected = false
         vpnInterface?.close()
         serverChannel?.close()
         serviceScope.cancel()
+
+        // Update global state
+        VpnServiceConnection.updateGlobalState("DISCONNECTED", 0L, 0L)
+
         super.onDestroy()
     }
 
@@ -687,10 +709,5 @@ class RealVPNService : VpnService() {
         private const val NOTIFICATION_ID = 1
 
         private const val CONNECTION_TIMEOUT_MS = 30000L // 30 seconds
-
-        // Singleton instance for ViewModel access to StateFlows
-        @Volatile
-        var instance: RealVPNService? = null
-            private set
     }
 }

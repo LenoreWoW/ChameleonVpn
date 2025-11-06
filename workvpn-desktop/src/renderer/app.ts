@@ -155,13 +155,13 @@ function hideAllStates() {
 }
 
 function showState(state: HTMLElement) {
-  console.log('[UI] showState called for:', state.id);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('[UI] showState called for:', state.id);
+  }
   hideAllStates();
-  console.log('[UI] All states hidden, now showing:', state.id);
   state.style.display = 'block';
   state.style.opacity = '1';
   state.style.visibility = 'visible';
-  console.log('[UI] State display set to block, opacity: 1, visibility: visible');
 
   // GSAP animation
   try {
@@ -179,7 +179,6 @@ function showState(state: HTMLElement) {
           clearProps: 'all'
         }
       );
-      console.log('[UI] GSAP animation applied');
     } else {
       console.error('[UI] GSAP is not defined!');
     }
@@ -221,27 +220,27 @@ function formatPhoneNumber(phone: string): string {
 
 // Step 1: Phone Number Entry
 async function handlePhoneSubmit() {
-  console.log('[Phone] Submit button clicked');
   const phone = phoneInput.value.trim();
-  console.log('[Phone] Phone number entered:', phone);
 
+  // Validate phone number format (E.164 format: +[country code][number])
+  const e164Regex = /^\+[1-9]\d{1,14}$/;
   if (!phone) {
-    console.log('[Phone] No phone number provided');
     alert('Please enter your phone number');
     return;
   }
 
-  console.log('[Phone] Disabling button and sending OTP...');
+  if (!e164Regex.test(phone)) {
+    alert('Invalid phone number format. Please use international format (e.g., +1234567890)');
+    return;
+  }
+
   phoneSubmitBtn.disabled = true;
   phoneSubmitBtn.textContent = 'Sending...';
 
   try {
-    console.log('[Phone] Calling window.vpn.sendOTP...');
     const result = await window.vpn.sendOTP(phone);
-    console.log('[Phone] sendOTP result:', result);
 
     if (result.success) {
-      console.log('[Phone] OTP sent successfully! Showing verification screen...');
       currentPhoneNumber = phone;
       phoneDisplay.textContent = formatPhoneNumber(phone);
       showState(otpVerificationState);
@@ -258,7 +257,6 @@ async function handlePhoneSubmit() {
         ease: 'back.out(1.7)'
       });
     } else {
-      console.error('[Phone] sendOTP failed:', result.error);
       alert(result.error || 'Failed to send OTP. Please try again.');
     }
   } catch (error) {
@@ -313,16 +311,11 @@ async function handleOTPVerify() {
   otpVerifyBtn.textContent = 'Verifying...';
 
   try {
-    console.log('[OTP] Verifying code for phone:', currentPhoneNumber);
     const result = await window.vpn.verifyOTP(currentPhoneNumber, code);
-    console.log('[OTP] Verification result:', { success: result.success, hasError: !!result.error });
 
     if (result.success) {
-      console.log('[OTP] Verification successful, transitioning to password creation...');
-
       // Store the verified OTP code for account creation
       currentOTPCode = code;
-      console.log('[OTP] Stored OTP code for account creation');
 
       try {
         // Ensure password creation state exists
@@ -331,7 +324,6 @@ async function handleOTPVerify() {
         }
 
         // Show password creation state
-        console.log('[OTP] Showing password creation state...');
         showState(passwordCreationState);
 
         // Animate password inputs if GSAP is available
@@ -345,11 +337,11 @@ async function handleOTPVerify() {
               ease: 'power2.out'
             });
           } catch (animError) {
-            console.warn('[OTP] GSAP animation failed, but state transition succeeded:', animError);
+            if (process.env.NODE_ENV !== 'production') {
+              console.warn('[OTP] GSAP animation failed, but state transition succeeded:', animError);
+            }
           }
         }
-
-        console.log('[OTP] Password creation state shown successfully');
 
         // Focus first password input after animation
         setTimeout(() => {
@@ -371,7 +363,6 @@ async function handleOTPVerify() {
         }
       }
     } else {
-      console.log('[OTP] Verification failed:', result.error);
       otpError.textContent = result.error || 'Invalid code. Please try again.';
       otpError.style.display = 'block';
 
@@ -433,8 +424,22 @@ async function handlePasswordSubmit() {
     return;
   }
 
-  if (password.length < 8) {
-    passwordError.textContent = 'Password must be at least 8 characters';
+  // Strengthened password validation (12 characters minimum with complexity requirements)
+  if (password.length < 12) {
+    passwordError.textContent = 'Password must be at least 12 characters';
+    passwordError.style.display = 'block';
+    gsap.from(passwordError, { x: -10, duration: 0.1, repeat: 5, yoyo: true });
+    return;
+  }
+
+  // Check for password complexity: uppercase, lowercase, number, and special character
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasLowercase = /[a-z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+
+  if (!hasUppercase || !hasLowercase || !hasNumber || !hasSpecial) {
+    passwordError.textContent = 'Password must include uppercase, lowercase, number, and special character';
     passwordError.style.display = 'block';
     gsap.from(passwordError, { x: -10, duration: 0.1, repeat: 5, yoyo: true });
     return;
@@ -445,14 +450,9 @@ async function handlePasswordSubmit() {
   passwordSubmitBtn.textContent = 'Creating...';
 
   try {
-    console.log('[Password] Creating account for:', currentPhoneNumber);
-    console.log('[Password] Using OTP code:', currentOTPCode);
     const result = await window.vpn.createAccount(currentPhoneNumber, password, currentOTPCode);
-    console.log('[Password] createAccount result:', result);
 
     if (result.success) {
-      console.log('[Password] Account created successfully! Transitioning to main app...');
-
       // Clear sensitive data
       currentOTPCode = '';
       passwordInput.value = '';
@@ -464,12 +464,10 @@ async function handlePasswordSubmit() {
         opacity: 0,
         duration: 0.4,
         onComplete: () => {
-          console.log('[Password] Animation complete, calling checkAuthAndShowUI()');
           checkAuthAndShowUI();
         }
       });
     } else {
-      console.error('[Password] Failed to create account:', result.error);
       passwordError.textContent = result.error || 'Failed to create account';
       passwordError.style.display = 'block';
       gsap.from(passwordError, { x: -10, duration: 0.1, repeat: 5, yoyo: true });
@@ -513,7 +511,7 @@ async function handleLogin() {
         }
       });
     } else {
-      loginError.textContent = result.error || 'Invalid credentials';
+      loginError.textContent = result.error || 'Invalid phone number or password';
       loginError.style.display = 'block';
       gsap.from(loginError, { x: -10, duration: 0.1, repeat: 5, yoyo: true });
     }
@@ -596,36 +594,29 @@ async function handleLogout() {
 
 // ===== VPN Functions =====
 async function updateUI() {
-  console.log('[UI] updateUI called, currentConfig:', currentConfig);
-
   if (!currentConfig) {
-    console.log('[UI] No config, showing noConfigState (import screen)');
     showState(noConfigState);
     return;
   }
 
   // Check if VPN requires authentication and we don't have credentials yet
-  if (currentConfig.parsed?.requiresAuth && 
+  if (currentConfig.parsed?.requiresAuth &&
       (!currentConfig.parsed.username || !currentConfig.parsed.password)) {
-    console.log('[UI] VPN requires authentication, showing credentials state');
     showState(vpnCredentialsState);
     return;
   }
 
   if (currentStatus?.error && !currentStatus.connected && !currentStatus.connecting) {
-    console.log('[UI] Error state, showing error screen');
     errorMessageText.textContent = currentStatus.error;
     showState(errorState);
     return;
   }
 
   if (currentStatus?.connecting) {
-    console.log('[UI] Connecting state, showing connecting screen');
     showState(connectingState);
     return;
   }
 
-  console.log('[UI] Showing VPN state screen');
   showState(vpnState);
 
   // Update status with GSAP animation
@@ -687,12 +678,9 @@ async function handleImport() {
   importBtn.textContent = 'Importing...';
 
   try {
-    console.log('[Import] Opening file dialog...');
     const result = await window.vpn.importConfig();
-    console.log('[Import] Result:', result);
 
     if (result.success) {
-      console.log('[Import] Success! Loading config...');
       await loadConfig();
       updateUI();
 
@@ -704,7 +692,6 @@ async function handleImport() {
         ease: 'back.out(1.7)'
       });
     } else {
-      console.error('[Import] Failed:', result.error);
       alert(`Failed to import config: ${result.error || 'No file selected or invalid configuration'}`);
     }
   } catch (error) {
@@ -817,28 +804,15 @@ async function loadSettings() {
 
 async function checkAuthAndShowUI() {
   try {
-    console.log('[Auth] Checking authentication status...');
     const isAuth = await window.vpn.isAuthenticated();
-    console.log('[Auth] Is authenticated:', isAuth);
 
     if (isAuth) {
-      console.log('[Auth] User is authenticated, loading VPN UI...');
-      console.log('[Auth] Loading config...');
       await loadConfig();
-      console.log('[Auth] Config loaded:', currentConfig);
-      console.log('[Auth] Loading status...');
       await loadStatus();
-      console.log('[Auth] Status loaded:', currentStatus);
-      console.log('[Auth] Loading stats...');
       await loadStats();
-      console.log('[Auth] Stats loaded:', currentStats);
-      console.log('[Auth] Loading settings...');
       await loadSettings();
-      console.log('[Auth] Settings loaded');
-      console.log('[Auth] Calling updateUI()...');
       updateUI();
     } else {
-      console.log('[Auth] User not authenticated, showing phone entry screen...');
       showState(phoneEntryState);
     }
   } catch (error) {
@@ -850,15 +824,15 @@ async function checkAuthAndShowUI() {
 
 // ===== Initialization =====
 async function initialize() {
-  console.log('[App] Initializing WorkVPN Desktop...');
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('[App] Initializing WorkVPN Desktop...');
+  }
 
   try {
     // Initialize Three.js scene
-    console.log('[App] Initializing Three.js scene...');
     initThreeScene();
 
     // Setup OTP inputs
-    console.log('[App] Setting up OTP inputs...');
     setupOTPInputs();
 
     // Event listeners for onboarding
@@ -942,9 +916,7 @@ async function initialize() {
     });
 
     // Check auth status and show appropriate UI
-    console.log('[App] Checking authentication and showing UI...');
     await checkAuthAndShowUI();
-    console.log('[App] UI displayed');
 
     // Animate title bar
     gsap.from('.title-bar', {
@@ -963,7 +935,9 @@ async function initialize() {
       ease: 'power3.out'
     });
 
-    console.log('[App] Initialization complete!');
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[App] Initialization complete!');
+    }
   } catch (error) {
     console.error('[App] Fatal error during initialization:', error);
     // Fallback: show phone entry screen

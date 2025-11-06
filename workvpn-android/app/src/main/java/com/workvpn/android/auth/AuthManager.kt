@@ -1,96 +1,161 @@
 package com.barqnet.android.auth
 
 import android.content.Context
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
-import com.barqnet.android.BuildConfig
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
+import android.util.Log
+import com.barqnet.android.api.ApiService
+import com.barqnet.android.api.models.UserData
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import kotlin.random.Random
 
-private val Context.authDataStore by preferencesDataStore(name = "auth_prefs")
-
+/**
+ * Authentication Manager - PRODUCTION VERSION with Real Backend Integration
+ *
+ * This class handles all authentication operations with the BarqNet backend:
+ * - OTP sending and verification
+ * - User registration
+ * - User login
+ * - Token refresh (automatic and manual)
+ * - Secure token storage
+ *
+ * Features:
+ * - Real backend API integration via Retrofit
+ * - Encrypted token storage via EncryptedSharedPreferences
+ * - Automatic token refresh (5 min before expiry)
+ * - Coroutine-based async operations
+ * - Proper error handling
+ *
+ * Security:
+ * - All tokens stored encrypted
+ * - Automatic token rotation
+ * - No plaintext credentials stored
+ * - Certificate pinning via ApiService
+ *
+ * @author BarqNet Team
+ * @version 2.0 - Production Ready
+ */
 class AuthManager(private val context: Context) {
 
-    private val CURRENT_USER_KEY = stringPreferencesKey("current_user")
-    private val USERS_KEY = stringPreferencesKey("users")
-    private val OTP_STORAGE_KEY = stringPreferencesKey("otp_storage")
+    private val tokenStorage = TokenStorage(context)
+    private val rateLimiter = RateLimiter(context)
+    private val authScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
+    private val _authState = MutableStateFlow<AuthState>(AuthState.Unauthenticated)
+    val authState: StateFlow<AuthState> = _authState
+
+    private var currentOtpSessionId: String? = null
+
+    init {
+        // Start automatic token refresh monitoring
+        startTokenRefreshMonitoring()
+
+        // Check if user is already authenticated
+        authScope.launch {
+            if (tokenStorage.isAuthenticated()) {
+                val userData = tokenStorage.getUserData()
+                if (userData != null) {
+                    _authState.value = AuthState.Authenticated(userData)
+                }
+            }
+        }
+    }
+
+    // ==================== OTP Flow ====================
 
     /**
-     * Password hashing using BCrypt
+     * Send OTP to phone number
      *
-     * ✅ CORRECTLY IMPLEMENTED - No changes needed!
+     * Backend: POST /v1/auth/send-otp
      *
-     * Current Status: Passwords are properly hashed using BCrypt with 12 rounds
-     * - BCrypt is a secure, adaptive password hashing function
-     * - Includes salt automatically (prevents rainbow table attacks)
-     * - Strength of 12 rounds provides strong security
-     * - Industry standard for password storage
-     *
-     * Security Features:
-     * - Line 88: passwordEncoder.encode(password) - Creates BCrypt hash with salt
-     * - Line 116: passwordEncoder.matches(password, storedHash) - Secure verification
-     * - Hashes are one-way (cannot be reversed to get plaintext password)
-     * - Each password gets unique salt (even same passwords produce different hashes)
-     *
-     * This implementation follows OWASP password storage best practices.
-     * No changes required - password hashing is production-ready.
+     * Includes client-side rate limiting:
+     * - Max 3 requests per 5 minutes per phone number
+     * - Returns error with cooldown time if limit exceeded
      */
-    private val passwordEncoder = BCryptPasswordEncoder(12) // BCrypt with strength 12
-    private var otpStorage = mutableMapOf<String, Pair<String, Long>>() // phoneNumber -> (OTP, expiry)
-
     suspend fun sendOTP(phoneNumber: String): Result<Unit> {
         return try {
-            val otp = Random.nextInt(100000, 999999).toString()
-            val expiry = System.currentTimeMillis() + 10 * 60 * 1000 // 10 minutes
+            // Check rate limit before sending
+            val (canSend, remainingCooldown) = rateLimiter.canSendOTP(phoneNumber)
 
-            otpStorage[phoneNumber] = Pair(otp, expiry)
+            if (!canSend) {
+                val cooldownFormatted = rateLimiter.formatCooldown(remainingCooldown)
+                val errorMsg = "Too many OTP requests. Please wait $cooldownFormatted before trying again."
+                Log.w(TAG, errorMsg)
+                return Result.failure(Exception(errorMsg))
+            }
 
-            // Persist OTP storage (encrypted in DataStore)
-            saveOTPStorage()
+            Log.d(TAG, "Sending OTP to: $phoneNumber")
 
-            // BACKEND INTEGRATION: Your colleague's backend will handle SMS delivery
-            // The backend should call POST /auth/otp/send which will:
-            // - Generate OTP server-side
-            // - Send SMS via Twilio/AWS SNS
-            // - Return success to client
+            val result = ApiService.sendOtp(phoneNumber)
 
-            // OTP logging removed for security - even in debug builds, OTP codes
-            // should not be exposed in logs as they could be intercepted
-            // Production integration: Send OTP via SMS service (Twilio/AWS SNS/etc)
+            if (result.isSuccess) {
+                val response = result.getOrNull()!!
+                currentOtpSessionId = response.sessionId
+                tokenStorage.saveOtpSessionId(response.sessionId)
 
-            Result.success(Unit)
+                // Record OTP request for rate limiting
+                rateLimiter.recordOTPRequest(phoneNumber)
+
+                val remainingRequests = rateLimiter.getRemainingRequests(phoneNumber)
+                Log.d(TAG, "OTP sent successfully. Remaining requests: $remainingRequests")
+
+                Result.success(Unit)
+            } else {
+                val error = result.exceptionOrNull()
+                Log.e(TAG, "Failed to send OTP", error)
+                Result.failure(error ?: Exception("Failed to send OTP"))
+            }
         } catch (e: Exception) {
-            android.util.Log.e("AuthManager", "Failed to send OTP", e)
+            Log.e(TAG, "Exception sending OTP", e)
             Result.failure(e)
         }
     }
 
+    /**
+     * Verify OTP code
+     *
+     * Backend: POST /v1/auth/verify-otp
+     */
     suspend fun verifyOTP(phoneNumber: String, code: String): Result<Unit> {
         return try {
-            val otpData = otpStorage[phoneNumber]
-                ?: return Result.failure(Exception("No OTP session found"))
+            Log.d(TAG, "Verifying OTP for: $phoneNumber")
 
-            val (storedOtp, expiry) = otpData
+            val result = ApiService.verifyOtp(phoneNumber, code)
 
-            if (System.currentTimeMillis() > expiry) {
-                otpStorage.remove(phoneNumber)
-                return Result.failure(Exception("OTP expired"))
+            if (result.isSuccess) {
+                val response = result.getOrNull()!!
+                if (response.verified) {
+                    currentOtpSessionId = response.sessionId
+                    tokenStorage.saveOtpSessionId(response.sessionId)
+
+                    Log.d(TAG, "OTP verified successfully")
+                    Result.success(Unit)
+                } else {
+                    Log.w(TAG, "OTP verification failed")
+                    Result.failure(Exception("Invalid OTP code"))
+                }
+            } else {
+                val error = result.exceptionOrNull()
+                Log.e(TAG, "Failed to verify OTP", error)
+                Result.failure(error ?: Exception("Failed to verify OTP"))
             }
-
-            if (storedOtp != code) {
-                return Result.failure(Exception("Invalid OTP code"))
-            }
-
-            Result.success(Unit)
         } catch (e: Exception) {
+            Log.e(TAG, "Exception verifying OTP", e)
             Result.failure(e)
         }
     }
 
+    // ==================== Registration ====================
+
+    /**
+     * Create new account
+     *
+     * Backend: POST /v1/auth/register
+     */
     suspend fun createAccount(phoneNumber: String, password: String): Result<Unit> {
         return try {
             // Validate password strength
@@ -98,139 +163,210 @@ class AuthManager(private val context: Context) {
                 return Result.failure(Exception("Password must be at least 8 characters"))
             }
 
-            val users = getUsersMap()
+            val sessionId = currentOtpSessionId ?: tokenStorage.getOtpSessionId()
+                ?: return Result.failure(Exception("No OTP session found. Please verify OTP first."))
 
-            if (users.containsKey(phoneNumber)) {
-                return Result.failure(Exception("Account already exists"))
+            Log.d(TAG, "Creating account for: $phoneNumber")
+
+            val result = ApiService.register(phoneNumber, password, sessionId)
+
+            if (result.isSuccess) {
+                val response = result.getOrNull()!!
+
+                // Create UserData from response
+                val userData = UserData(
+                    userId = response.userId,
+                    phoneNumber = response.phoneNumber,
+                    accessToken = response.accessToken,
+                    refreshToken = response.refreshToken,
+                    expiresAt = response.expiresAt
+                )
+
+                // Save to encrypted storage
+                tokenStorage.saveUserData(userData)
+                tokenStorage.clearOtpSessionId()
+                currentOtpSessionId = null
+
+                // Update auth state
+                _authState.value = AuthState.Authenticated(userData)
+
+                Log.d(TAG, "Account created successfully for user: ${response.userId}")
+                Result.success(Unit)
+            } else {
+                val error = result.exceptionOrNull()
+                Log.e(TAG, "Failed to create account", error)
+                Result.failure(error ?: Exception("Failed to create account"))
             }
-
-            // Hash password with BCrypt (12 rounds)
-            val passwordHash = passwordEncoder.encode(password)
-
-            users[phoneNumber] = passwordHash
-            saveUsersMap(users)
-
-            // Auto-login
-            context.authDataStore.edit { prefs ->
-                prefs[CURRENT_USER_KEY] = phoneNumber
-            }
-
-            // Clean up OTP
-            otpStorage.remove(phoneNumber)
-            saveOTPStorage()
-
-            Result.success(Unit)
         } catch (e: Exception) {
-            android.util.Log.e("AuthManager", "Failed to create account", e)
+            Log.e(TAG, "Exception creating account", e)
             Result.failure(e)
         }
     }
 
+    // ==================== Login ====================
+
+    /**
+     * Login existing user
+     *
+     * Backend: POST /v1/auth/login
+     */
     suspend fun login(phoneNumber: String, password: String): Result<Unit> {
         return try {
-            val users = getUsersMap()
-            val storedHash = users[phoneNumber]
-                ?: return Result.failure(Exception("Account not found"))
+            Log.d(TAG, "Logging in user: $phoneNumber")
 
-            // Verify password using BCrypt
-            if (!passwordEncoder.matches(password, storedHash)) {
-                return Result.failure(Exception("Invalid password"))
+            val result = ApiService.login(phoneNumber, password)
+
+            if (result.isSuccess) {
+                val response = result.getOrNull()!!
+
+                // Create UserData from response
+                val userData = UserData(
+                    userId = response.userId,
+                    phoneNumber = response.phoneNumber,
+                    accessToken = response.accessToken,
+                    refreshToken = response.refreshToken,
+                    expiresAt = response.expiresAt
+                )
+
+                // Save to encrypted storage
+                tokenStorage.saveUserData(userData)
+
+                // Update auth state
+                _authState.value = AuthState.Authenticated(userData)
+
+                Log.d(TAG, "Login successful for user: ${response.userId}")
+                Result.success(Unit)
+            } else {
+                val error = result.exceptionOrNull()
+                Log.e(TAG, "Login failed", error)
+                Result.failure(error ?: Exception("Invalid phone number or password"))
             }
-
-            context.authDataStore.edit { prefs ->
-                prefs[CURRENT_USER_KEY] = phoneNumber
-            }
-
-            Result.success(Unit)
         } catch (e: Exception) {
-            android.util.Log.e("AuthManager", "Login failed", e)
+            Log.e(TAG, "Exception during login", e)
             Result.failure(e)
         }
     }
 
+    // ==================== Logout ====================
+
+    /**
+     * Logout current user
+     */
     suspend fun logout() {
-        context.authDataStore.edit { prefs ->
-            prefs.remove(CURRENT_USER_KEY)
-        }
-    }
+        try {
+            Log.d(TAG, "Logging out user")
 
-    suspend fun isAuthenticated(): Boolean {
-        // Check if user is authenticated by looking for current user in preferences
-        val currentUser = context.authDataStore.data
-            .map { prefs -> prefs[CURRENT_USER_KEY] }
-            .first()
-        return currentUser != null
-    }
+            // Clear all stored tokens and data
+            tokenStorage.clear()
 
-    suspend fun getCurrentUser(): String? {
-        return context.authDataStore.data
-            .map { prefs -> prefs[CURRENT_USER_KEY] }
-            .first()
-    }
+            // Update auth state
+            _authState.value = AuthState.Unauthenticated
 
-    private suspend fun getUsersMap(): MutableMap<String, String> {
-        val usersJson = context.authDataStore.data
-            .map { prefs -> prefs[USERS_KEY] ?: "{}" }
-            .first()
-
-        return try {
-            val map = mutableMapOf<String, String>()
-            usersJson.removeSurrounding("{", "}").split(",").forEach { entry ->
-                if (entry.isNotBlank()) {
-                    val (key, value) = entry.split(":")
-                    map[key.trim()] = value.trim()
-                }
-            }
-            map
+            Log.d(TAG, "Logout successful")
         } catch (e: Exception) {
-            mutableMapOf()
+            Log.e(TAG, "Error during logout", e)
         }
     }
 
-    private suspend fun saveUsersMap(users: Map<String, String>) {
-        val usersJson = users.entries.joinToString(",") { "${it.key}:${it.value}" }
-        context.authDataStore.edit { prefs ->
-            prefs[USERS_KEY] = "{$usersJson}"
+    // ==================== Token Refresh ====================
+
+    /**
+     * Refresh access token
+     *
+     * Backend: POST /v1/auth/refresh
+     */
+    suspend fun refreshToken(): Result<Unit> {
+        return try {
+            val refreshToken = tokenStorage.getRefreshToken()
+                ?: return Result.failure(Exception("No refresh token available"))
+
+            Log.d(TAG, "Refreshing access token")
+
+            val result = ApiService.refreshToken(refreshToken)
+
+            if (result.isSuccess) {
+                val response = result.getOrNull()!!
+
+                // Update access token in storage
+                tokenStorage.updateAccessToken(response.accessToken, response.expiresAt)
+
+                Log.d(TAG, "Token refreshed successfully. Expires at: ${response.expiresAt}")
+                Result.success(Unit)
+            } else {
+                val error = result.exceptionOrNull()
+                Log.e(TAG, "Failed to refresh token", error)
+
+                // If refresh fails, logout user
+                logout()
+                Result.failure(error ?: Exception("Failed to refresh token"))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception refreshing token", e)
+            logout()
+            Result.failure(e)
         }
     }
 
-    private suspend fun saveOTPStorage() {
-        val otpJson = otpStorage.entries.joinToString(",") {
-            "${it.key}:${it.value.first}:${it.value.second}"
-        }
-        context.authDataStore.edit { prefs ->
-            prefs[OTP_STORAGE_KEY] = otpJson
-        }
-    }
-
-    private suspend fun loadOTPStorage() {
-        val otpJson = context.authDataStore.data
-            .map { prefs -> prefs[OTP_STORAGE_KEY] ?: "" }
-            .first()
-
-        if (otpJson.isNotEmpty()) {
-            otpJson.split(",").forEach { entry ->
-                if (entry.isNotBlank()) {
-                    val parts = entry.split(":")
-                    if (parts.size == 3) {
-                        val phone = parts[0]
-                        val otp = parts[1]
-                        val expiry = parts[2].toLongOrNull() ?: 0L
-
-                        // Only load non-expired OTPs
-                        if (expiry > System.currentTimeMillis()) {
-                            otpStorage[phone] = Pair(otp, expiry)
-                        }
+    /**
+     * Start automatic token refresh monitoring
+     *
+     * This coroutine runs in the background and automatically refreshes
+     * the access token 5 minutes before it expires.
+     */
+    private fun startTokenRefreshMonitoring() {
+        authScope.launch {
+            while (isActive) {
+                try {
+                    if (tokenStorage.shouldRefreshToken()) {
+                        Log.d(TAG, "Token needs refresh, refreshing automatically...")
+                        refreshToken()
                     }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error in token refresh monitoring", e)
                 }
+
+                // Check every minute
+                delay(60_000)
             }
         }
     }
 
-    init {
-        // Load persisted OTP storage on initialization
-        kotlinx.coroutines.MainScope().launch {
-            loadOTPStorage()
-        }
+    // ==================== User Info ====================
+
+    /**
+     * Check if user is authenticated
+     */
+    suspend fun isAuthenticated(): Boolean {
+        return tokenStorage.isAuthenticated()
     }
+
+    /**
+     * Get current user data
+     */
+    suspend fun getCurrentUser(): UserData? {
+        return tokenStorage.getUserData()
+    }
+
+    /**
+     * Get access token for API calls
+     */
+    suspend fun getAccessToken(): String? {
+        // Refresh if needed
+        if (tokenStorage.shouldRefreshToken()) {
+            refreshToken()
+        }
+        return tokenStorage.getAccessToken()
+    }
+
+    companion object {
+        private const val TAG = "AuthManager"
+    }
+}
+
+/**
+ * Authentication state sealed class
+ */
+sealed class AuthState {
+    object Unauthenticated : AuthState()
+    data class Authenticated(val userData: UserData) : AuthState()
 }

@@ -9,8 +9,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.barqnet.android.settings.SettingsManager
 import com.barqnet.android.viewmodel.RealVPNViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -18,8 +21,20 @@ fun SettingsScreen(
     vpnViewModel: RealVPNViewModel,
     onNavigateBack: () -> Unit
 ) {
+    val context = LocalContext.current
+    val settingsManager = remember { SettingsManager(context) }
+    val coroutineScope = rememberCoroutineScope()
+
+    // Load settings from persistent storage
     var autoConnect by remember { mutableStateOf(false) }
     var useBiometric by remember { mutableStateOf(false) }
+
+    // Load initial settings
+    LaunchedEffect(Unit) {
+        val settings = settingsManager.getAllSettings()
+        autoConnect = settings.autoConnect
+        useBiometric = settings.useBiometric
+    }
 
     Scaffold(
         topBar = {
@@ -49,7 +64,12 @@ fun SettingsScreen(
                     title = "Auto-connect on app launch",
                     description = "Automatically connect when app starts",
                     checked = autoConnect,
-                    onCheckedChange = { autoConnect = it }
+                    onCheckedChange = { enabled ->
+                        autoConnect = enabled
+                        coroutineScope.launch {
+                            settingsManager.setAutoConnect(enabled)
+                        }
+                    }
                 )
             }
 
@@ -61,7 +81,12 @@ fun SettingsScreen(
                     title = "Use biometric authentication",
                     description = "Quick connect with fingerprint",
                     checked = useBiometric,
-                    onCheckedChange = { useBiometric = it }
+                    onCheckedChange = { enabled ->
+                        useBiometric = enabled
+                        coroutineScope.launch {
+                            settingsManager.setUseBiometric(enabled)
+                        }
+                    }
                 )
             }
 

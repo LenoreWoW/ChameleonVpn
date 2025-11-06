@@ -45,7 +45,7 @@ export function createTray(mainWindow: BrowserWindow, vpnManager: VPNManager): T
       },
       { type: 'separator' },
       {
-        label: 'Quit WorkVPN',
+        label: 'Quit BarqNet',
         click: () => {
           mainWindow.destroy();
           require('electron').app.quit();
@@ -54,7 +54,7 @@ export function createTray(mainWindow: BrowserWindow, vpnManager: VPNManager): T
     ]);
 
     tray.setContextMenu(contextMenu);
-    tray.setToolTip(status.connected ? 'WorkVPN - Connected' : 'WorkVPN - Disconnected');
+    tray.setToolTip(status.connected ? 'BarqNet - Connected' : 'BarqNet - Disconnected');
   };
 
   // Initial menu

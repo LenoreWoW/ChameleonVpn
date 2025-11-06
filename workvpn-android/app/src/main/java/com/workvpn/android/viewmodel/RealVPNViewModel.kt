@@ -54,6 +54,9 @@ class RealVPNViewModel(application: Application) : AndroidViewModel(application)
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
+    private val _vpnPermissionNeeded = MutableStateFlow(false)
+    val vpnPermissionNeeded: StateFlow<Boolean> = _vpnPermissionNeeded.asStateFlow()
+
     private var connectionStartTime: Long = 0
 
     // Reference to VPN service for statistics collection
@@ -120,11 +123,13 @@ class RealVPNViewModel(application: Application) : AndroidViewModel(application)
         // Check VPN permission
         val intent = VpnService.prepare(context)
         if (intent != null) {
-            // Permission needed - this should trigger activity result
-            _errorMessage.value = "VPN permission required"
+            // Permission needed - notify UI to show permission dialog
+            _vpnPermissionNeeded.value = true
+            _errorMessage.value = "VPN permission required. Please grant permission to connect."
             return
         }
 
+        _vpnPermissionNeeded.value = false
         _connectionState.value = ConnectionState.Connecting
         _errorMessage.value = null
         connectionStartTime = System.currentTimeMillis()
@@ -167,33 +172,21 @@ class RealVPNViewModel(application: Application) : AndroidViewModel(application)
 
     /**
      * Monitor connection state from VPN service
+     *
+     * Uses global state flows instead of singleton instance
      */
     private fun monitorConnectionState() {
         viewModelScope.launch {
-            // Poll for service instance and collect real connection state
-            var attempts = 0
-            while (attempts < 30 && isActive) { // 30 second timeout
-                val service = RealVPNService.instance
-                if (service != null) {
-                    // Service is available, monitor its connection state
-                    service.connectionState.collect { state ->
-                        _connectionState.value = when (state) {
-                            "CONNECTED" -> ConnectionState.Connected
-                            "CONNECTING" -> ConnectionState.Connecting
-                            "DISCONNECTING" -> ConnectionState.Disconnecting
-                            else -> ConnectionState.Disconnected
-                        }
-                    }
-                    return@launch
+            // Collect from global state flow (no memory leak)
+            VpnServiceConnection.globalConnectionState.collect { state ->
+                _connectionState.value = when (state) {
+                    "CONNECTED" -> ConnectionState.Connected
+                    "CONNECTING" -> ConnectionState.Connecting
+                    "DISCONNECTING" -> ConnectionState.Disconnecting
+                    "RECONNECTING" -> ConnectionState.Connecting
+                    "ERROR" -> ConnectionState.Disconnected
+                    else -> ConnectionState.Disconnected
                 }
-                delay(1000)
-                attempts++
-            }
-
-            // Timeout - service never started
-            if (_connectionState.value is ConnectionState.Connecting) {
-                _connectionState.value = ConnectionState.Disconnected
-                _errorMessage.value = "Failed to connect to VPN service"
             }
         }
     }
@@ -208,33 +201,49 @@ class RealVPNViewModel(application: Application) : AndroidViewModel(application)
      *   bytesOut = bytesOut + (500..2000).random()
      *
      * Now (REAL):
-     *   bytesIn = vpnService.bytesIn.value
-     *   bytesOut = vpnService.bytesOut.value
+     *   Uses global state flows (no singleton, no memory leak)
      */
     private fun startRealStatsMonitoring() {
+        // Monitor bytes in
         viewModelScope.launch {
-            while (isActive && _connectionState.value is ConnectionState.Connected) {
-                val duration = ((System.currentTimeMillis() - connectionStartTime) / 1000).toInt()
+            VpnServiceConnection.globalBytesIn.collect { bytes ->
+                val duration = if (connectionStartTime > 0) {
+                    ((System.currentTimeMillis() - connectionStartTime) / 1000).toInt()
+                } else {
+                    0
+                }
 
-                // Get REAL statistics from VPN service
-                val service = RealVPNService.instance
-                val realBytesIn = service?.bytesIn?.value ?: 0L
-                val realBytesOut = service?.bytesOut?.value ?: 0L
-
-                // Update stats with REAL data from service
                 _stats.value = _stats.value.copy(
-                    bytesIn = realBytesIn,
-                    bytesOut = realBytesOut,
+                    bytesIn = bytes,
                     duration = duration
                 )
+            }
+        }
 
-                delay(1000)
+        // Monitor bytes out
+        viewModelScope.launch {
+            VpnServiceConnection.globalBytesOut.collect { bytes ->
+                _stats.value = _stats.value.copy(
+                    bytesOut = bytes
+                )
             }
         }
     }
 
     fun clearError() {
         _errorMessage.value = null
+    }
+
+    fun clearVpnPermissionFlag() {
+        _vpnPermissionNeeded.value = false
+    }
+
+    /**
+     * Retry connection after VPN permission is granted
+     */
+    fun retryAfterPermission(context: Context) {
+        _vpnPermissionNeeded.value = false
+        connect(context)
     }
 
     val hasConfig: Boolean

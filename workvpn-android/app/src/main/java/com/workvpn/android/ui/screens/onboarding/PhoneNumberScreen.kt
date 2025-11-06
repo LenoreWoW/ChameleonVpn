@@ -70,7 +70,7 @@ fun PhoneNumberScreen(
 
             // Title with gradient
             Text(
-                text = "Welcome to WorkVPN",
+                text = "Welcome to BarqNet",
                 style = MaterialTheme.typography.headlineLarge,
                 color = CyanBlue,
                 textAlign = TextAlign.Center

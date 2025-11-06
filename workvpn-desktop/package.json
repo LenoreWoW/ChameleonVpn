@@ -5,7 +5,8 @@
   "main": "dist/main/index.js",
   "scripts": {
     "build": "tsc && npm run copy-assets",
-    "copy-assets": "cp src/renderer/index.html dist/renderer/ && cp src/renderer/styles.css dist/renderer/",
+    "copy-assets": "cp src/renderer/index.html dist/renderer/ && cp src/renderer/styles.css dist/renderer/ && npm run copy-vendor",
+    "copy-vendor": "mkdir -p dist/renderer/vendor && cp node_modules/three/build/three.min.js dist/renderer/vendor/ && cp node_modules/gsap/dist/gsap.min.js dist/renderer/vendor/",
     "watch": "tsc --watch",
     "start": "npm run build && electron-forge start",
     "package": "npm run build && electron-forge package",
@@ -66,9 +67,11 @@
     "bcrypt": "^5.1.1",
     "electron-squirrel-startup": "^1.0.0",
     "electron-store": "^8.1.0",
+    "gsap": "^3.13.0",
     "keytar": "^7.9.0",
     "node-machine-id": "^1.1.12",
-    "qrcode": "^1.5.3"
+    "qrcode": "^1.5.3",
+    "three": "^0.181.0"
   },
   "devDependencies": {
     "@electron-forge/cli": "^7.2.0",

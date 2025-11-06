@@ -71,6 +71,17 @@
             </intent-filter>
         </service>
 
+        <!-- Real VPN Service - Production Implementation -->
+        <service
+            android:name=".vpn.RealVPNService"
+            android:permission="android.permission.BIND_VPN_SERVICE"
+            android:foregroundServiceType="vpn"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.net.VpnService" />
+            </intent-filter>
+        </service>
+
         <!-- Boot Receiver for Auto-Start -->
         <receiver
             android:name=".receiver.BootReceiver"

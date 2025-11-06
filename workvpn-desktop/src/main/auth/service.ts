@@ -1,6 +1,7 @@
 import Store from 'electron-store';
 import { CertificatePinning } from '../vpn/certificate-pinning';
 import * as https from 'https';
+import * as keytar from 'keytar';
 
 interface User {
   id: string;
@@ -153,8 +154,8 @@ class AuthService {
     }
   }
 
-  private getAuthHeaders(): HeadersInit {
-    const tokens = this.getTokens();
+  private async getAuthHeaders(): Promise<HeadersInit> {
+    const tokens = await this.getTokens();
     if (tokens?.accessToken) {
       return {
         'Content-Type': 'application/json',
@@ -166,29 +167,50 @@ class AuthService {
     };
   }
 
-  private getTokens(): AuthTokens | null {
-    return this.store.get('tokens', null) as AuthTokens | null;
-  }
-
-  private saveTokens(tokens: AuthTokens): void {
-    this.store.set('tokens', {
-      ...tokens,
-      tokenIssuedAt: Date.now()
-    });
-    this.scheduleTokenRefresh();
-  }
-
-  private clearTokens(): void {
-    this.store.delete('tokens');
-    this.store.delete('currentUser');
-    if (this.tokenRefreshTimer) {
-      clearTimeout(this.tokenRefreshTimer);
-      this.tokenRefreshTimer = null;
+  private async getTokens(): Promise<AuthTokens | null> {
+    try {
+      // Use system keychain for secure token storage
+      const tokensJson = await keytar.getPassword('barqnet', 'auth-tokens');
+      if (!tokensJson) {
+        return null;
+      }
+      return JSON.parse(tokensJson) as AuthTokens;
+    } catch (error) {
+      console.error('[AUTH] Failed to load tokens from keychain:', error);
+      return null;
     }
   }
 
-  private scheduleTokenRefresh(): void {
-    const tokens = this.getTokens();
+  private async saveTokens(tokens: AuthTokens): Promise<void> {
+    try {
+      // Store tokens in system keychain (encrypted by OS)
+      const tokensWithTimestamp = {
+        ...tokens,
+        tokenIssuedAt: Date.now()
+      };
+      await keytar.setPassword('barqnet', 'auth-tokens', JSON.stringify(tokensWithTimestamp));
+      this.scheduleTokenRefresh();
+    } catch (error) {
+      console.error('[AUTH] Failed to save tokens to keychain:', error);
+      throw error;
+    }
+  }
+
+  private async clearTokens(): Promise<void> {
+    try {
+      await keytar.deletePassword('barqnet', 'auth-tokens');
+      this.store.delete('currentUser');
+      if (this.tokenRefreshTimer) {
+        clearTimeout(this.tokenRefreshTimer);
+        this.tokenRefreshTimer = null;
+      }
+    } catch (error) {
+      console.error('[AUTH] Failed to clear tokens from keychain:', error);
+    }
+  }
+
+  private async scheduleTokenRefresh(): Promise<void> {
+    const tokens = await this.getTokens();
     if (!tokens) return;
 
     // Clear existing timer
@@ -213,7 +235,7 @@ class AuthService {
 
   private async refreshAccessToken(): Promise<boolean> {
     try {
-      const tokens = this.getTokens();
+      const tokens = await this.getTokens();
       if (!tokens?.refreshToken) {
         return false;
       }
@@ -426,19 +448,32 @@ class AuthService {
         }
       }
 
-      // PRODUCTION MODE: No separate verify endpoint
-      // OTP is verified during registration (/v1/auth/register endpoint)
-      // Just store the OTP code for later use in registration
+      // PRODUCTION MODE: Verify OTP with backend
       if (!code || code.length !== 6) {
         return { success: false, error: 'Invalid OTP format' };
       }
 
+      const result = await this.apiCall('/v1/auth/verify-otp', {
+        method: 'POST',
+        body: JSON.stringify({
+          phone_number: phoneNumber,
+          otp: code,
+          session_id: session?.sessionId
+        })
+      });
+
+      if (!result.success) {
+        return { success: false, error: result.error || 'Invalid OTP code' };
+      }
+
+      // Store verification token for registration
       this.sessions.set(phoneNumber, {
         phoneNumber,
         sessionId: session?.sessionId,
-        verificationToken: code // Store OTP for registration
+        verificationToken: result.data?.verification_token || code
       });
 
+      console.log('[AUTH] ✅ OTP verified successfully');
       return { success: true };
     } catch (error) {
       console.error('[AUTH] Failed to verify OTP:', error);
@@ -602,8 +637,8 @@ class AuthService {
     this.clearTokens();
   }
 
-  isAuthenticated(): boolean {
-    const tokens = this.getTokens();
+  async isAuthenticated(): Promise<boolean> {
+    const tokens = await this.getTokens();
     if (!tokens) {
       return false;
     }
