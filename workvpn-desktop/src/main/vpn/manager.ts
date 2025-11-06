@@ -30,6 +30,7 @@ export class VPNManager extends EventEmitter {
   private managementInterface: OpenVPNManagementInterface | null = null;
   private authFilePath: string | null = null;
   private tempConfigPath: string | null = null;
+  private pendingAuthCredentials: { username: string; password: string } | null = null;
 
   constructor(configStore: ConfigStore) {
     super();
@@ -393,7 +394,8 @@ export class VPNManager extends EventEmitter {
 
       // Timeout after 30 seconds
       setTimeout(() => {
-        if (!connected) {
+        if (connectionState === ConnectionState.CONNECTING) {
+          connectionState = ConnectionState.FAILED;
           this.process?.kill();
           reject(new Error('Connection timeout'));
         }

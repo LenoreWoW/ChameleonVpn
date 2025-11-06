@@ -248,9 +248,9 @@ const setupIPCHandlers = () => {
     return await authService.verifyOTP(phoneNumber, code);
   }));
 
-  ipcMain.handle('auth-create-account', handleIPCError(async (_, phoneNumber: string, password: string) => {
+  ipcMain.handle('auth-create-account', handleIPCError(async (_, phoneNumber: string, password: string, otpCode: string) => {
     const { authService } = await import('./auth/service');
-    return await authService.createAccount(phoneNumber, password);
+    return await authService.createAccount(phoneNumber, password, otpCode);
   }));
 
   ipcMain.handle('auth-login', handleIPCError(async (_, phoneNumber: string, password: string) => {
