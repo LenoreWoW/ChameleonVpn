@@ -1,4 +1,4 @@
-# ChameleonVPN - Multi-Platform VPN Client
+# BarqNet - Multi-Platform VPN Client
 
 **Status**: ✅ Production-Ready (100%)
 **Platforms**: Android, iOS, Desktop (macOS/Windows/Linux)
@@ -9,7 +9,7 @@
 
 ## 🎯 Project Overview
 
-ChameleonVPN is a production-ready, multi-platform VPN application with a complete backend management API and client applications for all major platforms.
+BarqNet is a production-ready, multi-platform VPN application with a complete backend management API and client applications for all major platforms.
 
 ### ⚡ Key Features
 
@@ -462,7 +462,7 @@ See [docs/archive/](docs/archive/) for historical audit reports and development 
 
 ---
 
-**⚡ ChameleonVPN - Production-Ready Multi-Platform VPN ⚡**
+**⚡ BarqNet - Production-Ready Multi-Platform VPN ⚡**
 
 **Status**: ✅ 100% Production Ready | **Security**: ✅ Enterprise Grade | **Deployment**: ✅ Guides Available
 

@@ -1,4 +1,4 @@
-# 🚀 ChameleonVPN - START HERE
+# 🚀 BarqNet - START HERE
 
 **For:** Hamad
 **Date:** November 6, 2025
