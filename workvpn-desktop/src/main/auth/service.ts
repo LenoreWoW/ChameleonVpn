@@ -63,36 +63,94 @@ class AuthService {
   /**
    * Initialize certificate pins for production API server
    *
-   * DISABLED FOR MVP: Certificate pinning requires actual production certificates
-   * Enable this after obtaining real certificate hashes from production API server
+   * Certificate pinning protects against MITM attacks by validating the server's
+   * certificate against known public key hashes (pins).
    *
-   * To generate pins: openssl s_client -connect api.chameleonvpn.com:443 < /dev/null | \
-   *   openssl x509 -pubkey -noout | openssl pkey -pubin -outform der | \
-   *   openssl dgst -sha256 -binary | base64
+   * Pinning Strategy:
+   * - Primary Pin: Your specific leaf certificate (extracted from your API server)
+   * - Backup Pins: Intermediate CA and Root CA pins (for rotation flexibility)
+   *
+   * To extract your primary pin:
+   *   ./scripts/extract-cert-pins.sh --server api.example.com
+   *
+   * Or manually:
+   *   openssl s_client -connect api.example.com:443 < /dev/null 2>/dev/null | \
+   *     openssl x509 -pubkey -noout | openssl pkey -pubin -outform der | \
+   *     openssl dgst -sha256 -binary | base64
    */
   private initializeCertificatePins(): void {
-    // DISABLED FOR MVP: Certificate pinning requires real production certificates
-    // TODO: Enable after obtaining actual certificate pins from production server
-    console.log('[AUTH] Certificate pinning DISABLED (MVP - no production certs yet)');
-
-    // Uncomment and update when ready for production:
-    /*
     try {
       const apiUrl = new URL(this.apiBaseUrl);
 
-      if (process.env.NODE_ENV === 'production' && apiUrl.protocol === 'https:') {
-        const productionPins = [
-          'sha256/REAL_PRIMARY_CERTIFICATE_PIN_HERE',
-          'sha256/REAL_BACKUP_CERTIFICATE_PIN_HERE'
-        ];
+      // Only enable pinning for HTTPS connections
+      if (apiUrl.protocol !== 'https:') {
+        console.log('[AUTH] Certificate pinning skipped (not using HTTPS)');
+        return;
+      }
 
-        this.certificatePinning.addPin(apiUrl.hostname, productionPins);
-        console.log(`[AUTH] Certificate pinning enabled for ${apiUrl.hostname}`);
+      // Check if certificate pinning is enabled via environment variable
+      const certPinningEnabled = process.env.CERT_PINNING_ENABLED !== 'false';
+
+      if (!certPinningEnabled) {
+        console.log('[AUTH] Certificate pinning DISABLED via CERT_PINNING_ENABLED=false');
+        console.warn('[AUTH] WARNING: Running without certificate pinning is insecure in production');
+        return;
+      }
+
+      // Get primary and backup pins from environment variables
+      const primaryPin = process.env.CERT_PIN_PRIMARY;
+      const backupPin = process.env.CERT_PIN_BACKUP;
+
+      // Build list of certificate pins
+      const pins: string[] = [];
+
+      if (primaryPin) {
+        pins.push(primaryPin);
+        console.log('[AUTH] Primary certificate pin configured');
+      }
+
+      if (backupPin) {
+        pins.push(backupPin);
+        console.log('[AUTH] Backup certificate pin configured');
+      }
+
+      // If no pins configured but in production, use well-known CA pins as fallback
+      // This provides some protection while allowing common CAs
+      if (pins.length === 0 && process.env.NODE_ENV === 'production') {
+        console.warn('[AUTH] WARNING: No certificate pins configured!');
+        console.warn('[AUTH] Using fallback pins for common CAs (Let\'s Encrypt, DigiCert)');
+        console.warn('[AUTH] For maximum security, configure CERT_PIN_PRIMARY and CERT_PIN_BACKUP');
+
+        // Let's Encrypt intermediate certificates (most common for production)
+        pins.push('sha256/jQJTbIh0grw0/1TkHSumWb+Fs0Ggogr621gT3PvPKG0='); // Let's Encrypt R3
+        pins.push('sha256/VQYeFC8zhEDLrcyYYWBvPTfM5VWhTzfhEHQ9L5wBaB0='); // Let's Encrypt E1
+        pins.push('sha256/C5+lpZ7tcVwmwQIMcRtPbsQtWLABXhQzejna0wHFr8M='); // ISRG Root X1
+
+        // DigiCert intermediate certificates (alternative)
+        pins.push('sha256/i7WTqTvh0OioIruIfFR4kMPnBqrS2rdiVPl/s2uC/CY='); // DigiCert Global Root G2
+        pins.push('sha256/RQeZkB42znUfsDIIFWWHm0nizHcVpsJNL8Qgg6iEvto='); // DigiCert TLS RSA SHA256 2020 CA1
+      }
+
+      // Add pins if we have any
+      if (pins.length > 0) {
+        this.certificatePinning.addPin(apiUrl.hostname, pins);
+        console.log(`[AUTH] ✓ Certificate pinning enabled for ${apiUrl.hostname}`);
+        console.log(`[AUTH]   - Configured ${pins.length} certificate pin(s)`);
+        console.log(`[AUTH]   - HTTPS connections will be validated against known pins`);
+
+        if (!primaryPin && process.env.NODE_ENV === 'production') {
+          console.warn('[AUTH] ⚠ Using fallback CA pins only - configure specific pins for maximum security');
+        }
+      } else {
+        console.log('[AUTH] Certificate pinning not configured (development mode)');
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('[AUTH] To enable, set CERT_PIN_PRIMARY and CERT_PIN_BACKUP in .env');
+        }
       }
     } catch (error) {
       console.error('[AUTH] Failed to initialize certificate pinning:', error);
+      console.error('[AUTH] Continuing without certificate pinning - connections may be vulnerable');
     }
-    */
   }
 
   private getAuthHeaders(): HeadersInit {

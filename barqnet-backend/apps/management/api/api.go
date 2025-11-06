@@ -16,14 +16,16 @@ import (
 
 // ManagementAPI handles API requests for the management server
 type ManagementAPI struct {
-	manager    *manager.ManagementManager
-	httpClient *http.Client
+	manager     *manager.ManagementManager
+	httpClient  *http.Client
+	rateLimiter *shared.RateLimiter
 }
 
 // NewManagementAPI creates a new management API
-func NewManagementAPI(manager *manager.ManagementManager) *ManagementAPI {
+func NewManagementAPI(manager *manager.ManagementManager, rateLimiter *shared.RateLimiter) *ManagementAPI {
 	return &ManagementAPI{
-		manager: manager,
+		manager:     manager,
+		rateLimiter: rateLimiter,
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
@@ -38,7 +40,7 @@ func (api *ManagementAPI) Start(port int) error {
 	db := api.manager.GetDB()
 	conn := db.GetConnection()
 	otpService := NewMockOTPService() // Use shared.NewLocalOTPService() for production
-	authHandler := NewAuthHandler(conn, otpService)
+	authHandler := NewAuthHandler(conn, otpService, api.rateLimiter)
 
 	// Authentication endpoints (v1 API)
 	mux.HandleFunc("/v1/auth/send-otp", authHandler.HandleSendOTP)
@@ -848,10 +850,34 @@ func (api *ManagementAPI) middleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// Rate limiting
-		if !api.checkRateLimit(r.RemoteAddr) {
-			http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
-			return
+		// Rate limiting for general API requests
+		if api.rateLimiter != nil && api.rateLimiter.IsEnabled() {
+			// Extract IP address from RemoteAddr (remove port)
+			ip := r.RemoteAddr
+			if idx := strings.LastIndex(ip, ":"); idx != -1 {
+				ip = ip[:idx]
+			}
+
+			allowed, remaining, resetTime, err := api.rateLimiter.Allow(shared.RateLimitAPI, ip)
+			if err != nil {
+				// Log error but don't block request
+				fmt.Printf("[RATE-LIMIT] Error checking rate limit: %v\n", err)
+			} else if !allowed {
+				// Set rate limit headers
+				w.Header().Set("X-RateLimit-Limit", "100")
+				w.Header().Set("X-RateLimit-Remaining", "0")
+				w.Header().Set("X-RateLimit-Reset", fmt.Sprintf("%d", resetTime.Unix()))
+				w.Header().Set("Retry-After", fmt.Sprintf("%d", int(time.Until(resetTime).Seconds())))
+
+				http.Error(w, "Rate limit exceeded. Please try again later.", http.StatusTooManyRequests)
+				api.logAuditEvent("RATE_LIMIT_EXCEEDED", "", fmt.Sprintf("API rate limit exceeded for %s", ip), r.RemoteAddr)
+				return
+			} else {
+				// Set rate limit headers for successful requests
+				w.Header().Set("X-RateLimit-Limit", "100")
+				w.Header().Set("X-RateLimit-Remaining", fmt.Sprintf("%d", remaining))
+				w.Header().Set("X-RateLimit-Reset", fmt.Sprintf("%d", resetTime.Unix()))
+			}
 		}
 
 		// Input validation and sanitization
@@ -867,11 +893,10 @@ func (api *ManagementAPI) middleware(next http.Handler) http.Handler {
 	})
 }
 
-// checkRateLimit implements rate limiting
-func (api *ManagementAPI) checkRateLimit(ip string) bool {
-	// Simple in-memory rate limiting (use Redis in production)
-	// This is a basic implementation - consider using a proper rate limiter
-	return true // Placeholder - implement proper rate limiting
+// logAuditEvent logs audit events for security monitoring
+func (api *ManagementAPI) logAuditEvent(action, username, details, ipAddress string) {
+	// Log to audit system via manager
+	api.logAudit(action, username, details, ipAddress)
 }
 
 // validateRequest validates and sanitizes incoming requests

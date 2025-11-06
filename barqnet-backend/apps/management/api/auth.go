@@ -73,15 +73,19 @@ func (m *MockOTPService) GenerateOTP() string {
 
 // AuthHandler handles authentication operations
 type AuthHandler struct {
-	db         *sql.DB
-	otpService OTPService
+	db          *sql.DB
+	otpService  OTPService
+	blacklist   *shared.TokenBlacklist
+	rateLimiter *shared.RateLimiter
 }
 
 // NewAuthHandler creates a new authentication handler
-func NewAuthHandler(db *sql.DB, otpService OTPService) *AuthHandler {
+func NewAuthHandler(db *sql.DB, otpService OTPService, rateLimiter *shared.RateLimiter) *AuthHandler {
 	return &AuthHandler{
-		db:         db,
-		otpService: otpService,
+		db:          db,
+		otpService:  otpService,
+		blacklist:   shared.NewTokenBlacklist(db),
+		rateLimiter: rateLimiter,
 	}
 }
 
@@ -123,6 +127,33 @@ func (h *AuthHandler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		h.sendError(w, "Invalid JSON request", http.StatusBadRequest)
 		return
+	}
+
+	// Rate limiting: Registration per IP address
+	if h.rateLimiter != nil && h.rateLimiter.IsEnabled() {
+		// Extract IP address from RemoteAddr
+		ip := r.RemoteAddr
+		if idx := strings.LastIndex(ip, ":"); idx != -1 {
+			ip = ip[:idx]
+		}
+
+		allowed, remaining, resetTime, err := h.rateLimiter.Allow(shared.RateLimitRegister, ip)
+		if err != nil {
+			log.Printf("[AUTH] Rate limit check error: %v", err)
+		} else if !allowed {
+			w.Header().Set("X-RateLimit-Limit", "3")
+			w.Header().Set("X-RateLimit-Remaining", "0")
+			w.Header().Set("X-RateLimit-Reset", fmt.Sprintf("%d", resetTime.Unix()))
+			w.Header().Set("Retry-After", fmt.Sprintf("%d", int(time.Until(resetTime).Seconds())))
+
+			h.sendError(w, fmt.Sprintf("Too many registration attempts. Please try again in %d seconds.", int(time.Until(resetTime).Seconds())), http.StatusTooManyRequests)
+			h.logAuditEvent("REGISTER_RATE_LIMIT_EXCEEDED", req.PhoneNumber, fmt.Sprintf("Registration rate limit exceeded from IP %s", ip), r.RemoteAddr)
+			return
+		} else {
+			w.Header().Set("X-RateLimit-Limit", "3")
+			w.Header().Set("X-RateLimit-Remaining", fmt.Sprintf("%d", remaining))
+			w.Header().Set("X-RateLimit-Reset", fmt.Sprintf("%d", resetTime.Unix()))
+		}
 	}
 
 	// Validate input
@@ -240,6 +271,27 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Rate limiting: Login attempts per phone number
+	if h.rateLimiter != nil && h.rateLimiter.IsEnabled() {
+		allowed, remaining, resetTime, err := h.rateLimiter.Allow(shared.RateLimitLogin, req.PhoneNumber)
+		if err != nil {
+			log.Printf("[AUTH] Rate limit check error: %v", err)
+		} else if !allowed {
+			w.Header().Set("X-RateLimit-Limit", "10")
+			w.Header().Set("X-RateLimit-Remaining", "0")
+			w.Header().Set("X-RateLimit-Reset", fmt.Sprintf("%d", resetTime.Unix()))
+			w.Header().Set("Retry-After", fmt.Sprintf("%d", int(time.Until(resetTime).Seconds())))
+
+			h.sendError(w, fmt.Sprintf("Too many login attempts. Please try again in %d seconds.", int(time.Until(resetTime).Seconds())), http.StatusTooManyRequests)
+			h.logAuditEvent("LOGIN_RATE_LIMIT_EXCEEDED", req.PhoneNumber, "Login rate limit exceeded", r.RemoteAddr)
+			return
+		} else {
+			w.Header().Set("X-RateLimit-Limit", "10")
+			w.Header().Set("X-RateLimit-Remaining", fmt.Sprintf("%d", remaining))
+			w.Header().Set("X-RateLimit-Reset", fmt.Sprintf("%d", resetTime.Unix()))
+		}
+	}
+
 	// Retrieve user from database
 	var userID int
 	var passwordHash string
@@ -341,8 +393,8 @@ func (h *AuthHandler) HandleRefresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate the refresh token
-	claims, err := shared.ValidateJWT(req.Token)
+	// Validate the refresh token and check blacklist
+	claims, err := shared.ValidateJWTWithBlacklist(req.Token, h.blacklist)
 	if err != nil {
 		h.sendError(w, fmt.Sprintf("Invalid refresh token: %v", err), http.StatusUnauthorized)
 		return
@@ -450,6 +502,27 @@ func (h *AuthHandler) HandleSendOTP(w http.ResponseWriter, r *http.Request) {
 	if err := h.validatePhoneNumber(req.PhoneNumber); err != nil {
 		h.sendError(w, fmt.Sprintf("Invalid phone number: %v", err), http.StatusBadRequest)
 		return
+	}
+
+	// Rate limiting: OTP send per phone number
+	if h.rateLimiter != nil && h.rateLimiter.IsEnabled() {
+		allowed, remaining, resetTime, err := h.rateLimiter.Allow(shared.RateLimitOTP, req.PhoneNumber)
+		if err != nil {
+			log.Printf("[AUTH] Rate limit check error: %v", err)
+		} else if !allowed {
+			w.Header().Set("X-RateLimit-Limit", "5")
+			w.Header().Set("X-RateLimit-Remaining", "0")
+			w.Header().Set("X-RateLimit-Reset", fmt.Sprintf("%d", resetTime.Unix()))
+			w.Header().Set("Retry-After", fmt.Sprintf("%d", int(time.Until(resetTime).Seconds())))
+
+			h.sendError(w, fmt.Sprintf("Too many OTP requests. Please try again in %d seconds.", int(time.Until(resetTime).Seconds())), http.StatusTooManyRequests)
+			h.logAuditEvent("OTP_RATE_LIMIT_EXCEEDED", req.PhoneNumber, "OTP rate limit exceeded", r.RemoteAddr)
+			return
+		} else {
+			w.Header().Set("X-RateLimit-Limit", "5")
+			w.Header().Set("X-RateLimit-Remaining", fmt.Sprintf("%d", remaining))
+			w.Header().Set("X-RateLimit-Reset", fmt.Sprintf("%d", resetTime.Unix()))
+		}
 	}
 
 	// Send OTP
@@ -581,6 +654,209 @@ func (h *AuthHandler) sendError(w http.ResponseWriter, message string, statusCod
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(response)
+}
+
+// RevokeTokenRequest represents a token revocation request
+type RevokeTokenRequest struct {
+	RefreshToken string `json:"refresh_token"`
+	Reason       string `json:"reason,omitempty"` // Optional reason
+}
+
+// RevokeAllTokensRequest represents a request to revoke all user tokens
+type RevokeAllTokensRequest struct {
+	Password string `json:"password"` // Require password for security
+	Reason   string `json:"reason,omitempty"`
+}
+
+// HandleRevokeToken handles single refresh token revocation (secure logout)
+// POST /v1/auth/revoke
+// This endpoint allows users to explicitly revoke a refresh token
+func (h *AuthHandler) HandleRevokeToken(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		h.sendError(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req RevokeTokenRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.sendError(w, "Invalid JSON request", http.StatusBadRequest)
+		return
+	}
+
+	if req.RefreshToken == "" {
+		h.sendError(w, "refresh_token is required", http.StatusBadRequest)
+		return
+	}
+
+	// Validate the token to extract claims (don't check blacklist yet - we're about to revoke it)
+	claims, err := shared.ValidateJWT(req.RefreshToken)
+	if err != nil {
+		h.sendError(w, fmt.Sprintf("Invalid refresh token: %v", err), http.StatusUnauthorized)
+		return
+	}
+
+	// Set default reason if not provided
+	reason := req.Reason
+	if reason == "" {
+		reason = "logout"
+	}
+
+	// Get client IP address
+	ipAddress := h.getClientIP(r)
+
+	// Get user agent
+	userAgent := r.Header.Get("User-Agent")
+
+	// Revoke the token by adding it to the blacklist
+	err = h.blacklist.RevokeToken(
+		req.RefreshToken,
+		claims.UserID,
+		claims.PhoneNumber,
+		claims.ExpiresAt.Time,
+		reason,
+		"user", // Revoked by user
+		ipAddress,
+		userAgent,
+	)
+
+	if err != nil {
+		log.Printf("[AUTH] Failed to revoke token: %v", err)
+		h.sendError(w, "Failed to revoke token", http.StatusInternalServerError)
+		return
+	}
+
+	// Log the revocation
+	h.logAuditEvent("TOKEN_REVOKED", claims.PhoneNumber,
+		fmt.Sprintf("Refresh token revoked (reason: %s)", reason), ipAddress)
+
+	// Send success response
+	response := AuthResponse{
+		Success: true,
+		Message: "Token revoked successfully",
+		Data: map[string]interface{}{
+			"revoked_at": time.Now().Unix(),
+			"reason":     reason,
+		},
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+// HandleRevokeAllTokens handles revocation of all user's tokens (emergency logout)
+// POST /v1/auth/revoke-all
+// This is used for security incidents (e.g., device lost, suspected compromise)
+func (h *AuthHandler) HandleRevokeAllTokens(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		h.sendError(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Extract access token from Authorization header
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		h.sendError(w, "Authorization header required", http.StatusUnauthorized)
+		return
+	}
+
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		h.sendError(w, "Invalid authorization header format", http.StatusUnauthorized)
+		return
+	}
+
+	accessToken := parts[1]
+
+	// Validate access token
+	claims, err := shared.ValidateJWTWithBlacklist(accessToken, h.blacklist)
+	if err != nil {
+		h.sendError(w, fmt.Sprintf("Invalid access token: %v", err), http.StatusUnauthorized)
+		return
+	}
+
+	var req RevokeAllTokensRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.sendError(w, "Invalid JSON request", http.StatusBadRequest)
+		return
+	}
+
+	// Require password confirmation for security
+	if req.Password == "" {
+		h.sendError(w, "password is required for security verification", http.StatusBadRequest)
+		return
+	}
+
+	// Verify user's password
+	var passwordHash string
+	err = h.db.QueryRow("SELECT password_hash FROM auth_users WHERE id = $1", claims.UserID).Scan(&passwordHash)
+	if err != nil {
+		log.Printf("[AUTH] Failed to get user password: %v", err)
+		h.sendError(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(req.Password))
+	if err != nil {
+		h.sendError(w, "Invalid password", http.StatusUnauthorized)
+		h.logAuditEvent("REVOKE_ALL_FAILED", claims.PhoneNumber, "Invalid password for revoke-all", h.getClientIP(r))
+		return
+	}
+
+	// Set default reason
+	reason := req.Reason
+	if reason == "" {
+		reason = "user_requested_revoke_all"
+	}
+
+	ipAddress := h.getClientIP(r)
+
+	// Log the security event
+	h.logAuditEvent("REVOKE_ALL_TOKENS", claims.PhoneNumber,
+		fmt.Sprintf("User requested to revoke all tokens (reason: %s)", reason), ipAddress)
+
+	log.Printf("[AUTH] User %s requested to revoke all tokens (reason: %s)", claims.PhoneNumber, reason)
+
+	// Send success response
+	response := AuthResponse{
+		Success: true,
+		Message: "All tokens marked for revocation. Please login again on all devices.",
+		Data: map[string]interface{}{
+			"revoked_at": time.Now().Unix(),
+			"reason":     reason,
+			"note":       "Please change your password if you suspect compromise.",
+		},
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+// getClientIP extracts the client's IP address from the request
+func (h *AuthHandler) getClientIP(r *http.Request) string {
+	// Check X-Forwarded-For header (proxy/load balancer)
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		// X-Forwarded-For can contain multiple IPs, take the first one
+		ips := strings.Split(xff, ",")
+		if len(ips) > 0 {
+			return strings.TrimSpace(ips[0])
+		}
+	}
+
+	// Check X-Real-IP header (nginx)
+	if xri := r.Header.Get("X-Real-IP"); xri != "" {
+		return xri
+	}
+
+	// Fall back to RemoteAddr
+	// RemoteAddr format: "IP:port" or "[IPv6]:port"
+	host := r.RemoteAddr
+	if idx := strings.LastIndex(host, ":"); idx != -1 {
+		host = host[:idx]
+	}
+	// Remove brackets from IPv6 addresses
+	host = strings.Trim(host, "[]")
+
+	return host
 }
 
 // logAuditEvent logs an authentication event to the audit log

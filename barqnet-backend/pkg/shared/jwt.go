@@ -168,6 +168,38 @@ func ValidateJWT(tokenString string) (*Claims, error) {
 	return claims, nil
 }
 
+// ValidateJWTWithBlacklist validates a JWT token and checks if it's blacklisted
+// This is the recommended validation function for production use
+// Parameters:
+//   - tokenString: The JWT token to validate
+//   - blacklist: The TokenBlacklist instance to check against
+//
+// Returns: Claims object and error
+func ValidateJWTWithBlacklist(tokenString string, blacklist *TokenBlacklist) (*Claims, error) {
+	// First, validate the token signature and expiry
+	claims, err := ValidateJWT(tokenString)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if token is blacklisted (revoked)
+	if blacklist != nil {
+		isBlacklisted, err := blacklist.IsTokenBlacklisted(tokenString)
+		if err != nil {
+			// Log error but don't fail validation (fail open for availability)
+			// In production, consider fail-closed for maximum security
+			fmt.Printf("WARNING: Failed to check token blacklist: %v\n", err)
+			// return nil, fmt.Errorf("failed to verify token status: %v", err)
+		}
+
+		if isBlacklisted {
+			return nil, fmt.Errorf("token has been revoked")
+		}
+	}
+
+	return claims, nil
+}
+
 // RefreshJWT refreshes an existing JWT token
 // This creates a new token with updated expiration time while keeping the same user data
 // Parameters:

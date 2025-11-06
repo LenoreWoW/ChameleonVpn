@@ -39,6 +39,18 @@ func main() {
 	}
 	defer db.Close()
 
+	// Initialize rate limiter
+	rateLimiter, err := shared.NewRateLimiter()
+	if err != nil {
+		log.Printf("Warning: Rate limiter initialization had issues: %v", err)
+		log.Println("Continuing with degraded rate limiting...")
+	}
+	defer func() {
+		if rateLimiter != nil {
+			rateLimiter.Close()
+		}
+	}()
+
 	// Create managers
 	userManager := shared.NewUserManager(db)
 	serverManager := shared.NewServerManager(db)
@@ -53,8 +65,8 @@ func main() {
 		auditManager,
 	)
 
-	// Start API server
-	apiServer := api.NewManagementAPI(managementManager)
+	// Start API server with rate limiter
+	apiServer := api.NewManagementAPI(managementManager, rateLimiter)
 	
 	// Start the API server in a goroutine
 	go func() {
@@ -127,6 +139,13 @@ func showHelp() {
 	fmt.Println("  DB_PASSWORD          Database password")
 	fmt.Println("  DB_NAME              Database name (default: vpnmanager)")
 	fmt.Println("  DB_SSLMODE           Database SSL mode (default: disable)")
+	fmt.Println("")
+	fmt.Println("Rate Limiting:")
+	fmt.Println("  RATE_LIMIT_ENABLED   Enable rate limiting (default: true)")
+	fmt.Println("  REDIS_HOST           Redis host (default: localhost)")
+	fmt.Println("  REDIS_PORT           Redis port (default: 6379)")
+	fmt.Println("  REDIS_PASSWORD       Redis password (optional)")
+	fmt.Println("  REDIS_DB             Redis database number (default: 0)")
 	fmt.Println("")
 	fmt.Println("Examples:")
 	fmt.Println("  vpnmanager-management")
