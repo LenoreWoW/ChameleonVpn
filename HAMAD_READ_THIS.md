@@ -109,13 +109,26 @@ open WorkVPN.xcworkspace  # NOT .xcodeproj!
 **Expected**: Xcode opens, build succeeds (⌘B)
 
 ### **5. Test Android App (Android Studio)**
+
+**Option A: Validate Configuration First (Recommended)**
+```bash
+cd workvpn-android
+./test_gradle_setup.sh
+```
+This validates Gradle 8.2.1 and AGP 8.2.1 are configured correctly.
+
+**Option B: Open in Android Studio**
 ```bash
 cd workvpn-android
 # Open in Android Studio
 # File > Open > select workvpn-android folder
+# Android Studio Settings:
+#   - Use Gradle from: 'gradle-wrapper.properties' file
+#   - Gradle JDK: Java 17 or higher
 ```
 
 **Expected**: Gradle sync succeeds, app builds
+**Troubleshooting**: See `workvpn-android/GRADLE_SETUP.md`
 
 ---
 
@@ -157,6 +170,9 @@ cd workvpn-android
    - ✅ Automated database setup script added
    - ✅ Complete database troubleshooting guide
    - ✅ Documentation cleanup (49 → 12 essential docs)
+   - ✅ Android Gradle compatibility fixed (AGP 7.4.2 → 8.2.1, Gradle 7.6 → 8.2.1)
+   - ✅ Gradle configuration test script added
+   - ✅ Java 17 configuration for Android build
 
 **Total**: +12,000 lines of production code, 100+ KB documentation
 
@@ -306,11 +322,23 @@ pod install
 ### **Android Build Fails**
 
 ```bash
-# Sync Gradle
-./gradlew clean
-./gradlew sync
+# Error: "NoSuchMethodError: DependencyHandler.module()"
+# Solution: Already fixed! Pull latest code and validate:
+git pull origin main
+cd workvpn-android
+./test_gradle_setup.sh
 
-# Or in Android Studio: File > Sync Project with Gradle Files
+# If test passes, open in Android Studio:
+# - File → Settings → Build Tools → Gradle
+# - Use Gradle from: 'gradle-wrapper.properties' file
+# - Gradle JDK: Java 17 or higher
+
+# Manual sync:
+./gradlew clean
+./gradlew tasks
+
+# Complete guide:
+cat workvpn-android/GRADLE_SETUP.md
 ```
 
 ---
