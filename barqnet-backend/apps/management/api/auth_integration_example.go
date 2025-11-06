@@ -2,7 +2,10 @@ package api
 
 import (
 	"database/sql"
+	"log"
 	"net/http"
+
+	"barqnet-backend/pkg/shared"
 )
 
 // Example: How to integrate the authentication API with your existing ManagementAPI
@@ -13,8 +16,17 @@ func (api *ManagementAPI) IntegrateAuthEndpoints(mux *http.ServeMux, db *sql.DB)
 	// Initialize OTP service (use MockOTPService for development)
 	otpService := NewMockOTPService()
 
+	// Initialize rate limiter (required for production)
+	// For development, you can pass nil, but production requires rate limiting
+	rateLimiter, err := shared.NewRateLimiter()
+	if err != nil {
+		log.Printf("[WARNING] Failed to initialize rate limiter: %v", err)
+		log.Printf("[WARNING] Continuing without rate limiting - NOT RECOMMENDED FOR PRODUCTION")
+		rateLimiter = nil // Will disable rate limiting
+	}
+
 	// Initialize auth handler
-	authHandler := NewAuthHandler(db, otpService)
+	authHandler := NewAuthHandler(db, otpService, rateLimiter)
 
 	// Register public authentication endpoints
 	mux.HandleFunc("/auth/send-otp", authHandler.HandleSendOTP)
