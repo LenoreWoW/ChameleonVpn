@@ -300,6 +300,17 @@ npm run build  # Copies vendor files automatically
 
 ### iOS Issues
 
+**Issue:** `Unable to find the Xcode project WorkVPN.xcodeproj`
+**Fix:**
+```bash
+# Pull latest code (fix pushed November 7, 2025)
+git pull origin main
+
+# Then run pod install
+cd workvpn-ios
+pod install
+```
+
 **Issue:** Pod install fails
 **Fix:**
 ```bash
