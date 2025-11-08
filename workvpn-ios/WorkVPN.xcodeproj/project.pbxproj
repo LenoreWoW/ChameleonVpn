@@ -1,0 +1,695 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		2CCFAFF0AF6212DBB820191D /* Pods_WorkVPN.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 53AE0D88077946F684D67150 /* Pods_WorkVPN.framework */; };
+		A010000000000000000000001 /* WorkVPNApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A020000000000000000000001 /* WorkVPNApp.swift */; };
+		A010000000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A020000000000000000000002 /* ContentView.swift */; };
+		A010000000000000000000003 /* VPNManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A020000000000000000000003 /* VPNManager.swift */; };
+		A010000000000000000000004 /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A020000000000000000000004 /* AuthManager.swift */; };
+		A010000000000000000000005 /* VPNConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = A020000000000000000000005 /* VPNConfig.swift */; };
+		A010000000000000000000006 /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = A020000000000000000000006 /* Colors.swift */; };
+		A010000000000000000000007 /* OVPNParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = A020000000000000000000007 /* OVPNParser.swift */; };
+		A010000000000000000000008 /* CertificatePinning.swift in Sources */ = {isa = PBXBuildFile; fileRef = A020000000000000000000008 /* CertificatePinning.swift */; };
+		A010000000000000000000009 /* PhoneNumberView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A020000000000000000000009 /* PhoneNumberView.swift */; };
+		A01000000000000000000000A /* OTPVerificationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A02000000000000000000000A /* OTPVerificationView.swift */; };
+		A01000000000000000000000B /* PasswordCreationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A02000000000000000000000B /* PasswordCreationView.swift */; };
+		A01000000000000000000000C /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A02000000000000000000000C /* LoginView.swift */; };
+		A01000000000000000000000D /* VPNStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A02000000000000000000000D /* VPNStatusView.swift */; };
+		A01000000000000000000000E /* NoConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A02000000000000000000000E /* NoConfigView.swift */; };
+		A01000000000000000000000F /* ConfigImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A02000000000000000000000F /* ConfigImportView.swift */; };
+		A010000000000000000000010 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A020000000000000000000010 /* SettingsView.swift */; };
+		A010000000000000000000011 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A020000000000000000000011 /* Assets.xcassets */; };
+		A010000000000000000000012 /* PacketTunnelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A020000000000000000000012 /* PacketTunnelProvider.swift */; };
+		A010000000000000000000013 /* WorkVPNTunnelExtension.appex in Embed Extensions */ = {isa = PBXBuildFile; fileRef = A030000000000000000000001 /* WorkVPNTunnelExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		EEBCA73FA7DAA301BA17377A /* Pods_WorkVPNTunnelExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FD9720463523C384759011BA /* Pods_WorkVPNTunnelExtension.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		A040000000000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A050000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A030000000000000000000002;
+			remoteInfo = WorkVPNTunnelExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		A060000000000000000000001 /* Embed Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				A010000000000000000000013 /* WorkVPNTunnelExtension.appex in Embed Extensions */,
+			);
+			name = "Embed Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		0A634E1AFD4EFB3C25D4B6D2 /* Pods-WorkVPNTunnelExtension.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WorkVPNTunnelExtension.debug.xcconfig"; path = "Target Support Files/Pods-WorkVPNTunnelExtension/Pods-WorkVPNTunnelExtension.debug.xcconfig"; sourceTree = "<group>"; };
+		4607E9588FA03FD5FED03960 /* Pods-WorkVPN.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WorkVPN.debug.xcconfig"; path = "Target Support Files/Pods-WorkVPN/Pods-WorkVPN.debug.xcconfig"; sourceTree = "<group>"; };
+		53AE0D88077946F684D67150 /* Pods_WorkVPN.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_WorkVPN.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A020000000000000000000001 /* WorkVPNApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkVPNApp.swift; sourceTree = "<group>"; };
+		A020000000000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		A020000000000000000000003 /* VPNManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPNManager.swift; sourceTree = "<group>"; };
+		A020000000000000000000004 /* AuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManager.swift; sourceTree = "<group>"; };
+		A020000000000000000000005 /* VPNConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPNConfig.swift; sourceTree = "<group>"; };
+		A020000000000000000000006 /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
+		A020000000000000000000007 /* OVPNParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OVPNParser.swift; sourceTree = "<group>"; };
+		A020000000000000000000008 /* CertificatePinning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CertificatePinning.swift; sourceTree = "<group>"; };
+		A020000000000000000000009 /* PhoneNumberView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneNumberView.swift; sourceTree = "<group>"; };
+		A02000000000000000000000A /* OTPVerificationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OTPVerificationView.swift; sourceTree = "<group>"; };
+		A02000000000000000000000B /* PasswordCreationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasswordCreationView.swift; sourceTree = "<group>"; };
+		A02000000000000000000000C /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		A02000000000000000000000D /* VPNStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPNStatusView.swift; sourceTree = "<group>"; };
+		A02000000000000000000000E /* NoConfigView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoConfigView.swift; sourceTree = "<group>"; };
+		A02000000000000000000000F /* ConfigImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigImportView.swift; sourceTree = "<group>"; };
+		A020000000000000000000010 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		A020000000000000000000011 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A020000000000000000000012 /* PacketTunnelProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PacketTunnelProvider.swift; sourceTree = "<group>"; };
+		A020000000000000000000013 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A020000000000000000000014 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A030000000000000000000001 /* WorkVPNTunnelExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = WorkVPNTunnelExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		A070000000000000000000001 /* WorkVPN.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WorkVPN.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E4C071B0D4AF6A496C2192C4 /* Pods-WorkVPN.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WorkVPN.release.xcconfig"; path = "Target Support Files/Pods-WorkVPN/Pods-WorkVPN.release.xcconfig"; sourceTree = "<group>"; };
+		EB3419E118C39D8DA2763124 /* Pods-WorkVPNTunnelExtension.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WorkVPNTunnelExtension.release.xcconfig"; path = "Target Support Files/Pods-WorkVPNTunnelExtension/Pods-WorkVPNTunnelExtension.release.xcconfig"; sourceTree = "<group>"; };
+		FD9720463523C384759011BA /* Pods_WorkVPNTunnelExtension.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_WorkVPNTunnelExtension.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A080000000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2CCFAFF0AF6212DBB820191D /* Pods_WorkVPN.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A080000000000000000000002 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EEBCA73FA7DAA301BA17377A /* Pods_WorkVPNTunnelExtension.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		47D98A4CC57239E0E47091CB /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				4607E9588FA03FD5FED03960 /* Pods-WorkVPN.debug.xcconfig */,
+				E4C071B0D4AF6A496C2192C4 /* Pods-WorkVPN.release.xcconfig */,
+				0A634E1AFD4EFB3C25D4B6D2 /* Pods-WorkVPNTunnelExtension.debug.xcconfig */,
+				EB3419E118C39D8DA2763124 /* Pods-WorkVPNTunnelExtension.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
+			sourceTree = "<group>";
+		};
+		706595EB0ECE815ED8D64469 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				53AE0D88077946F684D67150 /* Pods_WorkVPN.framework */,
+				FD9720463523C384759011BA /* Pods_WorkVPNTunnelExtension.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		A090000000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				A090000000000000000000002 /* WorkVPN */,
+				A090000000000000000000003 /* WorkVPNTunnelExtension */,
+				A090000000000000000000004 /* Products */,
+				47D98A4CC57239E0E47091CB /* Pods */,
+				706595EB0ECE815ED8D64469 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		A090000000000000000000002 /* WorkVPN */ = {
+			isa = PBXGroup;
+			children = (
+				A020000000000000000000001 /* WorkVPNApp.swift */,
+				A090000000000000000000005 /* Views */,
+				A090000000000000000000006 /* Services */,
+				A090000000000000000000007 /* Models */,
+				A090000000000000000000008 /* Theme */,
+				A090000000000000000000009 /* Utils */,
+				A020000000000000000000011 /* Assets.xcassets */,
+				A020000000000000000000013 /* Info.plist */,
+			);
+			path = WorkVPN;
+			sourceTree = "<group>";
+		};
+		A090000000000000000000003 /* WorkVPNTunnelExtension */ = {
+			isa = PBXGroup;
+			children = (
+				A020000000000000000000012 /* PacketTunnelProvider.swift */,
+				A020000000000000000000014 /* Info.plist */,
+			);
+			path = WorkVPNTunnelExtension;
+			sourceTree = "<group>";
+		};
+		A090000000000000000000004 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A070000000000000000000001 /* WorkVPN.app */,
+				A030000000000000000000001 /* WorkVPNTunnelExtension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A090000000000000000000005 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				A020000000000000000000002 /* ContentView.swift */,
+				A02000000000000000000000D /* VPNStatusView.swift */,
+				A02000000000000000000000E /* NoConfigView.swift */,
+				A02000000000000000000000F /* ConfigImportView.swift */,
+				A020000000000000000000010 /* SettingsView.swift */,
+				A09000000000000000000000A /* Onboarding */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		A090000000000000000000006 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				A020000000000000000000003 /* VPNManager.swift */,
+				A020000000000000000000004 /* AuthManager.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		A090000000000000000000007 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				A020000000000000000000005 /* VPNConfig.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		A090000000000000000000008 /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+				A020000000000000000000006 /* Colors.swift */,
+			);
+			path = Theme;
+			sourceTree = "<group>";
+		};
+		A090000000000000000000009 /* Utils */ = {
+			isa = PBXGroup;
+			children = (
+				A020000000000000000000007 /* OVPNParser.swift */,
+				A020000000000000000000008 /* CertificatePinning.swift */,
+			);
+			path = Utils;
+			sourceTree = "<group>";
+		};
+		A09000000000000000000000A /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				A020000000000000000000009 /* PhoneNumberView.swift */,
+				A02000000000000000000000A /* OTPVerificationView.swift */,
+				A02000000000000000000000B /* PasswordCreationView.swift */,
+				A02000000000000000000000C /* LoginView.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A030000000000000000000002 /* WorkVPNTunnelExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A0B0000000000000000000002 /* Build configuration list for PBXNativeTarget "WorkVPNTunnelExtension" */;
+			buildPhases = (
+				8A0305A089A2B8FCE9514BB0 /* [CP] Check Pods Manifest.lock */,
+				A0C0000000000000000000002 /* Sources */,
+				A080000000000000000000002 /* Frameworks */,
+				A0D0000000000000000000002 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = WorkVPNTunnelExtension;
+			productName = WorkVPNTunnelExtension;
+			productReference = A030000000000000000000001 /* WorkVPNTunnelExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		A0A0000000000000000000001 /* WorkVPN */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A0B0000000000000000000001 /* Build configuration list for PBXNativeTarget "WorkVPN" */;
+			buildPhases = (
+				857F5BE0FA82193FC72F3C3A /* [CP] Check Pods Manifest.lock */,
+				A0C0000000000000000000001 /* Sources */,
+				A080000000000000000000001 /* Frameworks */,
+				A0D0000000000000000000001 /* Resources */,
+				A060000000000000000000001 /* Embed Extensions */,
+				F858C9D1613EE648A1720864 /* [CP] Embed Pods Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A0E0000000000000000000001 /* PBXTargetDependency */,
+			);
+			name = WorkVPN;
+			productName = WorkVPN;
+			productReference = A070000000000000000000001 /* WorkVPN.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A050000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					A030000000000000000000002 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+					A0A0000000000000000000001 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = A0B0000000000000000000003 /* Build configuration list for PBXProject "WorkVPN" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A090000000000000000000001;
+			productRefGroup = A090000000000000000000004 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A0A0000000000000000000001 /* WorkVPN */,
+				A030000000000000000000002 /* WorkVPNTunnelExtension */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A0D0000000000000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A010000000000000000000011 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A0D0000000000000000000002 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		857F5BE0FA82193FC72F3C3A /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-WorkVPN-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		8A0305A089A2B8FCE9514BB0 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-WorkVPNTunnelExtension-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		F858C9D1613EE648A1720864 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-WorkVPN/Pods-WorkVPN-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-WorkVPN/Pods-WorkVPN-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-WorkVPN/Pods-WorkVPN-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A0C0000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A010000000000000000000001 /* WorkVPNApp.swift in Sources */,
+				A010000000000000000000002 /* ContentView.swift in Sources */,
+				A010000000000000000000003 /* VPNManager.swift in Sources */,
+				A010000000000000000000004 /* AuthManager.swift in Sources */,
+				A010000000000000000000005 /* VPNConfig.swift in Sources */,
+				A010000000000000000000006 /* Colors.swift in Sources */,
+				A010000000000000000000007 /* OVPNParser.swift in Sources */,
+				A010000000000000000000008 /* CertificatePinning.swift in Sources */,
+				A010000000000000000000009 /* PhoneNumberView.swift in Sources */,
+				A01000000000000000000000A /* OTPVerificationView.swift in Sources */,
+				A01000000000000000000000B /* PasswordCreationView.swift in Sources */,
+				A01000000000000000000000C /* LoginView.swift in Sources */,
+				A01000000000000000000000D /* VPNStatusView.swift in Sources */,
+				A01000000000000000000000E /* NoConfigView.swift in Sources */,
+				A01000000000000000000000F /* ConfigImportView.swift in Sources */,
+				A010000000000000000000010 /* SettingsView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A0C0000000000000000000002 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A010000000000000000000012 /* PacketTunnelProvider.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A0E0000000000000000000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A030000000000000000000002 /* WorkVPNTunnelExtension */;
+			targetProxy = A040000000000000000000001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		A0F0000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		A0F0000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		A0F0000000000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4607E9588FA03FD5FED03960 /* Pods-WorkVPN.debug.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = WorkVPN/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = WorkVPN;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.workvpn.ios;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A0F0000000000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = E4C071B0D4AF6A496C2192C4 /* Pods-WorkVPN.release.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = WorkVPN/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = WorkVPN;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.workvpn.ios;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		A0F0000000000000000000005 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0A634E1AFD4EFB3C25D4B6D2 /* Pods-WorkVPNTunnelExtension.debug.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = WorkVPNTunnelExtension/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.workvpn.ios.WorkVPNTunnelExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A0F0000000000000000000006 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = EB3419E118C39D8DA2763124 /* Pods-WorkVPNTunnelExtension.release.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = WorkVPNTunnelExtension/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.workvpn.ios.WorkVPNTunnelExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A0B0000000000000000000001 /* Build configuration list for PBXNativeTarget "WorkVPN" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A0F0000000000000000000003 /* Debug */,
+				A0F0000000000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A0B0000000000000000000002 /* Build configuration list for PBXNativeTarget "WorkVPNTunnelExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A0F0000000000000000000005 /* Debug */,
+				A0F0000000000000000000006 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A0B0000000000000000000003 /* Build configuration list for PBXProject "WorkVPN" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A0F0000000000000000000001 /* Debug */,
+				A0F0000000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A050000000000000000000001 /* Project object */;
+}

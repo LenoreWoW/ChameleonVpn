@@ -41,6 +41,12 @@ Packages/
 Package.pins
 Package.resolved
 *.xcodeproj
+# EXCEPTION: We need to commit the main Xcode project
+!WorkVPN.xcodeproj
+!WorkVPN.xcodeproj/*
+!WorkVPN.xcodeproj/project.pbxproj
+!WorkVPN.xcodeproj/project.xcworkspace
+!WorkVPN.xcodeproj/project.xcworkspace/*
 #
 # Xcode automatically generates this directory with a .xcworkspacedata file and xcuserdata
 # hence it is not needed unless you have added a package configuration file to your project
