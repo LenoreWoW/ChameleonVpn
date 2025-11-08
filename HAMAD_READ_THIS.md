@@ -357,6 +357,18 @@ pod install
 
 ### Android Issues
 
+**Issue:** `Dependency requires compileSdk version 34 or later` (13 AAR metadata errors)
+**Fix:**
+```bash
+# Pull latest code (fix pushed November 7, 2025)
+git pull origin main
+
+# Sync and build
+cd workvpn-android
+./gradlew clean
+./gradlew build
+```
+
 **Issue:** Gradle sync fails - Java version
 **Fix:**
 ```bash
