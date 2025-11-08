@@ -102,9 +102,9 @@ func loadConfig(configFile string) (*shared.ManagementConfig, error) {
 		Database: shared.DatabaseConfig{
 			Host:     getEnv("DB_HOST", "localhost"),
 			Port:     5432,
-			User:     getEnv("DB_USER", "vpnmanager"),
+			User:     getEnv("DB_USER", "barqnet"),
 			Password: getEnv("DB_PASSWORD", ""),
-			DBName:   getEnv("DB_NAME", "vpnmanager"),
+			DBName:   getEnv("DB_NAME", "barqnet"),
 			SSLMode:  getEnv("DB_SSLMODE", "disable"),
 		},
 	}, nil
@@ -135,9 +135,9 @@ func showHelp() {
 	fmt.Println("Environment Variables:")
 	fmt.Println("  API_KEY              API key for authentication")
 	fmt.Println("  DB_HOST              Database host (default: localhost)")
-	fmt.Println("  DB_USER              Database user (default: vpnmanager)")
+	fmt.Println("  DB_USER              Database user (default: barqnet)")
 	fmt.Println("  DB_PASSWORD          Database password")
-	fmt.Println("  DB_NAME              Database name (default: vpnmanager)")
+	fmt.Println("  DB_NAME              Database name (default: barqnet)")
 	fmt.Println("  DB_SSLMODE           Database SSL mode (default: disable)")
 	fmt.Println("")
 	fmt.Println("Rate Limiting:")

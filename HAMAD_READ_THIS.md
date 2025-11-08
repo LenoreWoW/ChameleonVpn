@@ -257,6 +257,30 @@ cd workvpn-android
 
 ### Backend Issues
 
+**Issue:** `password authentication failed for user "vpnmanager"`
+**Fix:**
+```bash
+cd barqnet-backend
+
+# Option 1: Set environment variables (recommended)
+export DB_USER="barqnet"
+export DB_PASSWORD="barqnet123"
+export DB_NAME="barqnet"
+export DB_HOST="localhost"
+export DB_SSLMODE="disable"
+export JWT_SECRET="$(openssl rand -base64 32)"
+
+# Rebuild the binary (required after pulling latest code)
+go build -o management ./apps/management
+
+# Then run
+./management
+
+# Option 2: Re-run database setup
+./setup_database.sh  # Creates correct user/database
+# Then export variables and run management
+```
+
 **Issue:** `permission denied for schema public`
 **Fix:**
 ```bash
@@ -274,6 +298,7 @@ export JWT_SECRET="$(openssl rand -base64 32)"
 **Fix:**
 ```bash
 lsof -ti:8080 | xargs kill  # macOS/Linux
+# OR: sudo lsof -ti:8080 | xargs sudo kill  # Linux if needed
 # Then restart: ./management
 ```
 
