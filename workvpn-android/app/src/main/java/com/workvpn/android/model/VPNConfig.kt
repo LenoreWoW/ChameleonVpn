@@ -19,7 +19,11 @@ data class VPNConfig(
     val tlsAuth: String? = null,
     val cipher: String? = null,
     val auth: String? = null,
-    val deviceType: String = "tun"
+    val deviceType: String = "tun",
+
+    // Authentication credentials (for auth-user-pass configs)
+    val username: String? = null,
+    val password: String? = null
 ) {
     val displayName: String
         get() = name.removeSuffix(".ovpn")

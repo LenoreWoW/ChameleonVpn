@@ -28,6 +28,15 @@ func main() {
 		return
 	}
 
+	// Validate environment variables before proceeding
+	log.Println("========================================")
+	log.Println("BarqNet Endnode Server - Starting...")
+	log.Println("========================================")
+
+	if _, err := shared.ValidateEnvironment(); err != nil {
+		log.Fatalf("❌ Environment validation failed: %v", err)
+	}
+
 	if *serverID == "" {
 		log.Fatal("Server ID is required. Use -server-id flag or set ENDNODE_SERVER_ID environment variable")
 	}

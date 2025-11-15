@@ -26,6 +26,15 @@ func main() {
 		return
 	}
 
+	// Validate environment variables before proceeding
+	log.Println("========================================")
+	log.Println("BarqNet Management Server - Starting...")
+	log.Println("========================================")
+
+	if _, err := shared.ValidateEnvironment(); err != nil {
+		log.Fatalf("❌ Environment validation failed: %v", err)
+	}
+
 	// Load configuration
 	config, err := loadConfig(*configFile)
 	if err != nil {

@@ -8,6 +8,11 @@
 import NetworkExtension
 import OpenVPNAdapter
 
+// MARK: - Protocol Conformance
+
+// Ensure NEPacketTunnelFlow conforms to OpenVPNAdapterPacketFlow
+extension NEPacketTunnelFlow: OpenVPNAdapterPacketFlow {}
+
 // MARK: - Traffic Statistics
 
 struct TrafficStats: Codable {
@@ -159,7 +164,26 @@ extension PacketTunnelProvider: OpenVPNAdapterDelegate {
         case .reconnecting:
             NSLog("[PacketTunnel] ↻ VPN RECONNECTING...")
 
+        case .connecting:
+            NSLog("[PacketTunnel] Establishing connection...")
+
+        case .wait:
+            NSLog("[PacketTunnel] Waiting...")
+
+        case .authenticating:
+            NSLog("[PacketTunnel] Authenticating...")
+
+        case .getConfig:
+            NSLog("[PacketTunnel] Getting configuration...")
+
+        case .assignIP:
+            NSLog("[PacketTunnel] Assigning IP address...")
+
+        case .addRoutes:
+            NSLog("[PacketTunnel] Adding routes...")
+
         @unknown default:
+            NSLog("[PacketTunnel] Unknown event: \(event)")
             break
         }
 

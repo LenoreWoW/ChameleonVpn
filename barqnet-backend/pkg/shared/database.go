@@ -3,8 +3,8 @@ package shared
 import (
 	"database/sql"
 	"fmt"
-	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -286,7 +286,7 @@ func (db *DB) getAppliedMigrations() (map[int]bool, error) {
 
 // readMigrationFiles reads and parses migration files from the specified directory
 func (db *DB) readMigrationFiles(migrationsPath string) ([]Migration, error) {
-	files, err := ioutil.ReadDir(migrationsPath)
+	files, err := os.ReadDir(migrationsPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read migrations directory: %v", err)
 	}
@@ -314,7 +314,7 @@ func (db *DB) readMigrationFiles(migrationsPath string) ([]Migration, error) {
 
 		// Read SQL content
 		sqlPath := filepath.Join(migrationsPath, file.Name())
-		content, err := ioutil.ReadFile(sqlPath)
+		content, err := os.ReadFile(sqlPath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read migration file %s: %v", file.Name(), err)
 		}

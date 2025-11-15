@@ -12,6 +12,7 @@ import com.barqnet.android.model.VPNStats
 import com.barqnet.android.repository.VPNConfigRepository
 import com.barqnet.android.util.OVPNParser
 import com.barqnet.android.vpn.RealVPNService
+import com.barqnet.android.vpn.VpnServiceConnection
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -138,9 +139,9 @@ class RealVPNViewModel(application: Application) : AndroidViewModel(application)
         val serviceIntent = Intent(context, RealVPNService::class.java).apply {
             action = RealVPNService.ACTION_START_VPN
             putExtra(RealVPNService.EXTRA_CONFIG_CONTENT, currentConfig.content)
-            // TODO: Add username/password if required
-            // putExtra(RealVPNService.EXTRA_USERNAME, username)
-            // putExtra(RealVPNService.EXTRA_PASSWORD, password)
+            // Pass username/password if provided (for auth-user-pass configs)
+            currentConfig.username?.let { putExtra(RealVPNService.EXTRA_USERNAME, it) }
+            currentConfig.password?.let { putExtra(RealVPNService.EXTRA_PASSWORD, it) }
         }
         context.startService(serviceIntent)
 

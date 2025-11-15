@@ -66,6 +66,7 @@ android {
     buildFeatures {
         compose true
         viewBinding true
+        buildConfig true
     }
 
     composeOptions {
@@ -83,6 +84,9 @@ dependencies {
     // Kotlin
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation 'androidx.core:core-ktx:1.12.0'
+
+    // AppCompat
+    implementation 'androidx.appcompat:appcompat:1.6.1'
 
     // Jetpack Compose
     implementation platform('androidx.compose:compose-bom:2023.10.01')
@@ -139,6 +143,9 @@ dependencies {
 
     // Security - EncryptedSharedPreferences
     implementation 'androidx.security:security-crypto:1.1.0-alpha06'
+
+    // Google Error Prone annotations (required by Tink crypto)
+    implementation 'com.google.errorprone:error_prone_annotations:2.23.0'
 
     // WorkManager for background tasks
     implementation 'androidx.work:work-runtime-ktx:2.9.0'

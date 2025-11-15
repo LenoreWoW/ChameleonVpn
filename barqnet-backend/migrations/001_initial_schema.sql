@@ -44,8 +44,8 @@ CREATE INDEX IF NOT EXISTS idx_servers_name ON servers(name);
 CREATE INDEX IF NOT EXISTS idx_servers_enabled ON servers(enabled);
 CREATE INDEX IF NOT EXISTS idx_servers_type ON servers(server_type);
 
--- Create audit_logs table
-CREATE TABLE IF NOT EXISTS audit_logs (
+-- Create audit_log table (singular to match code expectations)
+CREATE TABLE IF NOT EXISTS audit_log (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
     action VARCHAR(255) NOT NULL,
@@ -58,12 +58,12 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create indexes on audit_logs
-CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);
-CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
-CREATE INDEX IF NOT EXISTS idx_audit_logs_resource_type ON audit_logs(resource_type);
-CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
-CREATE INDEX IF NOT EXISTS idx_audit_logs_status ON audit_logs(status);
+-- Create indexes on audit_log
+CREATE INDEX IF NOT EXISTS idx_audit_log_user_id ON audit_log(user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_log_action ON audit_log(action);
+CREATE INDEX IF NOT EXISTS idx_audit_log_resource_type ON audit_log(resource_type);
+CREATE INDEX IF NOT EXISTS idx_audit_log_created_at ON audit_log(created_at);
+CREATE INDEX IF NOT EXISTS idx_audit_log_status ON audit_log(status);
 
 -- Create schema_migrations table to track applied migrations
 CREATE TABLE IF NOT EXISTS schema_migrations (
