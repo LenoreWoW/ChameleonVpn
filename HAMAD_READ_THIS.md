@@ -75,6 +75,75 @@
 
 ---
 
+## 🐧 UBUNTU SERVER DEPLOYMENT (NEW!)
+
+**For production deployment on Ubuntu servers, we've created comprehensive automation:**
+
+### Quick Deploy (Automated - Recommended)
+
+```bash
+# One-command deployment on Ubuntu 20.04+
+cd barqnet-backend
+sudo bash deploy-ubuntu.sh
+```
+
+**What it does automatically:**
+- ✅ Installs all dependencies (Go, PostgreSQL, Redis, Nginx)
+- ✅ Creates database with secure credentials
+- ✅ Configures systemd services
+- ✅ Sets up Nginx reverse proxy
+- ✅ Obtains SSL certificate (Let's Encrypt)
+- ✅ Configures firewall (ufw)
+- ✅ Creates monitoring and backup scripts
+
+**Duration:** ~15-20 minutes (fully automated)
+
+### Documentation
+
+| Document | Purpose |
+|----------|---------|
+| **`barqnet-backend/UBUNTU_PRODUCTION.md`** | 📚 Complete Ubuntu deployment guide |
+| **`barqnet-backend/deploy-ubuntu.sh`** | 🚀 Automated deployment script |
+| **`barqnet-backend/scripts/monitor.sh`** | 📊 Health monitoring (cron job) |
+| **`barqnet-backend/scripts/backup.sh`** | 💾 Database backup (daily cron) |
+
+### Features
+
+**Security Hardening:**
+- Dedicated `barqnet` user (no root)
+- Systemd sandboxing (ProtectSystem, NoNewPrivileges)
+- Firewall configured (SSH + HTTPS only)
+- Automatic SSL with Let's Encrypt
+- Generated strong credentials (saved to `.env`)
+
+**Monitoring:**
+- Health checks every 5 minutes
+- Automatic service restart on failure
+- Database, Redis, disk, CPU, memory monitoring
+- Email alerts (configurable)
+
+**Backup:**
+- Daily database backups (2 AM)
+- 30-day retention policy
+- Configuration backup
+- Log archival
+
+**Service Management:**
+```bash
+# Start/stop/restart
+sudo systemctl start barqnet-management
+sudo systemctl stop barqnet-management
+sudo systemctl restart barqnet-management
+
+# View logs
+sudo journalctl -u barqnet-management -f
+
+# Check status
+sudo systemctl status barqnet-management
+```
+
+---
+
 ## 📋 PRE-FLIGHT CHECKLIST
 
 **Before You Start - Verify You Have:**
