@@ -8,6 +8,8 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/joho/godotenv"
+
 	"barqnet-backend/pkg/shared"
 	"barqnet-backend/apps/management/api"
 	"barqnet-backend/apps/management/manager"
@@ -26,11 +28,18 @@ func main() {
 		return
 	}
 
-	// Validate environment variables before proceeding
+	// Load .env file if it exists
 	log.Println("========================================")
 	log.Println("BarqNet Management Server - Starting...")
 	log.Println("========================================")
 
+	if err := godotenv.Load(); err != nil {
+		log.Printf("[ENV] ⚠️  No .env file found, using environment variables only")
+	} else {
+		log.Printf("[ENV] ✅ Loaded configuration from .env file")
+	}
+
+	// Validate environment variables before proceeding
 	if _, err := shared.ValidateEnvironment(); err != nil {
 		log.Fatalf("❌ Environment validation failed: %v", err)
 	}

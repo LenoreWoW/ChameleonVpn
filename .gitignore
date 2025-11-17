@@ -38,37 +38,41 @@ $RECYCLE.BIN/
 *.log
 
 # Android
-barqnet-android/local.properties
-barqnet-android/.gradle/
-barqnet-android/build/
-barqnet-android/captures/
-barqnet-android/.externalNativeBuild/
-barqnet-android/.cxx/
-barqnet-android/app/build/
-barqnet-android/*.apk
-barqnet-android/*.aab
-barqnet-android/*.keystore
-barqnet-android/*.jks
+workvpn-android/local.properties
+workvpn-android/.gradle/
+workvpn-android/build/
+workvpn-android/captures/
+workvpn-android/.externalNativeBuild/
+workvpn-android/.cxx/
+workvpn-android/app/build/
+workvpn-android/*.apk
+workvpn-android/*.aab
+workvpn-android/*.keystore
+workvpn-android/*.jks
 
 # iOS
-barqnet-ios/Pods/
-barqnet-ios/Podfile.lock
-barqnet-ios/*.xcworkspace/xcuserdata/
-barqnet-ios/*.xcodeproj/xcuserdata/
-barqnet-ios/*.xcodeproj/project.xcworkspace/xcuserdata/
-barqnet-ios/build/
-barqnet-ios/DerivedData/
-barqnet-ios/*.ipa
-barqnet-ios/*.dSYM.zip
-barqnet-ios/*.dSYM
+workvpn-ios/Pods/
+workvpn-ios/Podfile.lock
+workvpn-ios/*.xcworkspace/xcuserdata/
+workvpn-ios/*.xcodeproj/xcuserdata/
+workvpn-ios/*.xcodeproj/project.xcworkspace/xcuserdata/
+workvpn-ios/build/
+workvpn-ios/DerivedData/
+workvpn-ios/*.ipa
+workvpn-ios/*.dSYM.zip
+workvpn-ios/*.dSYM
 
 # Desktop
-barqnet-desktop/node_modules/
-barqnet-desktop/.env
-barqnet-desktop/dist/
-barqnet-desktop/out/
-barqnet-desktop/*.log
-barqnet-desktop/package-lock.json
+workvpn-desktop/node_modules/
+workvpn-desktop/.env
+workvpn-desktop/dist/
+workvpn-desktop/out/
+workvpn-desktop/*.log
+
+# Backend
+barqnet-backend/management
+barqnet-backend/endnode
+barqnet-backend/*.exe
 
 # Secrets and credentials
 *.env

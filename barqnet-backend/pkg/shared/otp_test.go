@@ -7,7 +7,9 @@ import (
 
 // TestNewLocalOTPService verifies service initialization
 func TestNewLocalOTPService(t *testing.T) {
-	service := NewLocalOTPService()
+	// Use local email service for testing (logs to console)
+	emailService := NewLocalEmailService()
+	service := NewLocalOTPService(emailService)
 
 	if service == nil {
 		t.Fatal("NewLocalOTPService returned nil")
@@ -36,7 +38,8 @@ func TestNewLocalOTPService(t *testing.T) {
 
 // TestGenerateOTP verifies OTP generation
 func TestGenerateOTP(t *testing.T) {
-	service := NewLocalOTPService()
+	emailService := NewLocalEmailService()
+	service := NewLocalOTPService(emailService)
 
 	// Test multiple generations
 	codes := make(map[string]bool)
@@ -66,17 +69,18 @@ func TestGenerateOTP(t *testing.T) {
 
 // TestSendOTP verifies OTP sending
 func TestSendOTP(t *testing.T) {
-	service := NewLocalOTPService()
-	phoneNumber := "+1234567890"
+	emailService := NewLocalEmailService()
+	service := NewLocalOTPService(emailService)
+	email := "test@example.com"
 
-	err := service.Send(phoneNumber)
+	err := service.Send(email)
 	if err != nil {
 		t.Fatalf("Failed to send OTP: %v", err)
 	}
 
 	// Verify OTP was stored
 	service.mu.RLock()
-	entry, exists := service.otpStore[phoneNumber]
+	entry, exists := service.otpStore[email]
 	service.mu.RUnlock()
 
 	if !exists {
@@ -102,28 +106,29 @@ func TestSendOTP(t *testing.T) {
 
 // TestVerifyOTP verifies OTP verification logic
 func TestVerifyOTP(t *testing.T) {
-	service := NewLocalOTPService()
-	phoneNumber := "+1234567890"
+	emailService := NewLocalEmailService()
+	service := NewLocalOTPService(emailService)
+	email := "test@example.com"
 
 	// Send OTP
-	err := service.Send(phoneNumber)
+	err := service.Send(email)
 	if err != nil {
 		t.Fatalf("Failed to send OTP: %v", err)
 	}
 
 	// Get the generated code
 	service.mu.RLock()
-	code := service.otpStore[phoneNumber].Code
+	code := service.otpStore[email].Code
 	service.mu.RUnlock()
 
 	// Test valid verification
-	if !service.Verify(phoneNumber, code) {
+	if !service.Verify(email, code) {
 		t.Error("Failed to verify correct OTP")
 	}
 
 	// Verify OTP was removed after successful verification
 	service.mu.RLock()
-	_, exists := service.otpStore[phoneNumber]
+	_, exists := service.otpStore[email]
 	service.mu.RUnlock()
 
 	if exists {
@@ -133,23 +138,24 @@ func TestVerifyOTP(t *testing.T) {
 
 // TestVerifyInvalidOTP verifies rejection of invalid codes
 func TestVerifyInvalidOTP(t *testing.T) {
-	service := NewLocalOTPService()
-	phoneNumber := "+1234567890"
+	emailService := NewLocalEmailService()
+	service := NewLocalOTPService(emailService)
+	email := "test@example.com"
 
 	// Send OTP
-	err := service.Send(phoneNumber)
+	err := service.Send(email)
 	if err != nil {
 		t.Fatalf("Failed to send OTP: %v", err)
 	}
 
 	// Test invalid code
-	if service.Verify(phoneNumber, "000000") {
+	if service.Verify(email, "000000") {
 		t.Error("Verification succeeded with invalid code")
 	}
 
 	// Verify OTP still exists (not removed on failed attempt)
 	service.mu.RLock()
-	_, exists := service.otpStore[phoneNumber]
+	_, exists := service.otpStore[email]
 	service.mu.RUnlock()
 
 	if !exists {
@@ -157,43 +163,45 @@ func TestVerifyInvalidOTP(t *testing.T) {
 	}
 }
 
-// TestVerifyNonExistentOTP verifies behavior with non-existent phone number
+// TestVerifyNonExistentOTP verifies behavior with non-existent email
 func TestVerifyNonExistentOTP(t *testing.T) {
-	service := NewLocalOTPService()
+	emailService := NewLocalEmailService()
+	service := NewLocalOTPService(emailService)
 
-	if service.Verify("+9999999999", "123456") {
-		t.Error("Verification succeeded for non-existent phone number")
+	if service.Verify("nonexistent@example.com", "123456") {
+		t.Error("Verification succeeded for non-existent email")
 	}
 }
 
 // TestOTPExpiry verifies OTP expiration logic
 func TestOTPExpiry(t *testing.T) {
-	service := NewLocalOTPService()
+	emailService := NewLocalEmailService()
+	service := NewLocalOTPService(emailService)
 	service.OTPExpiry = 100 * time.Millisecond // Short expiry for testing
-	phoneNumber := "+1234567890"
+	email := "test@example.com"
 
 	// Send OTP
-	err := service.Send(phoneNumber)
+	err := service.Send(email)
 	if err != nil {
 		t.Fatalf("Failed to send OTP: %v", err)
 	}
 
 	// Get the code before it expires
 	service.mu.RLock()
-	code := service.otpStore[phoneNumber].Code
+	code := service.otpStore[email].Code
 	service.mu.RUnlock()
 
 	// Wait for expiry
 	time.Sleep(150 * time.Millisecond)
 
 	// Try to verify expired OTP
-	if service.Verify(phoneNumber, code) {
+	if service.Verify(email, code) {
 		t.Error("Verification succeeded with expired OTP")
 	}
 
 	// Verify expired OTP was removed
 	service.mu.RLock()
-	_, exists := service.otpStore[phoneNumber]
+	_, exists := service.otpStore[email]
 	service.mu.RUnlock()
 
 	if exists {
@@ -203,20 +211,21 @@ func TestOTPExpiry(t *testing.T) {
 
 // TestRateLimiting verifies rate limiting functionality
 func TestRateLimiting(t *testing.T) {
-	service := NewLocalOTPService()
+	emailService := NewLocalEmailService()
+	service := NewLocalOTPService(emailService)
 	service.RateLimitMax = 3 // Set low limit for testing
-	phoneNumber := "+1234567890"
+	email := "test@example.com"
 
 	// Send OTPs up to the limit
 	for i := 0; i < 3; i++ {
-		err := service.Send(phoneNumber)
+		err := service.Send(email)
 		if err != nil {
 			t.Fatalf("Send %d failed: %v", i+1, err)
 		}
 	}
 
 	// Next send should fail due to rate limit
-	err := service.Send(phoneNumber)
+	err := service.Send(email)
 	if err == nil {
 		t.Error("Expected rate limit error, got nil")
 	}
@@ -228,21 +237,22 @@ func TestRateLimiting(t *testing.T) {
 
 // TestRateLimitReset verifies rate limit window reset
 func TestRateLimitReset(t *testing.T) {
-	service := NewLocalOTPService()
+	emailService := NewLocalEmailService()
+	service := NewLocalOTPService(emailService)
 	service.RateLimitMax = 2
 	service.RateLimitWindow = 200 * time.Millisecond // Short window for testing
-	phoneNumber := "+1234567890"
+	email := "test@example.com"
 
 	// Exhaust rate limit
 	for i := 0; i < 2; i++ {
-		err := service.Send(phoneNumber)
+		err := service.Send(email)
 		if err != nil {
 			t.Fatalf("Send %d failed: %v", i+1, err)
 		}
 	}
 
 	// Verify rate limit is hit
-	err := service.Send(phoneNumber)
+	err := service.Send(email)
 	if err == nil {
 		t.Error("Expected rate limit error")
 	}
@@ -251,7 +261,7 @@ func TestRateLimitReset(t *testing.T) {
 	time.Sleep(250 * time.Millisecond)
 
 	// Should succeed after window reset
-	err = service.Send(phoneNumber)
+	err = service.Send(email)
 	if err != nil {
 		t.Errorf("Send failed after rate limit reset: %v", err)
 	}
@@ -259,26 +269,27 @@ func TestRateLimitReset(t *testing.T) {
 
 // TestMaxVerifyAttempts verifies brute force protection
 func TestMaxVerifyAttempts(t *testing.T) {
-	service := NewLocalOTPService()
+	emailService := NewLocalEmailService()
+	service := NewLocalOTPService(emailService)
 	service.MaxVerifyAttempts = 3
-	phoneNumber := "+1234567890"
+	email := "test@example.com"
 
 	// Send OTP
-	err := service.Send(phoneNumber)
+	err := service.Send(email)
 	if err != nil {
 		t.Fatalf("Failed to send OTP: %v", err)
 	}
 
 	// Make 3 failed attempts
 	for i := 0; i < 3; i++ {
-		if service.Verify(phoneNumber, "000000") {
+		if service.Verify(email, "000000") {
 			t.Error("Verification should have failed")
 		}
 	}
 
 	// Get the actual code
 	service.mu.RLock()
-	entry, exists := service.otpStore[phoneNumber]
+	entry, exists := service.otpStore[email]
 	service.mu.RUnlock()
 
 	// Fourth attempt should fail even with correct code
@@ -290,13 +301,13 @@ func TestMaxVerifyAttempts(t *testing.T) {
 		code = "999999" // Use dummy code
 	}
 
-	if service.Verify(phoneNumber, code) {
+	if service.Verify(email, code) {
 		t.Error("Verification succeeded after max attempts exceeded")
 	}
 
 	// Verify OTP was removed
 	service.mu.RLock()
-	_, exists = service.otpStore[phoneNumber]
+	_, exists = service.otpStore[email]
 	service.mu.RUnlock()
 
 	if exists {
@@ -306,14 +317,15 @@ func TestMaxVerifyAttempts(t *testing.T) {
 
 // TestCleanup verifies cleanup functionality
 func TestCleanup(t *testing.T) {
-	service := NewLocalOTPService()
+	emailService := NewLocalEmailService()
+	service := NewLocalOTPService(emailService)
 	service.OTPExpiry = 100 * time.Millisecond
 	service.RateLimitWindow = 100 * time.Millisecond
 
 	// Create some OTPs
-	service.Send("+1111111111")
-	service.Send("+2222222222")
-	service.Send("+3333333333")
+	service.Send("test1@example.com")
+	service.Send("test2@example.com")
+	service.Send("test3@example.com")
 
 	// Verify they exist
 	if len(service.otpStore) != 3 {
@@ -343,11 +355,12 @@ func TestCleanup(t *testing.T) {
 
 // TestGetStats verifies statistics retrieval
 func TestGetStats(t *testing.T) {
-	service := NewLocalOTPService()
+	emailService := NewLocalEmailService()
+	service := NewLocalOTPService(emailService)
 
 	// Send a few OTPs
-	service.Send("+1111111111")
-	service.Send("+2222222222")
+	service.Send("test1@example.com")
+	service.Send("test2@example.com")
 
 	stats := service.GetStats()
 
@@ -374,22 +387,23 @@ func TestGetStats(t *testing.T) {
 
 // TestConcurrentAccess verifies thread safety
 func TestConcurrentAccess(t *testing.T) {
-	service := NewLocalOTPService()
-	phoneNumbers := []string{"+1111111111", "+2222222222", "+3333333333"}
+	emailService := NewLocalEmailService()
+	service := NewLocalOTPService(emailService)
+	emails := []string{"test1@example.com", "test2@example.com", "test3@example.com"}
 
 	// Concurrent sends
 	done := make(chan bool)
-	for _, phone := range phoneNumbers {
-		go func(p string) {
+	for _, email := range emails {
+		go func(e string) {
 			for i := 0; i < 10; i++ {
-				service.Send(p)
+				service.Send(e)
 			}
 			done <- true
-		}(phone)
+		}(email)
 	}
 
 	// Wait for all goroutines
-	for i := 0; i < len(phoneNumbers); i++ {
+	for i := 0; i < len(emails); i++ {
 		<-done
 	}
 
@@ -400,62 +414,64 @@ func TestConcurrentAccess(t *testing.T) {
 	}
 }
 
-// TestMultiplePhoneNumbers verifies isolation between different phone numbers
-func TestMultiplePhoneNumbers(t *testing.T) {
-	service := NewLocalOTPService()
+// TestMultipleEmails verifies isolation between different email addresses
+func TestMultipleEmails(t *testing.T) {
+	emailService := NewLocalEmailService()
+	service := NewLocalOTPService(emailService)
 
-	phone1 := "+1111111111"
-	phone2 := "+2222222222"
+	email1 := "test1@example.com"
+	email2 := "test2@example.com"
 
-	// Send OTPs to both numbers
-	service.Send(phone1)
-	service.Send(phone2)
+	// Send OTPs to both emails
+	service.Send(email1)
+	service.Send(email2)
 
 	// Get codes
 	service.mu.RLock()
-	code1 := service.otpStore[phone1].Code
-	code2 := service.otpStore[phone2].Code
+	code1 := service.otpStore[email1].Code
+	code2 := service.otpStore[email2].Code
 	service.mu.RUnlock()
 
-	// Verify isolation - wrong code for wrong number
-	if service.Verify(phone1, code2) {
-		t.Error("Verified phone1 with phone2's code")
+	// Verify isolation - wrong code for wrong email
+	if service.Verify(email1, code2) {
+		t.Error("Verified email1 with email2's code")
 	}
 
-	if service.Verify(phone2, code1) {
-		t.Error("Verified phone2 with phone1's code")
+	if service.Verify(email2, code1) {
+		t.Error("Verified email2 with email1's code")
 	}
 
 	// Verify correct codes work
-	if !service.Verify(phone1, code1) {
-		t.Error("Failed to verify phone1 with correct code")
+	if !service.Verify(email1, code1) {
+		t.Error("Failed to verify email1 with correct code")
 	}
 
-	if !service.Verify(phone2, code2) {
-		t.Error("Failed to verify phone2 with correct code")
+	if !service.Verify(email2, code2) {
+		t.Error("Failed to verify email2 with correct code")
 	}
 }
 
 // TestOTPReuse verifies OTP cannot be reused
 func TestOTPReuse(t *testing.T) {
-	service := NewLocalOTPService()
-	phoneNumber := "+1234567890"
+	emailService := NewLocalEmailService()
+	service := NewLocalOTPService(emailService)
+	email := "test@example.com"
 
 	// Send OTP
-	service.Send(phoneNumber)
+	service.Send(email)
 
 	// Get code
 	service.mu.RLock()
-	code := service.otpStore[phoneNumber].Code
+	code := service.otpStore[email].Code
 	service.mu.RUnlock()
 
 	// First verification should succeed
-	if !service.Verify(phoneNumber, code) {
+	if !service.Verify(email, code) {
 		t.Error("First verification failed")
 	}
 
 	// Second verification with same code should fail
-	if service.Verify(phoneNumber, code) {
+	if service.Verify(email, code) {
 		t.Error("OTP was reused successfully")
 	}
 }
