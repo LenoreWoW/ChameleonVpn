@@ -16,20 +16,20 @@ import com.google.gson.annotations.SerializedName
 // ==================== Request Models ====================
 
 data class SendOtpRequest(
-    @SerializedName("phone_number")
-    val phoneNumber: String
+    @SerializedName("email")
+    val email: String
 )
 
 data class VerifyOtpRequest(
-    @SerializedName("phone_number")
-    val phoneNumber: String,
+    @SerializedName("email")
+    val email: String,
     @SerializedName("otp")
     val otp: String
 )
 
 data class RegisterRequest(
-    @SerializedName("phone_number")
-    val phoneNumber: String,
+    @SerializedName("email")
+    val email: String,
     @SerializedName("password")
     val password: String,
     @SerializedName("otp_session_id")
@@ -37,8 +37,8 @@ data class RegisterRequest(
 )
 
 data class LoginRequest(
-    @SerializedName("phone_number")
-    val phoneNumber: String,
+    @SerializedName("email")
+    val email: String,
     @SerializedName("password")
     val password: String
 )
@@ -71,8 +71,8 @@ data class VerifyOtpResponse(
 data class RegisterResponse(
     @SerializedName("user_id")
     val userId: String,
-    @SerializedName("phone_number")
-    val phoneNumber: String,
+    @SerializedName("email")
+    val email: String,
     @SerializedName("access_token")
     val accessToken: String,
     @SerializedName("refresh_token")
@@ -86,8 +86,8 @@ data class RegisterResponse(
 data class LoginResponse(
     @SerializedName("user_id")
     val userId: String,
-    @SerializedName("phone_number")
-    val phoneNumber: String,
+    @SerializedName("email")
+    val email: String,
     @SerializedName("access_token")
     val accessToken: String,
     @SerializedName("refresh_token")
@@ -120,7 +120,7 @@ data class ErrorResponse(
 
 data class UserData(
     val userId: String,
-    val phoneNumber: String,
+    val email: String,
     val accessToken: String,
     val refreshToken: String,
     val expiresAt: Long

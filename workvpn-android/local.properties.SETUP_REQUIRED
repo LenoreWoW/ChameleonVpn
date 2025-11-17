@@ -1,0 +1,43 @@
+# Android SDK Location Configuration
+#
+# SETUP REQUIRED: Rename this file to 'local.properties' and set your Android SDK path
+#
+# This file should NOT be committed to git (already in .gitignore)
+#
+# Instructions:
+# 1. Rename this file from 'local.properties.SETUP_REQUIRED' to 'local.properties'
+# 2. Set sdk.dir to your Android SDK location
+# 3. Run: ./gradlew assembleDebug
+
+## macOS (Common locations):
+# If installed via Android Studio:
+sdk.dir=/Users/YOUR_USERNAME/Library/Android/sdk
+
+# If installed via Homebrew:
+# sdk.dir=/opt/homebrew/share/android-commandlinetools
+
+## Linux (Common location):
+# sdk.dir=/home/YOUR_USERNAME/Android/Sdk
+
+## Windows:
+# sdk.dir=C\:\\Users\\YOUR_USERNAME\\AppData\\Local\\Android\\Sdk
+
+# ========================================
+# How to find your Android SDK location:
+# ========================================
+#
+# Method 1 - Via Android Studio:
+#   Android Studio → Settings → Appearance & Behavior → System Settings → Android SDK
+#   Copy the "Android SDK Location" path
+#
+# Method 2 - Via Command Line (macOS/Linux):
+#   echo $ANDROID_HOME
+#   Or check: ~/Library/Android/sdk (macOS default)
+#
+# Method 3 - Via Command Line (Windows):
+#   echo %ANDROID_HOME%
+#
+# ========================================
+
+# Example for user 'wolf':
+# sdk.dir=/Users/wolf/Library/Android/sdk

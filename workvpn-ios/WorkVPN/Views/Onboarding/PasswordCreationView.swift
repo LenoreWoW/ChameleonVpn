@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct PasswordCreationView: View {
-    let phoneNumber: String
+    let email: String
     var onCreate: (String) -> Void
 
     @State private var password = ""
@@ -164,7 +164,7 @@ struct PasswordCreationView: View {
 struct PasswordCreationView_Previews: PreviewProvider {
     static var previews: some View {
         PasswordCreationView(
-            phoneNumber: "+1 (555) 123-4567",
+            email: "user@example.com",
             onCreate: { _ in }
         )
     }

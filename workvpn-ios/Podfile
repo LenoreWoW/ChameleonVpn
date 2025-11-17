@@ -8,13 +8,17 @@ use_frameworks!
 
 # Main app target
 target 'WorkVPN' do
-  # OpenVPN library for real VPN functionality - using latest stable version
+  # OpenVPN library for real VPN functionality
+  # NOTE: Repository archived March 2022, but stable and working
+  # See TECHNICAL_DEBT.md for decision rationale and migration plan
+  # Version: 0.8.0 | Last reviewed: November 2025
   pod 'OpenVPNAdapter', :git => 'https://github.com/ss-abramchuk/OpenVPNAdapter.git', :branch => 'master'
 end
 
 # Network Extension target
 target 'WorkVPNTunnelExtension' do
-  # OpenVPN library (required in extension too) - using latest stable version
+  # OpenVPN library (required in extension too)
+  # Same version as main app target
   pod 'OpenVPNAdapter', :git => 'https://github.com/ss-abramchuk/OpenVPNAdapter.git', :branch => 'master'
 end
 

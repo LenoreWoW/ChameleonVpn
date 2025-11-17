@@ -44,9 +44,10 @@ BarqNet is a complete, enterprise-grade, multi-platform VPN solution with profes
 
 ### Authentication & Authorization
 - ✅ JWT tokens (access + refresh) with automatic rotation
-- ✅ Phone number + OTP authentication
+- ✅ Email + OTP authentication with Resend email delivery
+- ✅ Beautiful branded HTML email templates
 - ✅ Strong password requirements (12+ chars, complexity)
-- ✅ Rate limiting (prevents OTP spam)
+- ✅ Rate limiting (prevents OTP spam - 5 OTPs per hour)
 - ✅ Token revocation/blacklist system
 - ✅ Secure credential storage (OS Keychain/Credential Manager)
 
@@ -120,7 +121,8 @@ cd workvpn-android
 
 **Backend:**
 - JWT authentication with refresh tokens
-- Phone + OTP registration/login
+- Email + OTP registration/login with Resend
+- Beautiful branded HTML email templates
 - Rate limiting (Redis-based)
 - Token revocation/blacklist
 - Database migrations (PostgreSQL)
@@ -135,7 +137,7 @@ cd workvpn-android
 - Settings persistence
 - Certificate pinning (iOS, Android)
 - Strong password validation
-- Phone number validation (E.164 format)
+- Email validation (RFC 5322 format)
 
 ---
 
@@ -242,6 +244,11 @@ export DB_PASSWORD="barqnet123"
 export DB_HOST="localhost"
 export DB_SSLMODE="disable"
 export REDIS_ADDR="localhost:6379"
+
+# Email Configuration (Resend)
+export RESEND_API_KEY="re_your_api_key_here"
+export RESEND_FROM_EMAIL="onboarding@resend.dev"  # or your custom domain
+export EMAIL_SERVICE_MODE="resend"  # or "local" for development
 ```
 
 ### Build Commands
@@ -442,6 +449,14 @@ MIT License - See [LICENSE](LICENSE) file for details
 - Added complete backend integration to iOS and Android
 - Implemented enterprise-grade security features
 - Created 3,200+ lines of comprehensive documentation
+
+**November 16, 2025:** Email OTP migration completed (Backend)
+- Migrated from phone-based to email-based OTP authentication
+- Integrated Resend for email delivery (3,000 free emails/month)
+- Created beautiful branded HTML email templates
+- Updated all backend APIs to use email instead of phone
+- Database migration ready (not yet applied)
+- Client platforms (iOS, Android, Desktop) in progress
 
 **Result:** **100% Production-Ready Enterprise VPN Platform**
 

@@ -19,13 +19,13 @@ interface VPNApi {
   onConfigDeleted: (callback: () => void) => void;
   onShowImportDialog: (callback: () => void) => void;
   // Auth API
-  sendOTP: (phoneNumber: string) => Promise<{ success: boolean; error?: string }>;
-  verifyOTP: (phoneNumber: string, code: string) => Promise<{ success: boolean; error?: string }>;
-  createAccount: (phoneNumber: string, password: string, otpCode: string) => Promise<{ success: boolean; error?: string }>;
-  login: (phoneNumber: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  sendOTP: (email: string) => Promise<{ success: boolean; error?: string }>;
+  verifyOTP: (email: string, code: string) => Promise<{ success: boolean; error?: string }>;
+  createAccount: (email: string, password: string, otpCode: string) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   isAuthenticated: () => Promise<boolean>;
-  getCurrentUser: () => Promise<{ phoneNumber: string } | null>;
+  getCurrentUser: () => Promise<{ email: string } | null>;
 }
 
 declare global {
@@ -38,13 +38,13 @@ declare global {
 let currentStatus: any = null;
 let currentStats: any = null;
 let currentConfig: any = null;
-let currentPhoneNumber: string = '';
+let currentEmail: string = '';
 let currentOTPCode: string = ''; // Store verified OTP code for account creation
 let threeScene: ThreeScene | null = null;
 let isLoadingSettings: boolean = false;
 
 // UI States
-const phoneEntryState = document.getElementById('phone-entry-state')!;
+const emailEntryState = document.getElementById('email-entry-state')!;
 const otpVerificationState = document.getElementById('otp-verification-state')!;
 const passwordCreationState = document.getElementById('password-creation-state')!;
 const loginState = document.getElementById('login-state')!;
@@ -54,13 +54,13 @@ const vpnState = document.getElementById('vpn-state')!;
 const connectingState = document.getElementById('connecting-state')!;
 const errorState = document.getElementById('error-state')!;
 
-// Phone Entry Elements
-const phoneInput = document.getElementById('phone-input') as HTMLInputElement;
-const phoneSubmitBtn = document.getElementById('phone-submit-btn') as HTMLButtonElement;
+// Email Entry Elements
+const emailInput = document.getElementById('email-input') as HTMLInputElement;
+const emailSubmitBtn = document.getElementById('email-submit-btn') as HTMLButtonElement;
 const loginLink = document.getElementById('login-link')!;
 
 // OTP Elements
-const phoneDisplay = document.getElementById('phone-display')!;
+const emailDisplay = document.getElementById('email-display')!;
 const otpDigits: HTMLInputElement[] = [
   document.getElementById('otp-1') as HTMLInputElement,
   document.getElementById('otp-2') as HTMLInputElement,
@@ -80,7 +80,7 @@ const passwordSubmitBtn = document.getElementById('password-submit-btn') as HTML
 const passwordError = document.getElementById('password-error')!;
 
 // Login Elements
-const loginPhoneInput = document.getElementById('login-phone-input') as HTMLInputElement;
+const loginEmailInput = document.getElementById('login-email-input') as HTMLInputElement;
 const loginPasswordInput = document.getElementById('login-password-input') as HTMLInputElement;
 const loginSubmitBtn = document.getElementById('login-submit-btn') as HTMLButtonElement;
 const loginError = document.getElementById('login-error')!;
@@ -143,7 +143,7 @@ function initThreeScene() {
 
 // ===== Utility Functions =====
 function hideAllStates() {
-  phoneEntryState.style.display = 'none';
+  emailEntryState.style.display = 'none';
   otpVerificationState.style.display = 'none';
   passwordCreationState.style.display = 'none';
   loginState.style.display = 'none';
@@ -207,42 +207,33 @@ function formatDuration(seconds: number): string {
   }
 }
 
-function formatPhoneNumber(phone: string): string {
-  // Simple formatting for display
-  const cleaned = phone.replace(/\D/g, '');
-  if (cleaned.length === 11 && cleaned.startsWith('1')) {
-    return `+1 (${cleaned.slice(1, 4)}) ${cleaned.slice(4, 7)}-${cleaned.slice(7)}`;
-  }
-  return phone;
-}
-
 // ===== Onboarding Flow =====
 
-// Step 1: Phone Number Entry
-async function handlePhoneSubmit() {
-  const phone = phoneInput.value.trim();
+// Step 1: Email Entry
+async function handleEmailSubmit() {
+  const email = emailInput.value.trim();
 
-  // Validate phone number format (E.164 format: +[country code][number])
-  const e164Regex = /^\+[1-9]\d{1,14}$/;
-  if (!phone) {
-    alert('Please enter your phone number');
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email) {
+    alert('Please enter your email address');
     return;
   }
 
-  if (!e164Regex.test(phone)) {
-    alert('Invalid phone number format. Please use international format (e.g., +1234567890)');
+  if (!emailRegex.test(email)) {
+    alert('Invalid email format. Please enter a valid email address');
     return;
   }
 
-  phoneSubmitBtn.disabled = true;
-  phoneSubmitBtn.textContent = 'Sending...';
+  emailSubmitBtn.disabled = true;
+  emailSubmitBtn.textContent = 'Sending...';
 
   try {
-    const result = await window.vpn.sendOTP(phone);
+    const result = await window.vpn.sendOTP(email);
 
     if (result.success) {
-      currentPhoneNumber = phone;
-      phoneDisplay.textContent = formatPhoneNumber(phone);
+      currentEmail = email;
+      emailDisplay.textContent = email;
       showState(otpVerificationState);
 
       // Focus first OTP digit
@@ -262,8 +253,8 @@ async function handlePhoneSubmit() {
   } catch (error) {
     alert('Error sending OTP: ' + (error as Error).message);
   } finally {
-    phoneSubmitBtn.disabled = false;
-    phoneSubmitBtn.textContent = 'Continue';
+    emailSubmitBtn.disabled = false;
+    emailSubmitBtn.textContent = 'Continue';
   }
 }
 
@@ -311,7 +302,7 @@ async function handleOTPVerify() {
   otpVerifyBtn.textContent = 'Verifying...';
 
   try {
-    const result = await window.vpn.verifyOTP(currentPhoneNumber, code);
+    const result = await window.vpn.verifyOTP(currentEmail, code);
 
     if (result.success) {
       // Store the verified OTP code for account creation
@@ -388,7 +379,7 @@ async function handleResendOTP() {
   resendOtpLink.textContent = 'Sending...';
 
   try {
-    const result = await window.vpn.sendOTP(currentPhoneNumber);
+    const result = await window.vpn.sendOTP(currentEmail);
 
     if (result.success) {
       resendOtpLink.textContent = 'Code sent!';
@@ -450,7 +441,7 @@ async function handlePasswordSubmit() {
   passwordSubmitBtn.textContent = 'Creating...';
 
   try {
-    const result = await window.vpn.createAccount(currentPhoneNumber, password, currentOTPCode);
+    const result = await window.vpn.createAccount(currentEmail, password, currentOTPCode);
 
     if (result.success) {
       // Clear sensitive data
@@ -484,10 +475,10 @@ async function handlePasswordSubmit() {
 
 // Step 4: Login
 async function handleLogin() {
-  const phone = loginPhoneInput.value.trim();
+  const email = loginEmailInput.value.trim();
   const password = loginPasswordInput.value;
 
-  if (!phone || !password) {
+  if (!email || !password) {
     loginError.textContent = 'Please fill in all fields';
     loginError.style.display = 'block';
     gsap.from(loginError, { x: -10, duration: 0.1, repeat: 5, yoyo: true });
@@ -499,7 +490,7 @@ async function handleLogin() {
   loginSubmitBtn.textContent = 'Signing In...';
 
   try {
-    const result = await window.vpn.login(phone, password);
+    const result = await window.vpn.login(email, password);
 
     if (result.success) {
       gsap.to(loginState, {
@@ -511,7 +502,7 @@ async function handleLogin() {
         }
       });
     } else {
-      loginError.textContent = result.error || 'Invalid phone number or password';
+      loginError.textContent = result.error || 'Invalid email or password';
       loginError.style.display = 'block';
       gsap.from(loginError, { x: -10, duration: 0.1, repeat: 5, yoyo: true });
     }
@@ -585,7 +576,7 @@ async function handleLogout() {
       currentConfig = null;
       currentStatus = null;
       currentStats = null;
-      showState(phoneEntryState);
+      showState(emailEntryState);
     } catch (error) {
       alert('Error logging out');
     }
@@ -813,12 +804,12 @@ async function checkAuthAndShowUI() {
       await loadSettings();
       updateUI();
     } else {
-      showState(phoneEntryState);
+      showState(emailEntryState);
     }
   } catch (error) {
     console.error('[Auth] Error in checkAuthAndShowUI:', error);
-    // Show phone entry as fallback
-    showState(phoneEntryState);
+    // Show email entry as fallback
+    showState(emailEntryState);
   }
 }
 
@@ -836,9 +827,9 @@ async function initialize() {
     setupOTPInputs();
 
     // Event listeners for onboarding
-    phoneSubmitBtn.addEventListener('click', handlePhoneSubmit);
-    phoneInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') handlePhoneSubmit();
+    emailSubmitBtn.addEventListener('click', handleEmailSubmit);
+    emailInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleEmailSubmit();
     });
     loginLink.addEventListener('click', (e) => {
       e.preventDefault();
@@ -862,7 +853,7 @@ async function initialize() {
     });
     signupLink.addEventListener('click', (e) => {
       e.preventDefault();
-      showState(phoneEntryState);
+      showState(emailEntryState);
     });
 
     // VPN Credentials event listeners
@@ -940,8 +931,8 @@ async function initialize() {
     }
   } catch (error) {
     console.error('[App] Fatal error during initialization:', error);
-    // Fallback: show phone entry screen
-    showState(phoneEntryState);
+    // Fallback: show email entry screen
+    showState(emailEntryState);
   }
 }
 

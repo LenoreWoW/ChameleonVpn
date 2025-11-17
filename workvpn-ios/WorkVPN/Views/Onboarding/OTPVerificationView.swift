@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct OTPVerificationView: View {
-    let phoneNumber: String
+    let email: String
     var onVerify: (String) -> Void
     var onResend: () -> Void
 
@@ -44,12 +44,12 @@ struct OTPVerificationView: View {
                         }
                     }
 
-                Text("Verify Your Number")
+                Text("Verify Your Email")
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .foregroundColor(.cyanBlue)
 
-                Text("We've sent a 6-digit code to \(phoneNumber)")
+                Text("We've sent a 6-digit code to \(email)")
                     .font(.body)
                     .foregroundColor(.white.opacity(0.6))
                     .multilineTextAlignment(.center)
@@ -171,7 +171,7 @@ struct OTPVerificationView: View {
 struct OTPVerificationView_Previews: PreviewProvider {
     static var previews: some View {
         OTPVerificationView(
-            phoneNumber: "+1 (555) 123-4567",
+            email: "user@example.com",
             onVerify: { _ in },
             onResend: {}
         )

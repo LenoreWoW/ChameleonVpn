@@ -1,11 +1,12 @@
 module barqnet-backend
 
-go 1.21
+go 1.23
 
 require (
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/lib/pq v1.10.9
+	github.com/resend/resend-go/v3 v3.0.0
 	golang.org/x/crypto v0.18.0
 )
 

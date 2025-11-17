@@ -4,6 +4,17 @@ import (
 	"time"
 )
 
+// AuthUser represents an authenticated user in the auth_users table
+type AuthUser struct {
+	ID              int       `json:"id"`
+	Email           string    `json:"email"`
+	PasswordHash    string    `json:"-"` // Never expose password hash in JSON
+	CreatedAt       time.Time `json:"created_at"`
+	LastLogin       time.Time `json:"last_login"`
+	Active          bool      `json:"active"`
+	MigratedFromPhone bool    `json:"migrated_from_phone,omitempty"`
+}
+
 // User represents a VPN user
 type User struct {
 	ID         int       `json:"id"`

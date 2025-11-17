@@ -1,14 +1,14 @@
 //
-//  PhoneNumberView.swift
+//  EmailEntryView.swift
 //  BarqNet
 //
-//  Phone number entry for onboarding
+//  Email entry for onboarding
 //
 
 import SwiftUI
 
-struct PhoneNumberView: View {
-    @Binding var phoneNumber: String
+struct EmailEntryView: View {
+    @Binding var email: String
     var onContinue: () -> Void
     var onLoginClick: () -> Void
 
@@ -30,7 +30,7 @@ struct PhoneNumberView: View {
                 Spacer()
 
                 // Floating icon
-                Text("📱")
+                Text("📧")
                     .font(.system(size: 80))
                     .offset(y: floatOffset)
                     .onAppear {
@@ -47,34 +47,35 @@ struct PhoneNumberView: View {
                     .fontWeight(.bold)
                     .foregroundColor(.cyanBlue)
 
-                Text("Enter your phone number to create your secure VPN account")
+                Text("Enter your email address to create your secure VPN account")
                     .font(.body)
                     .foregroundColor(.white.opacity(0.6))
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
 
-                // Phone number input
+                // Email input
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("PHONE NUMBER")
+                    Text("EMAIL ADDRESS")
                         .font(.caption)
                         .fontWeight(.medium)
                         .foregroundColor(.white.opacity(0.6))
 
-                    TextField("", text: $phoneNumber)
-                        .placeholder(when: phoneNumber.isEmpty) {
-                            Text("+1 (555) 123-4567")
+                    TextField("", text: $email)
+                        .placeholder(when: email.isEmpty) {
+                            Text("email@example.com")
                                 .foregroundColor(.white.opacity(0.3))
                         }
-                        .keyboardType(.phonePad)
+                        .keyboardType(.emailAddress)
+                        .autocapitalization(.none)
                         .foregroundColor(.white)
                         .padding()
                         .background(
                             RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.cyanBlue.opacity(phoneNumber.isEmpty ? 0.2 : 1), lineWidth: 2)
+                                .stroke(Color.cyanBlue.opacity(email.isEmpty ? 0.2 : 1), lineWidth: 2)
                                 .background(Color.black.opacity(0.3))
                                 .cornerRadius(12)
                         )
-                        .onChange(of: phoneNumber) { _ in
+                        .onChange(of: email) { _ in
                             errorMessage = nil
                         }
                 }
@@ -89,8 +90,8 @@ struct PhoneNumberView: View {
 
                 // Continue button
                 Button(action: {
-                    if phoneNumber.isEmpty {
-                        errorMessage = "Please enter your phone number"
+                    if email.isEmpty {
+                        errorMessage = "Please enter your email address"
                     } else {
                         isLoading = true
                         onContinue()
@@ -145,10 +146,10 @@ extension View {
     }
 }
 
-struct PhoneNumberView_Previews: PreviewProvider {
+struct EmailEntryView_Previews: PreviewProvider {
     static var previews: some View {
-        PhoneNumberView(
-            phoneNumber: .constant(""),
+        EmailEntryView(
+            email: .constant(""),
             onContinue: {},
             onLoginClick: {}
         )

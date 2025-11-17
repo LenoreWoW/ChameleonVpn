@@ -21,19 +21,19 @@
 
     <!-- Main Content -->
     <div class="content">
-      <!-- Step 1: Phone Number Entry -->
-      <div id="phone-entry-state" class="state" style="display: block;">
+      <!-- Step 1: Email Entry -->
+      <div id="email-entry-state" class="state" style="display: block;">
         <div class="onboarding-container">
-          <div class="onboarding-icon">📱</div>
+          <div class="onboarding-icon">📧</div>
           <h1 class="onboarding-title">Welcome to BarqNet</h1>
-          <p class="onboarding-subtitle">Enter your phone number to get started with secure, private browsing</p>
+          <p class="onboarding-subtitle">Enter your email address to get started with secure, private browsing</p>
 
           <div class="form-group">
-            <label class="form-label">Phone Number</label>
-            <input type="tel" id="phone-input" class="form-input" placeholder="+1 (555) 123-4567" autocomplete="tel">
+            <label class="form-label">Email Address</label>
+            <input type="email" id="email-input" class="form-input" placeholder="email@example.com" autocomplete="email">
           </div>
 
-          <button id="phone-submit-btn" class="btn btn-large">Continue</button>
+          <button id="email-submit-btn" class="btn btn-large">Continue</button>
 
           <p class="link-text" style="margin-top: 24px;">Already have an account? <a href="#" id="login-link" class="link-text">Sign In</a></p>
         </div>
@@ -43,8 +43,8 @@
       <div id="otp-verification-state" class="state" style="display: none;">
         <div class="onboarding-container">
           <div class="onboarding-icon">🔐</div>
-          <h1 class="onboarding-title">Verify Your Number</h1>
-          <p class="onboarding-subtitle">We've sent a 6-digit code to <span id="phone-display"></span></p>
+          <h1 class="onboarding-title">Verify Your Email</h1>
+          <p class="onboarding-subtitle">We've sent a 6-digit code to <span id="email-display"></span></p>
 
           <div class="otp-input-group">
             <input type="text" maxlength="1" class="otp-digit form-input" id="otp-1" autocomplete="off">
@@ -94,8 +94,8 @@
           <p class="onboarding-subtitle">Sign in to access your secure VPN connection</p>
 
           <div class="form-group">
-            <label class="form-label">Phone Number</label>
-            <input type="tel" id="login-phone-input" class="form-input" placeholder="+1 (555) 123-4567" autocomplete="tel">
+            <label class="form-label">Email Address</label>
+            <input type="email" id="login-email-input" class="form-input" placeholder="email@example.com" autocomplete="email">
           </div>
 
           <div class="form-group">

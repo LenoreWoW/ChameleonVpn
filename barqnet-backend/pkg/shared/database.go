@@ -55,9 +55,11 @@ func NewDatabase(cfg *DatabaseConfig) (*DB, error) {
 	}
 
 	// Initialize schema
-	if err := db.initSchema(); err != nil {
-		return nil, fmt.Errorf("failed to initialize schema: %v", err)
-	}
+	// NOTE: Schema initialization is handled by migrations (migrations/*.sql)
+	// Commenting out to avoid conflicts with migration-managed schema
+	// if err := db.initSchema(); err != nil {
+	// 	return nil, fmt.Errorf("failed to initialize schema: %v", err)
+	// }
 
 	return db, nil
 }

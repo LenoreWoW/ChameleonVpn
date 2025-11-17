@@ -10,8 +10,8 @@ import (
 
 // Claims represents the JWT claims structure
 type Claims struct {
-	PhoneNumber string `json:"phone_number"`
-	UserID      int    `json:"user_id"`
+	Email  string `json:"email"`
+	UserID int    `json:"user_id"`
 	jwt.RegisteredClaims
 }
 
@@ -48,13 +48,13 @@ func GetJWTSecret() string {
 
 // GenerateJWT generates a new JWT access token for a user (24 hour expiry)
 // Parameters:
-//   - phoneNumber: The user's phone number (used as primary identifier)
+//   - email: The user's email address (used as primary identifier)
 //   - userID: The user's database ID
 //
 // Returns: JWT token string and error
-func GenerateJWT(phoneNumber string, userID int) (string, error) {
-	if phoneNumber == "" {
-		return "", fmt.Errorf("phone number cannot be empty")
+func GenerateJWT(email string, userID int) (string, error) {
+	if email == "" {
+		return "", fmt.Errorf("email cannot be empty")
 	}
 
 	secret := GetJWTSecret()
@@ -62,14 +62,14 @@ func GenerateJWT(phoneNumber string, userID int) (string, error) {
 
 	// Create the claims
 	claims := &Claims{
-		PhoneNumber: phoneNumber,
-		UserID:      userID,
+		Email:  email,
+		UserID: userID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),
 			Issuer:    "barqnet-auth",
-			Subject:   phoneNumber,
+			Subject:   email,
 		},
 	}
 
@@ -88,13 +88,13 @@ func GenerateJWT(phoneNumber string, userID int) (string, error) {
 // GenerateRefreshToken generates a new JWT refresh token for a user (7 day expiry)
 // Refresh tokens have longer expiry and are used to obtain new access tokens
 // Parameters:
-//   - phoneNumber: The user's phone number (used as primary identifier)
+//   - email: The user's email address (used as primary identifier)
 //   - userID: The user's database ID
 //
 // Returns: JWT refresh token string and error
-func GenerateRefreshToken(phoneNumber string, userID int) (string, error) {
-	if phoneNumber == "" {
-		return "", fmt.Errorf("phone number cannot be empty")
+func GenerateRefreshToken(email string, userID int) (string, error) {
+	if email == "" {
+		return "", fmt.Errorf("email cannot be empty")
 	}
 
 	secret := GetJWTSecret()
@@ -102,14 +102,14 @@ func GenerateRefreshToken(phoneNumber string, userID int) (string, error) {
 
 	// Create the claims
 	claims := &Claims{
-		PhoneNumber: phoneNumber,
-		UserID:      userID,
+		Email:  email,
+		UserID: userID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),
 			Issuer:    "barqnet-auth-refresh",
-			Subject:   phoneNumber,
+			Subject:   email,
 		},
 	}
 
@@ -221,7 +221,7 @@ func RefreshJWT(tokenString string) (string, error) {
 	}
 
 	// Generate a new token with the same user data
-	newToken, err := GenerateJWT(claims.PhoneNumber, claims.UserID)
+	newToken, err := GenerateJWT(claims.Email, claims.UserID)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate new token: %v", err)
 	}
@@ -229,10 +229,10 @@ func RefreshJWT(tokenString string) (string, error) {
 	return newToken, nil
 }
 
-// ExtractPhoneNumber extracts the phone number from a JWT token without full validation
+// ExtractEmail extracts the email address from a JWT token without full validation
 // This is useful for logging and debugging purposes
 // For actual authentication, always use ValidateJWT
-func ExtractPhoneNumber(tokenString string) (string, error) {
+func ExtractEmail(tokenString string) (string, error) {
 	token, _, err := new(jwt.Parser).ParseUnverified(tokenString, &Claims{})
 	if err != nil {
 		return "", fmt.Errorf("failed to parse token: %v", err)
@@ -243,7 +243,7 @@ func ExtractPhoneNumber(tokenString string) (string, error) {
 		return "", fmt.Errorf("invalid token claims")
 	}
 
-	return claims.PhoneNumber, nil
+	return claims.Email, nil
 }
 
 // IsTokenExpired checks if a token is expired without validating the signature

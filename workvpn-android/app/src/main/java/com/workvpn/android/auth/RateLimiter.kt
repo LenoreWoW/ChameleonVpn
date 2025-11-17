@@ -12,13 +12,13 @@ import kotlinx.coroutines.flow.map
  * Rate Limiter for OTP requests
  *
  * Implements client-side rate limiting to prevent OTP spam:
- * - Maximum 3 OTP requests per 5 minutes per phone number
+ * - Maximum 3 OTP requests per 5 minutes per email address
  * - Tracks request count and cooldown period
  * - Provides countdown timer for UI feedback
  *
  * Security Benefits:
  * - Prevents brute-force OTP attacks
- * - Reduces load on SMS gateway
+ * - Reduces load on email gateway
  * - Protects against accidental button spam
  * - Improves user experience with clear cooldown messages
  *
@@ -32,28 +32,28 @@ class RateLimiter(private val context: Context) {
         private const val MAX_REQUESTS = 3
         private const val COOLDOWN_PERIOD_MS = 5 * 60 * 1000L // 5 minutes in milliseconds
 
-        private fun requestCountKey(phoneNumber: String) = intPreferencesKey("otp_count_$phoneNumber")
-        private fun cooldownStartKey(phoneNumber: String) = longPreferencesKey("cooldown_start_$phoneNumber")
+        private fun requestCountKey(email: String) = intPreferencesKey("otp_count_$email")
+        private fun cooldownStartKey(email: String) = longPreferencesKey("cooldown_start_$email")
     }
 
     /**
-     * Check if OTP request is allowed for given phone number
+     * Check if OTP request is allowed for given email address
      *
-     * @param phoneNumber Phone number to check
+     * @param email Email address to check
      * @return Pair<Boolean, Long> - (isAllowed, remainingCooldownMs)
      */
-    suspend fun canSendOTP(phoneNumber: String): Pair<Boolean, Long> {
+    suspend fun canSendOTP(email: String): Pair<Boolean, Long> {
         val preferences = context.rateLimiterDataStore.data.first()
 
-        val requestCount = preferences[requestCountKey(phoneNumber)] ?: 0
-        val cooldownStart = preferences[cooldownStartKey(phoneNumber)] ?: 0L
+        val requestCount = preferences[requestCountKey(email)] ?: 0
+        val cooldownStart = preferences[cooldownStartKey(email)] ?: 0L
 
         val currentTime = System.currentTimeMillis()
         val cooldownElapsed = currentTime - cooldownStart
 
         // If cooldown period has passed, reset counter
         if (cooldownElapsed >= COOLDOWN_PERIOD_MS) {
-            resetRateLimit(phoneNumber)
+            resetRateLimit(email)
             return Pair(true, 0L)
         }
 
@@ -68,29 +68,29 @@ class RateLimiter(private val context: Context) {
     }
 
     /**
-     * Record an OTP request for given phone number
+     * Record an OTP request for given email address
      *
-     * @param phoneNumber Phone number to track
+     * @param email Email address to track
      */
-    suspend fun recordOTPRequest(phoneNumber: String) {
+    suspend fun recordOTPRequest(email: String) {
         context.rateLimiterDataStore.edit { preferences ->
-            val currentCount = preferences[requestCountKey(phoneNumber)] ?: 0
-            val cooldownStart = preferences[cooldownStartKey(phoneNumber)] ?: 0L
+            val currentCount = preferences[requestCountKey(email)] ?: 0
+            val cooldownStart = preferences[cooldownStartKey(email)] ?: 0L
 
             val currentTime = System.currentTimeMillis()
             val cooldownElapsed = currentTime - cooldownStart
 
             if (cooldownElapsed >= COOLDOWN_PERIOD_MS) {
                 // Reset counter and start new cooldown period
-                preferences[requestCountKey(phoneNumber)] = 1
-                preferences[cooldownStartKey(phoneNumber)] = currentTime
+                preferences[requestCountKey(email)] = 1
+                preferences[cooldownStartKey(email)] = currentTime
             } else {
                 // Increment counter within existing cooldown period
-                preferences[requestCountKey(phoneNumber)] = currentCount + 1
+                preferences[requestCountKey(email)] = currentCount + 1
 
                 // If first request, set cooldown start time
                 if (currentCount == 0) {
-                    preferences[cooldownStartKey(phoneNumber)] = currentTime
+                    preferences[cooldownStartKey(email)] = currentTime
                 }
             }
         }
@@ -99,13 +99,13 @@ class RateLimiter(private val context: Context) {
     /**
      * Get remaining requests before rate limit
      *
-     * @param phoneNumber Phone number to check
+     * @param email Email address to check
      * @return Number of remaining requests (0-3)
      */
-    suspend fun getRemainingRequests(phoneNumber: String): Int {
+    suspend fun getRemainingRequests(email: String): Int {
         val preferences = context.rateLimiterDataStore.data.first()
-        val requestCount = preferences[requestCountKey(phoneNumber)] ?: 0
-        val cooldownStart = preferences[cooldownStartKey(phoneNumber)] ?: 0L
+        val requestCount = preferences[requestCountKey(email)] ?: 0
+        val cooldownStart = preferences[cooldownStartKey(email)] ?: 0L
 
         val currentTime = System.currentTimeMillis()
         val cooldownElapsed = currentTime - cooldownStart
@@ -137,14 +137,14 @@ class RateLimiter(private val context: Context) {
     }
 
     /**
-     * Reset rate limit for given phone number
+     * Reset rate limit for given email address
      *
-     * @param phoneNumber Phone number to reset
+     * @param email Email address to reset
      */
-    suspend fun resetRateLimit(phoneNumber: String) {
+    suspend fun resetRateLimit(email: String) {
         context.rateLimiterDataStore.edit { preferences ->
-            preferences.remove(requestCountKey(phoneNumber))
-            preferences.remove(cooldownStartKey(phoneNumber))
+            preferences.remove(requestCountKey(email))
+            preferences.remove(cooldownStartKey(email))
         }
     }
 

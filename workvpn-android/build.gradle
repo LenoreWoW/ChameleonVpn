@@ -8,6 +8,8 @@ buildscript {
         google()
         mavenCentral()
         maven { url 'https://jitpack.io' }
+        // For ics-openvpn OpenVPN library
+        maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
     }
 
     dependencies {

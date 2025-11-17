@@ -1,0 +1,3 @@
+[submodule "workvpn-android/ics-openvpn"]
+	path = workvpn-android/ics-openvpn
+	url = https://github.com/schwabe/ics-openvpn.git

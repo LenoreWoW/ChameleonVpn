@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -21,11 +22,11 @@ import com.barqnet.android.ui.theme.*
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun PhoneNumberScreen(
+fun EmailEntryScreen(
     onContinue: (String) -> Unit,
     onLoginClick: () -> Unit
 ) {
-    var phoneNumber by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
 
     val infiniteTransition = rememberInfiniteTransition(label = "float")
@@ -61,7 +62,7 @@ fun PhoneNumberScreen(
         ) {
             // Floating Icon
             Text(
-                text = "📱",
+                text = "📧",
                 style = MaterialTheme.typography.displayLarge,
                 modifier = Modifier.offset(y = floatOffset.dp)
             )
@@ -79,7 +80,7 @@ fun PhoneNumberScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             Text(
-                text = "Enter your phone number to get started with secure, private browsing",
+                text = "Enter your email address to get started with secure, private browsing",
                 style = MaterialTheme.typography.bodyLarge,
                 color = Color.White.copy(alpha = 0.6f),
                 textAlign = TextAlign.Center
@@ -87,13 +88,16 @@ fun PhoneNumberScreen(
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Phone Number Input
+            // Email Input
             OutlinedTextField(
-                value = phoneNumber,
-                onValueChange = { phoneNumber = it },
-                label = { Text("PHONE NUMBER", style = MaterialTheme.typography.labelMedium) },
-                placeholder = { Text("+1 (555) 123-4567", color = Color.White.copy(alpha = 0.3f)) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("EMAIL ADDRESS", style = MaterialTheme.typography.labelMedium) },
+                placeholder = { Text("email@example.com", color = Color.White.copy(alpha = 0.3f)) },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    capitalization = KeyboardCapitalization.None
+                ),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = CyanBlue,
                     unfocusedBorderColor = CyanBlue.copy(alpha = 0.2f),
@@ -111,12 +115,12 @@ fun PhoneNumberScreen(
             // Continue Button with gradient
             Button(
                 onClick = {
-                    if (phoneNumber.isNotBlank()) {
+                    if (email.isNotBlank()) {
                         isLoading = true
-                        onContinue(phoneNumber)
+                        onContinue(email)
                     }
                 },
-                enabled = phoneNumber.isNotBlank() && !isLoading,
+                enabled = email.isNotBlank() && !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),

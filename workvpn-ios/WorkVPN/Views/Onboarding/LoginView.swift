@@ -11,7 +11,7 @@ struct LoginView: View {
     var onLogin: (String, String) -> Void
     var onSignUpClick: () -> Void
 
-    @State private var phoneNumber = ""
+    @State private var email = ""
     @State private var password = ""
     @State private var isLoading = false
     @State private var errorMessage: String?
@@ -54,28 +54,29 @@ struct LoginView: View {
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
 
-                // Phone number input
+                // Email input
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("PHONE NUMBER")
+                    Text("EMAIL ADDRESS")
                         .font(.caption)
                         .fontWeight(.medium)
                         .foregroundColor(.white.opacity(0.6))
 
-                    TextField("", text: $phoneNumber)
-                        .placeholder(when: phoneNumber.isEmpty) {
-                            Text("+1 (555) 123-4567")
+                    TextField("", text: $email)
+                        .placeholder(when: email.isEmpty) {
+                            Text("user@example.com")
                                 .foregroundColor(.white.opacity(0.3))
                         }
-                        .keyboardType(.phonePad)
+                        .keyboardType(.emailAddress)
+                        .autocapitalization(.none)
                         .foregroundColor(.white)
                         .padding()
                         .background(
                             RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.cyanBlue.opacity(phoneNumber.isEmpty ? 0.2 : 1), lineWidth: 2)
+                                .stroke(Color.cyanBlue.opacity(email.isEmpty ? 0.2 : 1), lineWidth: 2)
                                 .background(Color.black.opacity(0.3))
                                 .cornerRadius(12)
                         )
-                        .onChange(of: phoneNumber) { _ in
+                        .onChange(of: email) { _ in
                             errorMessage = nil
                         }
                 }
@@ -123,11 +124,11 @@ struct LoginView: View {
 
                 // Sign in button
                 Button(action: {
-                    if phoneNumber.isEmpty || password.isEmpty {
+                    if email.isEmpty || password.isEmpty {
                         errorMessage = "Please fill in all fields"
                     } else {
                         isLoading = true
-                        onLogin(phoneNumber, password)
+                        onLogin(email, password)
                     }
                 }) {
                     ZStack {

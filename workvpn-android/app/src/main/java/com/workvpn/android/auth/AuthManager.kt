@@ -68,18 +68,18 @@ class AuthManager(private val context: Context) {
     // ==================== OTP Flow ====================
 
     /**
-     * Send OTP to phone number
+     * Send OTP to email address
      *
      * Backend: POST /v1/auth/send-otp
      *
      * Includes client-side rate limiting:
-     * - Max 3 requests per 5 minutes per phone number
+     * - Max 3 requests per 5 minutes per email
      * - Returns error with cooldown time if limit exceeded
      */
-    suspend fun sendOTP(phoneNumber: String): Result<Unit> {
+    suspend fun sendOTP(email: String): Result<Unit> {
         return try {
             // Check rate limit before sending
-            val (canSend, remainingCooldown) = rateLimiter.canSendOTP(phoneNumber)
+            val (canSend, remainingCooldown) = rateLimiter.canSendOTP(email)
 
             if (!canSend) {
                 val cooldownFormatted = rateLimiter.formatCooldown(remainingCooldown)
@@ -88,9 +88,9 @@ class AuthManager(private val context: Context) {
                 return Result.failure(Exception(errorMsg))
             }
 
-            Log.d(TAG, "Sending OTP to: $phoneNumber")
+            Log.d(TAG, "Sending OTP to: $email")
 
-            val result = ApiService.sendOtp(phoneNumber)
+            val result = ApiService.sendOtp(email)
 
             if (result.isSuccess) {
                 val response = result.getOrNull()!!
@@ -98,9 +98,9 @@ class AuthManager(private val context: Context) {
                 tokenStorage.saveOtpSessionId(response.sessionId)
 
                 // Record OTP request for rate limiting
-                rateLimiter.recordOTPRequest(phoneNumber)
+                rateLimiter.recordOTPRequest(email)
 
-                val remainingRequests = rateLimiter.getRemainingRequests(phoneNumber)
+                val remainingRequests = rateLimiter.getRemainingRequests(email)
                 Log.d(TAG, "OTP sent successfully. Remaining requests: $remainingRequests")
 
                 Result.success(Unit)
@@ -120,11 +120,11 @@ class AuthManager(private val context: Context) {
      *
      * Backend: POST /v1/auth/verify-otp
      */
-    suspend fun verifyOTP(phoneNumber: String, code: String): Result<Unit> {
+    suspend fun verifyOTP(email: String, code: String): Result<Unit> {
         return try {
-            Log.d(TAG, "Verifying OTP for: $phoneNumber")
+            Log.d(TAG, "Verifying OTP for: $email")
 
-            val result = ApiService.verifyOtp(phoneNumber, code)
+            val result = ApiService.verifyOtp(email, code)
 
             if (result.isSuccess) {
                 val response = result.getOrNull()!!
@@ -156,7 +156,7 @@ class AuthManager(private val context: Context) {
      *
      * Backend: POST /v1/auth/register
      */
-    suspend fun createAccount(phoneNumber: String, password: String): Result<Unit> {
+    suspend fun createAccount(email: String, password: String): Result<Unit> {
         return try {
             // Validate password strength
             if (password.length < 8) {
@@ -166,9 +166,9 @@ class AuthManager(private val context: Context) {
             val sessionId = currentOtpSessionId ?: tokenStorage.getOtpSessionId()
                 ?: return Result.failure(Exception("No OTP session found. Please verify OTP first."))
 
-            Log.d(TAG, "Creating account for: $phoneNumber")
+            Log.d(TAG, "Creating account for: $email")
 
-            val result = ApiService.register(phoneNumber, password, sessionId)
+            val result = ApiService.register(email, password, sessionId)
 
             if (result.isSuccess) {
                 val response = result.getOrNull()!!
@@ -176,7 +176,7 @@ class AuthManager(private val context: Context) {
                 // Create UserData from response
                 val userData = UserData(
                     userId = response.userId,
-                    phoneNumber = response.phoneNumber,
+                    email = response.email,
                     accessToken = response.accessToken,
                     refreshToken = response.refreshToken,
                     expiresAt = response.expiresAt
@@ -210,11 +210,11 @@ class AuthManager(private val context: Context) {
      *
      * Backend: POST /v1/auth/login
      */
-    suspend fun login(phoneNumber: String, password: String): Result<Unit> {
+    suspend fun login(email: String, password: String): Result<Unit> {
         return try {
-            Log.d(TAG, "Logging in user: $phoneNumber")
+            Log.d(TAG, "Logging in user: $email")
 
-            val result = ApiService.login(phoneNumber, password)
+            val result = ApiService.login(email, password)
 
             if (result.isSuccess) {
                 val response = result.getOrNull()!!
@@ -222,7 +222,7 @@ class AuthManager(private val context: Context) {
                 // Create UserData from response
                 val userData = UserData(
                     userId = response.userId,
-                    phoneNumber = response.phoneNumber,
+                    email = response.email,
                     accessToken = response.accessToken,
                     refreshToken = response.refreshToken,
                     expiresAt = response.expiresAt
@@ -239,7 +239,7 @@ class AuthManager(private val context: Context) {
             } else {
                 val error = result.exceptionOrNull()
                 Log.e(TAG, "Login failed", error)
-                Result.failure(error ?: Exception("Invalid phone number or password"))
+                Result.failure(error ?: Exception("Invalid email or password"))
             }
         } catch (e: Exception) {
             Log.e(TAG, "Exception during login", e)

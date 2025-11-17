@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"regexp"
@@ -39,7 +40,36 @@ func (api *ManagementAPI) Start(port int) error {
 	// Initialize authentication handler
 	db := api.manager.GetDB()
 	conn := db.GetConnection()
-	otpService := NewMockOTPService() // Use shared.NewLocalOTPService() for production
+
+	// Create EmailService based on EMAIL_SERVICE_MODE
+	var emailService shared.EmailService
+	emailServiceMode := os.Getenv("EMAIL_SERVICE_MODE")
+	if emailServiceMode == "resend" {
+		// Production mode: Use Resend for actual email delivery
+		resendAPIKey := os.Getenv("RESEND_API_KEY")
+		resendFromEmail := os.Getenv("RESEND_FROM_EMAIL")
+
+		if resendAPIKey == "" || resendFromEmail == "" {
+			log.Println("⚠️  WARNING: RESEND_API_KEY or RESEND_FROM_EMAIL not set, falling back to local email service")
+			emailService = shared.NewLocalEmailService()
+		} else {
+			var err error
+			emailService, err = shared.NewResendEmailService(resendAPIKey, resendFromEmail)
+			if err != nil {
+				log.Printf("⚠️  WARNING: Failed to create Resend email service: %v, falling back to local email service", err)
+				emailService = shared.NewLocalEmailService()
+			} else {
+				log.Printf("✅ Email service initialized: Resend (from: %s)", resendFromEmail)
+			}
+		}
+	} else {
+		// Development mode: Log emails to console
+		emailService = shared.NewLocalEmailService()
+		log.Println("✅ Email service initialized: Local (emails logged to console)")
+	}
+
+	// Create OTP service with email delivery
+	otpService := shared.NewLocalOTPService(emailService)
 	authHandler := NewAuthHandler(conn, otpService, api.rateLimiter)
 
 	// Authentication endpoints (v1 API)

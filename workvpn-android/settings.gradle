@@ -17,3 +17,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "BarqNet"
 include ':app'
+include ':ics-openvpn:main'
+project(':ics-openvpn:main').projectDir = new File(rootDir, 'ics-openvpn/main')

@@ -19,7 +19,7 @@ import com.barqnet.android.ui.theme.*
 
 @Composable
 fun PasswordCreationScreen(
-    phoneNumber: String,
+    email: String,
     onCreate: (String) -> Unit
 ) {
     var password by remember { mutableStateOf("") }

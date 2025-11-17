@@ -61,7 +61,7 @@ class TokenStorage(context: Context) {
             .putString(KEY_REFRESH_TOKEN, userData.refreshToken)
             .putLong(KEY_EXPIRES_AT, userData.expiresAt)
             .putString(KEY_USER_ID, userData.userId)
-            .putString(KEY_PHONE_NUMBER, userData.phoneNumber)
+            .putString(KEY_EMAIL, userData.email)
             .apply()
     }
 
@@ -176,7 +176,7 @@ class TokenStorage(context: Context) {
         private const val KEY_REFRESH_TOKEN = "refresh_token"
         private const val KEY_EXPIRES_AT = "expires_at"
         private const val KEY_USER_ID = "user_id"
-        private const val KEY_PHONE_NUMBER = "phone_number"
+        private const val KEY_EMAIL = "email"
         private const val KEY_OTP_SESSION_ID = "otp_session_id"
     }
 }

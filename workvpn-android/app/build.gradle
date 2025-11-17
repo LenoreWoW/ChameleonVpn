@@ -105,15 +105,11 @@ dependencies {
     // MultiDex Support (required for VPN libraries)
     implementation 'androidx.multidex:multidex:2.0.1'
 
-    // VPN Protocol Support - OpenVPN Implementation
-    // Using ics-openvpn library (open source, well-maintained)
-    // GitHub: https://github.com/schwabe/ics-openvpn
-    // Note: This requires building the VPN service integration manually
-    // For production: Consider using OpenVPN Connect SDK or building ics-openvpn from source
-
-    // Alternative: Use standalone OpenVPN implementation
-    // We'll implement our own OpenVPN client using standard networking APIs
-    // This gives us full control but requires more implementation work
+    // VPN Protocol Support - REAL OpenVPN Implementation
+    // Using ics-openvpn (schwabe/ics-openvpn) - Production-grade OpenVPN
+    // This provides actual OpenVPN 3 protocol implementation
+    // Documentation: https://github.com/schwabe/ics-openvpn
+    implementation project(':ics-openvpn:main')
 
     // Coroutines
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'

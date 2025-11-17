@@ -4,13 +4,19 @@
 //
 //  Network Extension tunnel provider for OpenVPN
 //
+//  NOTE: Using OpenVPNAdapter (archived March 2022) - See TECHNICAL_DEBT.md
+//  Decision: Keep current implementation due to stability and working status
+//  Last Reviewed: November 2025 | Next Review: February 2026
+//
 
 import NetworkExtension
 import OpenVPNAdapter
 
 // MARK: - Protocol Conformance
 
-// Ensure NEPacketTunnelFlow conforms to OpenVPNAdapterPacketFlow
+// NOTE: This conformance allows OpenVPNAdapter to work with NEPacketTunnelFlow
+// Warning is expected and safe - Apple is unlikely to add this conformance
+// as OpenVPNAdapter is a third-party library
 extension NEPacketTunnelFlow: OpenVPNAdapterPacketFlow {}
 
 // MARK: - Traffic Statistics
@@ -68,7 +74,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
 
         // Apply configuration and connect
         do {
-            let properties = try vpnAdapter.apply(configuration: configuration)
+            _ = try vpnAdapter.apply(configuration: configuration)
             NSLog("[PacketTunnel] Configuration applied successfully")
 
             // Start OpenVPN connection with packet flow
@@ -170,8 +176,8 @@ extension PacketTunnelProvider: OpenVPNAdapterDelegate {
         case .wait:
             NSLog("[PacketTunnel] Waiting...")
 
-        case .authenticating:
-            NSLog("[PacketTunnel] Authenticating...")
+        // Note: .authenticating event removed - not supported in OpenVPNAdapter 0.8.0
+        // Authentication status is logged via general connection events
 
         case .getConfig:
             NSLog("[PacketTunnel] Getting configuration...")

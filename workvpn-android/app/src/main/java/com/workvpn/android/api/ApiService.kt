@@ -178,11 +178,11 @@ object ApiService {
     // ==================== API Methods ====================
 
     /**
-     * Send OTP to phone number
+     * Send OTP to email address
      */
-    suspend fun sendOtp(phoneNumber: String): Result<SendOtpResponse> {
+    suspend fun sendOtp(email: String): Result<SendOtpResponse> {
         return try {
-            val response = api.sendOtp(SendOtpRequest(phoneNumber))
+            val response = api.sendOtp(SendOtpRequest(email))
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!)
             } else {
@@ -198,9 +198,9 @@ object ApiService {
     /**
      * Verify OTP code
      */
-    suspend fun verifyOtp(phoneNumber: String, otp: String): Result<VerifyOtpResponse> {
+    suspend fun verifyOtp(email: String, otp: String): Result<VerifyOtpResponse> {
         return try {
-            val response = api.verifyOtp(VerifyOtpRequest(phoneNumber, otp))
+            val response = api.verifyOtp(VerifyOtpRequest(email, otp))
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!)
             } else {
@@ -217,12 +217,12 @@ object ApiService {
      * Register new user
      */
     suspend fun register(
-        phoneNumber: String,
+        email: String,
         password: String,
         otpSessionId: String
     ): Result<RegisterResponse> {
         return try {
-            val response = api.register(RegisterRequest(phoneNumber, password, otpSessionId))
+            val response = api.register(RegisterRequest(email, password, otpSessionId))
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!)
             } else {
@@ -238,9 +238,9 @@ object ApiService {
     /**
      * Login existing user
      */
-    suspend fun login(phoneNumber: String, password: String): Result<LoginResponse> {
+    suspend fun login(email: String, password: String): Result<LoginResponse> {
         return try {
-            val response = api.login(LoginRequest(phoneNumber, password))
+            val response = api.login(LoginRequest(email, password))
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!)
             } else {

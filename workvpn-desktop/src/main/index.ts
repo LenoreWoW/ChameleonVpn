@@ -238,24 +238,24 @@ const setupIPCHandlers = () => {
   });
 
   // Authentication handlers with error handling
-  ipcMain.handle('auth-send-otp', handleIPCError(async (_, phoneNumber: string) => {
+  ipcMain.handle('auth-send-otp', handleIPCError(async (_, email: string) => {
     const { authService } = await import('./auth/service');
-    return await authService.sendOTP(phoneNumber);
+    return await authService.sendOTP(email);
   }));
 
-  ipcMain.handle('auth-verify-otp', handleIPCError(async (_, phoneNumber: string, code: string) => {
+  ipcMain.handle('auth-verify-otp', handleIPCError(async (_, email: string, code: string) => {
     const { authService } = await import('./auth/service');
-    return await authService.verifyOTP(phoneNumber, code);
+    return await authService.verifyOTP(email, code);
   }));
 
-  ipcMain.handle('auth-create-account', handleIPCError(async (_, phoneNumber: string, password: string, otpCode: string) => {
+  ipcMain.handle('auth-create-account', handleIPCError(async (_, email: string, password: string, otpCode: string) => {
     const { authService } = await import('./auth/service');
-    return await authService.createAccount(phoneNumber, password, otpCode);
+    return await authService.createAccount(email, password, otpCode);
   }));
 
-  ipcMain.handle('auth-login', handleIPCError(async (_, phoneNumber: string, password: string) => {
+  ipcMain.handle('auth-login', handleIPCError(async (_, email: string, password: string) => {
     const { authService } = await import('./auth/service');
-    return await authService.login(phoneNumber, password);
+    return await authService.login(email, password);
   }));
 
   ipcMain.handle('auth-logout', handleIPCError(async () => {

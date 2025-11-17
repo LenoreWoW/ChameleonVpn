@@ -22,7 +22,7 @@ class AuthManager: ObservableObject {
     private var otpSessions: [String: OTPSession] = [:]
 
     struct OTPSession {
-        let phoneNumber: String
+        let email: String
         let sessionId: String?
         let verificationToken: String?
         let timestamp: Date
@@ -37,26 +37,26 @@ class AuthManager: ObservableObject {
         if apiClient.hasValidToken() {
             // Load current user from keychain
             if let userData = KeychainHelper.load(service: keychainService, account: currentUserKey),
-               let phoneNumber = String(data: userData, encoding: .utf8) {
-                self.currentUser = phoneNumber
+               let email = String(data: userData, encoding: .utf8) {
+                self.currentUser = email
                 self.isAuthenticated = true
-                NSLog("[AuthManager] Restored authentication state for user: ***\(phoneNumber.suffix(4))")
+                NSLog("[AuthManager] Restored authentication state for user: \(email)")
             }
         }
     }
 
-    func sendOTP(phoneNumber: String, completion: @escaping (Result<Void, Error>) -> Void) {
-        NSLog("[AuthManager] Sending OTP to phone: ***\(phoneNumber.suffix(4))")
+    func sendOTP(email: String, completion: @escaping (Result<Void, Error>) -> Void) {
+        NSLog("[AuthManager] Sending OTP to email: \(email)")
 
-        apiClient.sendOTP(phoneNumber: phoneNumber) { [weak self] result in
+        apiClient.sendOTP(email: email) { [weak self] result in
             DispatchQueue.main.async {
                 guard let self = self else { return }
 
                 switch result {
                 case .success(let sessionId):
                     // Store session information
-                    self.otpSessions[phoneNumber] = OTPSession(
-                        phoneNumber: phoneNumber,
+                    self.otpSessions[email] = OTPSession(
+                        email: email,
                         sessionId: sessionId,
                         verificationToken: nil,
                         timestamp: Date()
@@ -72,8 +72,8 @@ class AuthManager: ObservableObject {
         }
     }
 
-    func verifyOTP(phoneNumber: String, code: String, completion: @escaping (Result<Void, Error>) -> Void) {
-        NSLog("[AuthManager] Verifying OTP for phone: ***\(phoneNumber.suffix(4))")
+    func verifyOTP(email: String, code: String, completion: @escaping (Result<Void, Error>) -> Void) {
+        NSLog("[AuthManager] Verifying OTP for email: \(email)")
 
         guard code.count == 6, code.rangeOfCharacter(from: CharacterSet.decimalDigits.inverted) == nil else {
             let error = NSError(domain: "AuthManager", code: 400, userInfo: [NSLocalizedDescriptionKey: "Invalid OTP format. Must be 6 digits."])
@@ -81,17 +81,17 @@ class AuthManager: ObservableObject {
             return
         }
 
-        let session = otpSessions[phoneNumber]
+        let session = otpSessions[email]
 
-        apiClient.verifyOTP(phoneNumber: phoneNumber, code: code, sessionId: session?.sessionId) { [weak self] result in
+        apiClient.verifyOTP(email: email, code: code, sessionId: session?.sessionId) { [weak self] result in
             DispatchQueue.main.async {
                 guard let self = self else { return }
 
                 switch result {
                 case .success(let verificationToken):
                     // Update session with verification token
-                    self.otpSessions[phoneNumber] = OTPSession(
-                        phoneNumber: phoneNumber,
+                    self.otpSessions[email] = OTPSession(
+                        email: email,
                         sessionId: session?.sessionId,
                         verificationToken: verificationToken ?? code,
                         timestamp: Date()
@@ -107,8 +107,8 @@ class AuthManager: ObservableObject {
         }
     }
 
-    func createAccount(phoneNumber: String, password: String, completion: @escaping (Result<Void, Error>) -> Void) {
-        NSLog("[AuthManager] Creating account for phone: ***\(phoneNumber.suffix(4))")
+    func createAccount(email: String, password: String, completion: @escaping (Result<Void, Error>) -> Void) {
+        NSLog("[AuthManager] Creating account for email: \(email)")
 
         // Validate password
         guard password.count >= 8 else {
@@ -118,31 +118,31 @@ class AuthManager: ObservableObject {
         }
 
         // Get OTP code from session
-        guard let session = otpSessions[phoneNumber],
+        guard let session = otpSessions[email],
               let otpCode = session.verificationToken else {
             let error = NSError(domain: "AuthManager", code: 400, userInfo: [NSLocalizedDescriptionKey: "OTP verification required before registration"])
             completion(.failure(error))
             return
         }
 
-        apiClient.register(phoneNumber: phoneNumber, password: password, otpCode: otpCode) { [weak self] result in
+        apiClient.register(email: email, password: password, otpCode: otpCode) { [weak self] result in
             DispatchQueue.main.async {
                 guard let self = self else { return }
 
                 switch result {
                 case .success(let (tokens, user)):
                     // Save current user to keychain
-                    let phoneToStore = user?.phoneNumber ?? phoneNumber
-                    if let userData = phoneToStore.data(using: .utf8) {
+                    let emailToStore = user?.email ?? email
+                    if let userData = emailToStore.data(using: .utf8) {
                         _ = KeychainHelper.save(userData, service: self.keychainService, account: self.currentUserKey)
                     }
 
                     // Update auth state
-                    self.currentUser = phoneToStore
+                    self.currentUser = emailToStore
                     self.isAuthenticated = true
 
                     // Clean up OTP session
-                    self.otpSessions.removeValue(forKey: phoneNumber)
+                    self.otpSessions.removeValue(forKey: email)
 
                     NSLog("[AuthManager] Account created successfully")
                     completion(.success(()))
@@ -155,23 +155,23 @@ class AuthManager: ObservableObject {
         }
     }
 
-    func login(phoneNumber: String, password: String, completion: @escaping (Result<Void, Error>) -> Void) {
-        NSLog("[AuthManager] Logging in user: ***\(phoneNumber.suffix(4))")
+    func login(email: String, password: String, completion: @escaping (Result<Void, Error>) -> Void) {
+        NSLog("[AuthManager] Logging in user: \(email)")
 
-        apiClient.login(phoneNumber: phoneNumber, password: password) { [weak self] result in
+        apiClient.login(email: email, password: password) { [weak self] result in
             DispatchQueue.main.async {
                 guard let self = self else { return }
 
                 switch result {
                 case .success(let (tokens, user)):
                     // Save current user to keychain
-                    let phoneToStore = user?.phoneNumber ?? phoneNumber
-                    if let userData = phoneToStore.data(using: .utf8) {
+                    let emailToStore = user?.email ?? email
+                    if let userData = emailToStore.data(using: .utf8) {
                         _ = KeychainHelper.save(userData, service: self.keychainService, account: self.currentUserKey)
                     }
 
                     // Update auth state
-                    self.currentUser = phoneToStore
+                    self.currentUser = emailToStore
                     self.isAuthenticated = true
 
                     NSLog("[AuthManager] Login successful")

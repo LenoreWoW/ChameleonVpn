@@ -369,8 +369,8 @@ func (api *ManagementAPI) validateJWTToken(r *http.Request) (string, error) {
 		return "", fmt.Errorf("invalid or expired token: %v", err)
 	}
 
-	// Return phone number from validated claims
-	return claims.PhoneNumber, nil
+	// Return email from validated claims
+	return claims.Email, nil
 }
 
 // isAdmin checks if a user has admin privileges

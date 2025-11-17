@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -22,7 +23,7 @@ fun LoginScreen(
     onLogin: (String, String) -> Unit,
     onSignUpClick: () -> Unit
 ) {
-    var phoneNumber by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -81,14 +82,17 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(40.dp))
 
             OutlinedTextField(
-                value = phoneNumber,
+                value = email,
                 onValueChange = {
-                    phoneNumber = it
+                    email = it
                     errorMessage = null
                 },
-                label = { Text("PHONE NUMBER", style = MaterialTheme.typography.labelMedium) },
-                placeholder = { Text("+1 (555) 123-4567") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                label = { Text("EMAIL ADDRESS", style = MaterialTheme.typography.labelMedium) },
+                placeholder = { Text("email@example.com") },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    capitalization = KeyboardCapitalization.None
+                ),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = CyanBlue,
                     unfocusedBorderColor = CyanBlue.copy(alpha = 0.2f),
@@ -147,12 +151,12 @@ fun LoginScreen(
             Button(
                 onClick = {
                     when {
-                        phoneNumber.isEmpty() || password.isEmpty() -> {
+                        email.isEmpty() || password.isEmpty() -> {
                             errorMessage = "Please fill in all fields"
                         }
                         else -> {
                             isLoading = true
-                            onLogin(phoneNumber, password)
+                            onLogin(email, password)
                         }
                     }
                 },

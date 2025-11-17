@@ -5,7 +5,7 @@ import * as keytar from 'keytar';
 
 interface User {
   id: string;
-  phoneNumber: string;
+  email: string;
 }
 
 interface AuthTokens {
@@ -16,7 +16,7 @@ interface AuthTokens {
 }
 
 interface AuthSession {
-  phoneNumber: string;
+  email: string;
   sessionId?: string;
   verificationToken?: string;
   devOtpCode?: string; // Development mode OTP code
@@ -56,9 +56,12 @@ class AuthService {
     }
 
     // Start token refresh timer if user is authenticated
-    if (this.isAuthenticated()) {
-      this.scheduleTokenRefresh();
-    }
+    // Note: isAuthenticated() is async, so we check in initialization
+    this.isAuthenticated().then((authenticated) => {
+      if (authenticated) {
+        this.scheduleTokenRefresh();
+      }
+    });
   }
 
   /**
@@ -330,9 +333,10 @@ class AuthService {
     options: RequestInit = {}
   ): Promise<{ success: boolean; data?: T; error?: string }> {
     try {
+      const headers = await this.getAuthHeaders();
       const response = await this.secureFetch(`${this.apiBaseUrl}${endpoint}`, {
         ...options,
-        headers: this.getAuthHeaders()
+        headers
       });
 
       const data = await response.json();
@@ -375,7 +379,7 @@ class AuthService {
     }
   }
 
-  async sendOTP(phoneNumber: string): Promise<{ success: boolean; error?: string }> {
+  async sendOTP(email: string): Promise<{ success: boolean; error?: string }> {
     try {
       // DEVELOPMENT MODE: Generate and log OTP to console
       if (process.env.NODE_ENV !== 'production') {
@@ -384,13 +388,13 @@ class AuthService {
         console.log('\n╔═══════════════════════════════════════════════════════╗');
         console.log('║         🔐 DEVELOPMENT MODE - OTP CODE              ║');
         console.log('╠═══════════════════════════════════════════════════════╣');
-        console.log(`║  Phone: ${phoneNumber.padEnd(42)} ║`);
+        console.log(`║  Email: ${email.padEnd(42)} ║`);
         console.log(`║  Code:  ${devOtpCode.padEnd(42)} ║`);
         console.log('╚═══════════════════════════════════════════════════════╝\n');
 
         // Store in session for verification
-        this.sessions.set(phoneNumber, {
-          phoneNumber,
+        this.sessions.set(email, {
+          email,
           sessionId: 'dev-session-' + Date.now(),
           devOtpCode
         });
@@ -402,7 +406,7 @@ class AuthService {
       const result = await this.apiCall('/v1/auth/send-otp', {
         method: 'POST',
         body: JSON.stringify({
-          phone_number: phoneNumber
+          email: email
         })
       });
 
@@ -412,8 +416,8 @@ class AuthService {
 
       // Save session ID for verification
       if (result.data?.sessionId) {
-        this.sessions.set(phoneNumber, {
-          phoneNumber,
+        this.sessions.set(email, {
+          email,
           sessionId: result.data.sessionId
         });
       }
@@ -425,9 +429,9 @@ class AuthService {
     }
   }
 
-  async verifyOTP(phoneNumber: string, code: string): Promise<{ success: boolean; error?: string }> {
+  async verifyOTP(email: string, code: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const session = this.sessions.get(phoneNumber);
+      const session = this.sessions.get(email);
 
       // DEVELOPMENT MODE: Verify against stored OTP code
       if (process.env.NODE_ENV !== 'production' && session?.devOtpCode) {
@@ -435,7 +439,7 @@ class AuthService {
           console.log('[AUTH-DEV] ✅ OTP verified successfully');
 
           // Store verified OTP in session for use during registration
-          this.sessions.set(phoneNumber, {
+          this.sessions.set(email, {
             ...session,
             verificationToken: code // Store the actual OTP code
           });
@@ -456,7 +460,7 @@ class AuthService {
       const result = await this.apiCall('/v1/auth/verify-otp', {
         method: 'POST',
         body: JSON.stringify({
-          phone_number: phoneNumber,
+          email: email,
           otp: code,
           session_id: session?.sessionId
         })
@@ -467,8 +471,8 @@ class AuthService {
       }
 
       // Store verification token for registration
-      this.sessions.set(phoneNumber, {
-        phoneNumber,
+      this.sessions.set(email, {
+        email,
         sessionId: session?.sessionId,
         verificationToken: result.data?.verification_token || code
       });
@@ -481,7 +485,7 @@ class AuthService {
     }
   }
 
-  async createAccount(phoneNumber: string, password: string, otpCode: string): Promise<{ success: boolean; error?: string }> {
+  async createAccount(email: string, password: string, otpCode: string): Promise<{ success: boolean; error?: string }> {
     try {
       // Validate password strength
       if (password.length < 8) {
@@ -491,7 +495,7 @@ class AuthService {
       // DEVELOPMENT MODE: Create mock account
       if (process.env.NODE_ENV !== 'production') {
         // Verify OTP in dev mode
-        const session = this.sessions.get(phoneNumber);
+        const session = this.sessions.get(email);
         if (!session?.devOtpCode || session.devOtpCode !== otpCode) {
           return { success: false, error: 'Invalid OTP code' };
         }
@@ -511,11 +515,11 @@ class AuthService {
 
         this.store.set('currentUser', {
           id: 'dev-user-' + Date.now(),
-          phoneNumber: phoneNumber
+          email: email
         });
 
         // Clean up session
-        this.sessions.delete(phoneNumber);
+        this.sessions.delete(email);
 
         console.log('[AUTH-DEV] Account created successfully');
         return { success: true };
@@ -525,7 +529,7 @@ class AuthService {
       const result = await this.apiCall('/v1/auth/register', {
         method: 'POST',
         body: JSON.stringify({
-          phone_number: phoneNumber,
+          email: email,
           password: password,
           otp: otpCode
         })
@@ -546,12 +550,12 @@ class AuthService {
 
         this.store.set('currentUser', {
           id: result.data.user?.id,
-          phoneNumber: result.data.user?.phoneNumber || phoneNumber
+          email: result.data.user?.email || email
         });
       }
 
       // Clean up session
-      this.sessions.delete(phoneNumber);
+      this.sessions.delete(email);
 
       return { success: true };
     } catch (error) {
@@ -560,13 +564,13 @@ class AuthService {
     }
   }
 
-  async login(phoneNumber: string, password: string): Promise<{ success: boolean; error?: string }> {
+  async login(email: string, password: string): Promise<{ success: boolean; error?: string }> {
     try {
       // DEVELOPMENT MODE: Use stored dev user
       if (process.env.NODE_ENV !== 'production') {
         const storedUser = this.store.get('currentUser') as User;
 
-        if (storedUser?.phoneNumber === phoneNumber) {
+        if (storedUser?.email === email) {
           console.log('[AUTH-DEV] ✅ Login successful (dev mode - no password check)');
 
           // Generate new development tokens
@@ -591,7 +595,7 @@ class AuthService {
       const result = await this.apiCall('/v1/auth/login', {
         method: 'POST',
         body: JSON.stringify({
-          phone_number: phoneNumber,
+          email: email,
           password: password
         })
       });
@@ -611,7 +615,7 @@ class AuthService {
 
         this.store.set('currentUser', {
           id: result.data.user?.id,
-          phoneNumber: result.data.user?.phoneNumber || phoneNumber
+          email: result.data.user?.email || email
         });
       }
 

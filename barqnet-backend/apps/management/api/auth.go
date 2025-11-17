@@ -16,71 +16,16 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// OTPService interface for OTP verification
-// This will be implemented later with actual OTP service
-type OTPService interface {
-	// SendOTP sends an OTP to the given phone number
-	SendOTP(phoneNumber string) (string, error)
-
-	// VerifyOTP verifies the OTP for the given phone number
-	VerifyOTP(phoneNumber, otp string) (bool, error)
-
-	// GenerateOTP generates a new OTP for testing purposes
-	GenerateOTP() string
-}
-
-// MockOTPService is a mock implementation for development
-type MockOTPService struct {
-	otpStore map[string]string
-}
-
-// NewMockOTPService creates a new mock OTP service
-func NewMockOTPService() *MockOTPService {
-	return &MockOTPService{
-		otpStore: make(map[string]string),
-	}
-}
-
-// SendOTP sends a mock OTP (in production, this would send SMS)
-func (m *MockOTPService) SendOTP(phoneNumber string) (string, error) {
-	otp := m.GenerateOTP()
-	m.otpStore[phoneNumber] = otp
-	log.Printf("[OTP] Sent OTP to %s: %s (this is a mock - in production, send via SMS)", phoneNumber, otp)
-	return otp, nil
-}
-
-// VerifyOTP verifies the OTP
-func (m *MockOTPService) VerifyOTP(phoneNumber, otp string) (bool, error) {
-	storedOTP, exists := m.otpStore[phoneNumber]
-	if !exists {
-		return false, fmt.Errorf("no OTP found for this phone number")
-	}
-
-	if storedOTP != otp {
-		return false, nil
-	}
-
-	// Delete OTP after successful verification
-	delete(m.otpStore, phoneNumber)
-	return true, nil
-}
-
-// GenerateOTP generates a 6-digit OTP
-func (m *MockOTPService) GenerateOTP() string {
-	// In production, use crypto/rand for secure random generation
-	return fmt.Sprintf("%06d", time.Now().Unix()%1000000)
-}
-
 // AuthHandler handles authentication operations
 type AuthHandler struct {
 	db          *sql.DB
-	otpService  OTPService
+	otpService  shared.OTPService // Use shared OTPService interface
 	blacklist   *shared.TokenBlacklist
 	rateLimiter *shared.RateLimiter
 }
 
 // NewAuthHandler creates a new authentication handler
-func NewAuthHandler(db *sql.DB, otpService OTPService, rateLimiter *shared.RateLimiter) *AuthHandler {
+func NewAuthHandler(db *sql.DB, otpService shared.OTPService, rateLimiter *shared.RateLimiter) *AuthHandler {
 	return &AuthHandler{
 		db:          db,
 		otpService:  otpService,
@@ -91,15 +36,15 @@ func NewAuthHandler(db *sql.DB, otpService OTPService, rateLimiter *shared.RateL
 
 // RegisterRequest represents a user registration request
 type RegisterRequest struct {
-	PhoneNumber string `json:"phone_number"`
-	Password    string `json:"password"`
-	OTP         string `json:"otp"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	OTP      string `json:"otp"`
 }
 
 // LoginRequest represents a user login request
 type LoginRequest struct {
-	PhoneNumber string `json:"phone_number"`
-	Password    string `json:"password"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 // RefreshRequest represents a token refresh request
@@ -147,7 +92,7 @@ func (h *AuthHandler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Retry-After", fmt.Sprintf("%d", int(time.Until(resetTime).Seconds())))
 
 			h.sendError(w, fmt.Sprintf("Too many registration attempts. Please try again in %d seconds.", int(time.Until(resetTime).Seconds())), http.StatusTooManyRequests)
-			h.logAuditEvent("REGISTER_RATE_LIMIT_EXCEEDED", req.PhoneNumber, fmt.Sprintf("Registration rate limit exceeded from IP %s", ip), r.RemoteAddr)
+			h.logAuditEvent("REGISTER_RATE_LIMIT_EXCEEDED", req.Email, fmt.Sprintf("Registration rate limit exceeded from IP %s", ip), r.RemoteAddr)
 			return
 		} else {
 			w.Header().Set("X-RateLimit-Limit", "3")
@@ -157,8 +102,8 @@ func (h *AuthHandler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate input
-	if err := h.validatePhoneNumber(req.PhoneNumber); err != nil {
-		h.sendError(w, fmt.Sprintf("Invalid phone number: %v", err), http.StatusBadRequest)
+	if err := h.validateEmail(req.Email); err != nil {
+		h.sendError(w, fmt.Sprintf("Invalid email: %v", err), http.StatusBadRequest)
 		return
 	}
 
@@ -167,12 +112,8 @@ func (h *AuthHandler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verify OTP
-	verified, err := h.otpService.VerifyOTP(req.PhoneNumber, req.OTP)
-	if err != nil {
-		h.sendError(w, fmt.Sprintf("OTP verification failed: %v", err), http.StatusBadRequest)
-		return
-	}
+	// Verify OTP using shared.OTPService
+	verified := h.otpService.Verify(req.Email, req.OTP)
 	if !verified {
 		h.sendError(w, "Invalid OTP", http.StatusUnauthorized)
 		return
@@ -180,9 +121,9 @@ func (h *AuthHandler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 
 	// Check if user already exists
 	var existingID int
-	err = h.db.QueryRow("SELECT id FROM auth_users WHERE phone_number = $1", req.PhoneNumber).Scan(&existingID)
+	err := h.db.QueryRow("SELECT id FROM users WHERE email = $1", req.Email).Scan(&existingID)
 	if err == nil {
-		h.sendError(w, "User with this phone number already exists", http.StatusConflict)
+		h.sendError(w, "User with this email already exists", http.StatusConflict)
 		return
 	} else if err != sql.ErrNoRows {
 		log.Printf("[AUTH] Database error checking existing user: %v", err)
@@ -198,13 +139,13 @@ func (h *AuthHandler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Insert new user
+	// Insert new user with email
 	var userID int
 	err = h.db.QueryRow(`
-		INSERT INTO auth_users (phone_number, password_hash, created_at, last_login, active)
+		INSERT INTO users (email, password_hash, created_at, last_login, active)
 		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id
-	`, req.PhoneNumber, string(hashedPassword), time.Now(), time.Now(), true).Scan(&userID)
+	`, req.Email, string(hashedPassword), time.Now(), time.Now(), true).Scan(&userID)
 
 	if err != nil {
 		log.Printf("[AUTH] Failed to create user: %v", err)
@@ -213,7 +154,7 @@ func (h *AuthHandler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Generate access and refresh tokens
-	accessToken, err := shared.GenerateJWT(req.PhoneNumber, userID)
+	accessToken, err := shared.GenerateJWT(req.Email, userID)
 	if err != nil {
 		log.Printf("[AUTH] Failed to generate access token: %v", err)
 		h.sendError(w, "Failed to generate authentication token", http.StatusInternalServerError)
@@ -221,7 +162,7 @@ func (h *AuthHandler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Generate refresh token (longer expiry)
-	refreshToken, err := shared.GenerateRefreshToken(req.PhoneNumber, userID)
+	refreshToken, err := shared.GenerateRefreshToken(req.Email, userID)
 	if err != nil {
 		log.Printf("[AUTH] Failed to generate refresh token: %v", err)
 		h.sendError(w, "Failed to generate refresh token", http.StatusInternalServerError)
@@ -229,7 +170,7 @@ func (h *AuthHandler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Log successful registration
-	h.logAuditEvent("USER_REGISTERED", req.PhoneNumber, "User registered successfully", r.RemoteAddr)
+	h.logAuditEvent("USER_REGISTERED", req.Email, "User registered successfully", r.RemoteAddr)
 
 	// Send success response with proper token structure
 	response := AuthResponse{
@@ -237,8 +178,8 @@ func (h *AuthHandler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 		Message: "User registered successfully",
 		Data: map[string]interface{}{
 			"user": map[string]interface{}{
-				"id":           userID,
-				"phone_number": req.PhoneNumber,
+				"id":    userID,
+				"email": req.Email,
 			},
 			"accessToken":  accessToken,
 			"refreshToken": refreshToken,
@@ -266,14 +207,14 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate input
-	if req.PhoneNumber == "" || req.Password == "" {
-		h.sendError(w, "Phone number and password are required", http.StatusBadRequest)
+	if req.Email == "" || req.Password == "" {
+		h.sendError(w, "Email and password are required", http.StatusBadRequest)
 		return
 	}
 
-	// Rate limiting: Login attempts per phone number
+	// Rate limiting: Login attempts per email
 	if h.rateLimiter != nil && h.rateLimiter.IsEnabled() {
-		allowed, remaining, resetTime, err := h.rateLimiter.Allow(shared.RateLimitLogin, req.PhoneNumber)
+		allowed, remaining, resetTime, err := h.rateLimiter.Allow(shared.RateLimitLogin, req.Email)
 		if err != nil {
 			log.Printf("[AUTH] Rate limit check error: %v", err)
 		} else if !allowed {
@@ -283,7 +224,7 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Retry-After", fmt.Sprintf("%d", int(time.Until(resetTime).Seconds())))
 
 			h.sendError(w, fmt.Sprintf("Too many login attempts. Please try again in %d seconds.", int(time.Until(resetTime).Seconds())), http.StatusTooManyRequests)
-			h.logAuditEvent("LOGIN_RATE_LIMIT_EXCEEDED", req.PhoneNumber, "Login rate limit exceeded", r.RemoteAddr)
+			h.logAuditEvent("LOGIN_RATE_LIMIT_EXCEEDED", req.Email, "Login rate limit exceeded", r.RemoteAddr)
 			return
 		} else {
 			w.Header().Set("X-RateLimit-Limit", "10")
@@ -298,14 +239,14 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	var active bool
 	err := h.db.QueryRow(`
 		SELECT id, password_hash, active
-		FROM auth_users
-		WHERE phone_number = $1
-	`, req.PhoneNumber).Scan(&userID, &passwordHash, &active)
+		FROM users
+		WHERE email = $1
+	`, req.Email).Scan(&userID, &passwordHash, &active)
 
 	if err == sql.ErrNoRows {
 		// Use generic error message to prevent user enumeration
-		h.sendError(w, "Invalid phone number or password", http.StatusUnauthorized)
-		h.logAuditEvent("LOGIN_FAILED", req.PhoneNumber, "Invalid credentials", r.RemoteAddr)
+		h.sendError(w, "Invalid email or password", http.StatusUnauthorized)
+		h.logAuditEvent("LOGIN_FAILED", req.Email, "Invalid credentials", r.RemoteAddr)
 		return
 	} else if err != nil {
 		log.Printf("[AUTH] Database error during login: %v", err)
@@ -316,7 +257,7 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	// Check if account is active
 	if !active {
 		h.sendError(w, "Account is disabled", http.StatusForbidden)
-		h.logAuditEvent("LOGIN_FAILED", req.PhoneNumber, "Account disabled", r.RemoteAddr)
+		h.logAuditEvent("LOGIN_FAILED", req.Email, "Account disabled", r.RemoteAddr)
 		return
 	}
 
@@ -324,8 +265,8 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(req.Password))
 	if err != nil {
 		// Invalid password
-		h.sendError(w, "Invalid phone number or password", http.StatusUnauthorized)
-		h.logAuditEvent("LOGIN_FAILED", req.PhoneNumber, "Invalid password", r.RemoteAddr)
+		h.sendError(w, "Invalid email or password", http.StatusUnauthorized)
+		h.logAuditEvent("LOGIN_FAILED", req.Email, "Invalid password", r.RemoteAddr)
 		return
 	}
 
@@ -337,7 +278,7 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Generate access and refresh tokens
-	accessToken, err := shared.GenerateJWT(req.PhoneNumber, userID)
+	accessToken, err := shared.GenerateJWT(req.Email, userID)
 	if err != nil {
 		log.Printf("[AUTH] Failed to generate access token: %v", err)
 		h.sendError(w, "Failed to generate authentication token", http.StatusInternalServerError)
@@ -345,7 +286,7 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Generate refresh token (longer expiry)
-	refreshToken, err := shared.GenerateRefreshToken(req.PhoneNumber, userID)
+	refreshToken, err := shared.GenerateRefreshToken(req.Email, userID)
 	if err != nil {
 		log.Printf("[AUTH] Failed to generate refresh token: %v", err)
 		h.sendError(w, "Failed to generate refresh token", http.StatusInternalServerError)
@@ -353,7 +294,7 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Log successful login
-	h.logAuditEvent("LOGIN_SUCCESS", req.PhoneNumber, "User logged in successfully", r.RemoteAddr)
+	h.logAuditEvent("LOGIN_SUCCESS", req.Email, "User logged in successfully", r.RemoteAddr)
 
 	// Send success response with proper token structure
 	response := AuthResponse{
@@ -361,8 +302,8 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		Message: "Login successful",
 		Data: map[string]interface{}{
 			"user": map[string]interface{}{
-				"id":           userID,
-				"phone_number": req.PhoneNumber,
+				"id":    userID,
+				"email": req.Email,
 			},
 			"accessToken":  accessToken,
 			"refreshToken": refreshToken,
@@ -401,21 +342,21 @@ func (h *AuthHandler) HandleRefresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Generate new access token with same user data
-	newAccessToken, err := shared.GenerateJWT(claims.PhoneNumber, claims.UserID)
+	newAccessToken, err := shared.GenerateJWT(claims.Email, claims.UserID)
 	if err != nil {
 		h.sendError(w, "Failed to generate new access token", http.StatusInternalServerError)
 		return
 	}
 
 	// Generate new refresh token
-	newRefreshToken, err := shared.GenerateRefreshToken(claims.PhoneNumber, claims.UserID)
+	newRefreshToken, err := shared.GenerateRefreshToken(claims.Email, claims.UserID)
 	if err != nil {
 		h.sendError(w, "Failed to generate new refresh token", http.StatusInternalServerError)
 		return
 	}
 
 	// Log token refresh
-	h.logAuditEvent("TOKEN_REFRESHED", claims.PhoneNumber, "Tokens refreshed successfully", r.RemoteAddr)
+	h.logAuditEvent("TOKEN_REFRESHED", claims.Email, "Tokens refreshed successfully", r.RemoteAddr)
 
 	// Send success response with new tokens
 	response := AuthResponse{
@@ -466,7 +407,7 @@ func (h *AuthHandler) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Log logout event
-	h.logAuditEvent("USER_LOGOUT", claims.PhoneNumber, "User logged out", r.RemoteAddr)
+	h.logAuditEvent("USER_LOGOUT", claims.Email, "User logged out", r.RemoteAddr)
 
 	// Send success response
 	response := AuthResponse{
@@ -490,7 +431,7 @@ func (h *AuthHandler) HandleSendOTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		PhoneNumber string `json:"phone_number"`
+		Email string `json:"email"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -498,15 +439,15 @@ func (h *AuthHandler) HandleSendOTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate phone number
-	if err := h.validatePhoneNumber(req.PhoneNumber); err != nil {
-		h.sendError(w, fmt.Sprintf("Invalid phone number: %v", err), http.StatusBadRequest)
+	// Validate email
+	if err := h.validateEmail(req.Email); err != nil {
+		h.sendError(w, fmt.Sprintf("Invalid email: %v", err), http.StatusBadRequest)
 		return
 	}
 
-	// Rate limiting: OTP send per phone number
+	// Rate limiting: OTP send per email
 	if h.rateLimiter != nil && h.rateLimiter.IsEnabled() {
-		allowed, remaining, resetTime, err := h.rateLimiter.Allow(shared.RateLimitOTP, req.PhoneNumber)
+		allowed, remaining, resetTime, err := h.rateLimiter.Allow(shared.RateLimitOTP, req.Email)
 		if err != nil {
 			log.Printf("[AUTH] Rate limit check error: %v", err)
 		} else if !allowed {
@@ -516,7 +457,7 @@ func (h *AuthHandler) HandleSendOTP(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Retry-After", fmt.Sprintf("%d", int(time.Until(resetTime).Seconds())))
 
 			h.sendError(w, fmt.Sprintf("Too many OTP requests. Please try again in %d seconds.", int(time.Until(resetTime).Seconds())), http.StatusTooManyRequests)
-			h.logAuditEvent("OTP_RATE_LIMIT_EXCEEDED", req.PhoneNumber, "OTP rate limit exceeded", r.RemoteAddr)
+			h.logAuditEvent("OTP_RATE_LIMIT_EXCEEDED", req.Email, "OTP rate limit exceeded", r.RemoteAddr)
 			return
 		} else {
 			w.Header().Set("X-RateLimit-Limit", "5")
@@ -525,30 +466,25 @@ func (h *AuthHandler) HandleSendOTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Send OTP
-	otp, err := h.otpService.SendOTP(req.PhoneNumber)
+	// Send OTP via email using shared.OTPService
+	err := h.otpService.Send(req.Email)
 	if err != nil {
 		log.Printf("[AUTH] Failed to send OTP: %v", err)
-		h.sendError(w, "Failed to send OTP", http.StatusInternalServerError)
+		h.sendError(w, "Failed to send OTP email", http.StatusInternalServerError)
 		return
 	}
 
 	// Log OTP sent event
-	h.logAuditEvent("OTP_SENT", req.PhoneNumber, "OTP sent to phone number", r.RemoteAddr)
+	h.logAuditEvent("OTP_SENT", req.Email, "OTP sent to email address", r.RemoteAddr)
 
 	// Send success response (NEVER include OTP in response for security)
 	response := AuthResponse{
 		Success: true,
-		Message: "OTP sent successfully. Please check your phone.",
+		Message: "OTP sent successfully. Please check your email.",
 		Data: map[string]interface{}{
-			"phone_number": req.PhoneNumber,
-			"expires_in":   300, // 5 minutes
+			"email":      req.Email,
+			"expires_in": 600, // 10 minutes
 		},
-	}
-
-	// In development, log OTP to console for testing (already done in mock service)
-	if otp != "" {
-		log.Printf("[AUTH-DEV] OTP for %s: %s (expires in 5 minutes)", req.PhoneNumber, otp)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -583,7 +519,7 @@ func (h *AuthHandler) JWTAuthMiddleware(next http.HandlerFunc) http.HandlerFunc 
 
 		// Add claims to request context
 		ctx := context.WithValue(r.Context(), "claims", claims)
-		ctx = context.WithValue(ctx, "phone_number", claims.PhoneNumber)
+		ctx = context.WithValue(ctx, "email", claims.Email)
 		ctx = context.WithValue(ctx, "user_id", claims.UserID)
 
 		// Call next handler with updated context
@@ -591,21 +527,24 @@ func (h *AuthHandler) JWTAuthMiddleware(next http.HandlerFunc) http.HandlerFunc 
 	}
 }
 
-// validatePhoneNumber validates phone number format
-func (h *AuthHandler) validatePhoneNumber(phoneNumber string) error {
-	// Remove spaces and dashes
-	phoneNumber = strings.ReplaceAll(phoneNumber, " ", "")
-	phoneNumber = strings.ReplaceAll(phoneNumber, "-", "")
+// validateEmail validates email address format
+func (h *AuthHandler) validateEmail(email string) error {
+	// Normalize email
+	email = strings.TrimSpace(strings.ToLower(email))
 
-	// Length check (minimum 10 digits, maximum 15 digits)
-	if len(phoneNumber) < 10 || len(phoneNumber) > 15 {
-		return fmt.Errorf("phone number must be 10-15 digits")
+	if email == "" {
+		return fmt.Errorf("email address cannot be empty")
 	}
 
-	// Check if it contains only digits and optional + prefix
-	matched, _ := regexp.MatchString(`^\+?[0-9]+$`, phoneNumber)
-	if !matched {
-		return fmt.Errorf("phone number must contain only digits and optional + prefix")
+	if len(email) > 255 {
+		return fmt.Errorf("email address too long (max 255 characters)")
+	}
+
+	// RFC 5322 compliant email regex
+	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9.!#$%&'*+/=?^_` + "`" + `{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$`)
+
+	if !emailRegex.MatchString(email) {
+		return fmt.Errorf("invalid email format")
 	}
 
 	return nil
@@ -711,7 +650,7 @@ func (h *AuthHandler) HandleRevokeToken(w http.ResponseWriter, r *http.Request) 
 	err = h.blacklist.RevokeToken(
 		req.RefreshToken,
 		claims.UserID,
-		claims.PhoneNumber,
+		claims.Email,
 		claims.ExpiresAt.Time,
 		reason,
 		"user", // Revoked by user
@@ -726,7 +665,7 @@ func (h *AuthHandler) HandleRevokeToken(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Log the revocation
-	h.logAuditEvent("TOKEN_REVOKED", claims.PhoneNumber,
+	h.logAuditEvent("TOKEN_REVOKED", claims.Email,
 		fmt.Sprintf("Refresh token revoked (reason: %s)", reason), ipAddress)
 
 	// Send success response
@@ -788,7 +727,7 @@ func (h *AuthHandler) HandleRevokeAllTokens(w http.ResponseWriter, r *http.Reque
 
 	// Verify user's password
 	var passwordHash string
-	err = h.db.QueryRow("SELECT password_hash FROM auth_users WHERE id = $1", claims.UserID).Scan(&passwordHash)
+	err = h.db.QueryRow("SELECT password_hash FROM users WHERE id = $1", claims.UserID).Scan(&passwordHash)
 	if err != nil {
 		log.Printf("[AUTH] Failed to get user password: %v", err)
 		h.sendError(w, "Internal server error", http.StatusInternalServerError)
@@ -798,7 +737,7 @@ func (h *AuthHandler) HandleRevokeAllTokens(w http.ResponseWriter, r *http.Reque
 	err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(req.Password))
 	if err != nil {
 		h.sendError(w, "Invalid password", http.StatusUnauthorized)
-		h.logAuditEvent("REVOKE_ALL_FAILED", claims.PhoneNumber, "Invalid password for revoke-all", h.getClientIP(r))
+		h.logAuditEvent("REVOKE_ALL_FAILED", claims.Email, "Invalid password for revoke-all", h.getClientIP(r))
 		return
 	}
 
@@ -811,10 +750,10 @@ func (h *AuthHandler) HandleRevokeAllTokens(w http.ResponseWriter, r *http.Reque
 	ipAddress := h.getClientIP(r)
 
 	// Log the security event
-	h.logAuditEvent("REVOKE_ALL_TOKENS", claims.PhoneNumber,
+	h.logAuditEvent("REVOKE_ALL_TOKENS", claims.Email,
 		fmt.Sprintf("User requested to revoke all tokens (reason: %s)", reason), ipAddress)
 
-	log.Printf("[AUTH] User %s requested to revoke all tokens (reason: %s)", claims.PhoneNumber, reason)
+	log.Printf("[AUTH] User %s requested to revoke all tokens (reason: %s)", claims.Email, reason)
 
 	// Send success response
 	response := AuthResponse{

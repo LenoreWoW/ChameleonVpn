@@ -8,7 +8,7 @@
 import SwiftUI
 
 enum OnboardingState {
-    case phoneEntry
+    case emailEntry
     case otpVerification
     case passwordCreation
     case login
@@ -20,8 +20,8 @@ struct ContentView: View {
     @StateObject private var authManager = AuthManager.shared
     @State private var showingImportConfig = false
     @State private var showingSettings = false
-    @State private var onboardingState: OnboardingState = .phoneEntry
-    @State private var currentPhoneNumber = ""
+    @State private var onboardingState: OnboardingState = .emailEntry
+    @State private var currentEmail = ""
 
     var body: some View {
         Group {
@@ -32,18 +32,18 @@ struct ContentView: View {
             }
         }
         .onAppear {
-            onboardingState = authManager.isAuthenticated ? .authenticated : .phoneEntry
+            onboardingState = authManager.isAuthenticated ? .authenticated : .emailEntry
         }
     }
 
     private var onboardingView: some View {
         Group {
             switch onboardingState {
-            case .phoneEntry:
-                PhoneNumberView(
-                    phoneNumber: $currentPhoneNumber,
+            case .emailEntry:
+                EmailEntryView(
+                    email: $currentEmail,
                     onContinue: {
-                        authManager.sendOTP(phoneNumber: currentPhoneNumber) { result in
+                        authManager.sendOTP(email: currentEmail) { result in
                             if case .success = result {
                                 onboardingState = .otpVerification
                             }
@@ -56,24 +56,24 @@ struct ContentView: View {
 
             case .otpVerification:
                 OTPVerificationView(
-                    phoneNumber: currentPhoneNumber,
+                    email: currentEmail,
                     onVerify: { code in
-                        authManager.verifyOTP(phoneNumber: currentPhoneNumber, code: code) { result in
+                        authManager.verifyOTP(email: currentEmail, code: code) { result in
                             if case .success = result {
                                 onboardingState = .passwordCreation
                             }
                         }
                     },
                     onResend: {
-                        authManager.sendOTP(phoneNumber: currentPhoneNumber) { _ in }
+                        authManager.sendOTP(email: currentEmail) { _ in }
                     }
                 )
 
             case .passwordCreation:
                 PasswordCreationView(
-                    phoneNumber: currentPhoneNumber,
+                    email: currentEmail,
                     onCreate: { password in
-                        authManager.createAccount(phoneNumber: currentPhoneNumber, password: password) { result in
+                        authManager.createAccount(email: currentEmail, password: password) { result in
                             if case .success = result {
                                 onboardingState = .authenticated
                             }
@@ -83,16 +83,16 @@ struct ContentView: View {
 
             case .login:
                 LoginView(
-                    onLogin: { phone, password in
-                        authManager.login(phoneNumber: phone, password: password) { result in
+                    onLogin: { email, password in
+                        authManager.login(email: email, password: password) { result in
                             if case .success = result {
-                                currentPhoneNumber = phone
+                                currentEmail = email
                                 onboardingState = .authenticated
                             }
                         }
                     },
                     onSignUpClick: {
-                        onboardingState = .phoneEntry
+                        onboardingState = .emailEntry
                     }
                 )
 
@@ -135,7 +135,7 @@ struct ContentView: View {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: {
                         authManager.logout()
-                        onboardingState = .phoneEntry
+                        onboardingState = .emailEntry
                     }) {
                         Image(systemName: "rectangle.portrait.and.arrow.right")
                             .foregroundColor(.cyanBlue)

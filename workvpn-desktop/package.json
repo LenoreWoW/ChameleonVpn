@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc && npm run copy-assets",
     "copy-assets": "cp src/renderer/index.html dist/renderer/ && cp src/renderer/styles.css dist/renderer/ && npm run copy-vendor",
-    "copy-vendor": "mkdir -p dist/renderer/vendor && cp node_modules/three/build/three.min.js dist/renderer/vendor/ && cp node_modules/gsap/dist/gsap.min.js dist/renderer/vendor/",
+    "copy-vendor": "mkdir -p dist/renderer/vendor && cp node_modules/three/build/three.module.min.js dist/renderer/vendor/three.min.js && cp node_modules/gsap/dist/gsap.min.js dist/renderer/vendor/",
     "watch": "tsc --watch",
     "start": "npm run build && electron-forge start",
     "package": "npm run build && electron-forge package",

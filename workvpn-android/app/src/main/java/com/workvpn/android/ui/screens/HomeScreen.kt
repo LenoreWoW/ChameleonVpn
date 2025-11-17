@@ -26,7 +26,7 @@ import com.barqnet.android.viewmodel.RealVPNViewModel
 import kotlinx.coroutines.launch
 
 enum class OnboardingState {
-    PHONE_ENTRY,
+    EMAIL_ENTRY,
     OTP_VERIFICATION,
     PASSWORD_CREATION,
     LOGIN,
@@ -44,8 +44,8 @@ fun HomeScreen(
     val authManager = remember { AuthManager(context) }
     val scope = rememberCoroutineScope()
 
-    var onboardingState by remember { mutableStateOf(OnboardingState.PHONE_ENTRY) }
-    var currentPhoneNumber by remember { mutableStateOf("") }
+    var onboardingState by remember { mutableStateOf(OnboardingState.EMAIL_ENTRY) }
+    var currentEmail by remember { mutableStateOf("") }
     var isAuthenticated by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
@@ -56,13 +56,13 @@ fun HomeScreen(
     }
 
     when (onboardingState) {
-        OnboardingState.PHONE_ENTRY -> {
-            PhoneNumberScreen(
-                onContinue = { phone ->
+        OnboardingState.EMAIL_ENTRY -> {
+            EmailEntryScreen(
+                onContinue = { email ->
                     scope.launch {
-                        val result = authManager.sendOTP(phone)
+                        val result = authManager.sendOTP(email)
                         if (result.isSuccess) {
-                            currentPhoneNumber = phone
+                            currentEmail = email
                             onboardingState = OnboardingState.OTP_VERIFICATION
                         }
                     }
@@ -75,10 +75,10 @@ fun HomeScreen(
 
         OnboardingState.OTP_VERIFICATION -> {
             OTPVerificationScreen(
-                phoneNumber = currentPhoneNumber,
+                email = currentEmail,
                 onVerify = { code ->
                     scope.launch {
-                        val result = authManager.verifyOTP(currentPhoneNumber, code)
+                        val result = authManager.verifyOTP(currentEmail, code)
                         if (result.isSuccess) {
                             onboardingState = OnboardingState.PASSWORD_CREATION
                         }
@@ -86,7 +86,7 @@ fun HomeScreen(
                 },
                 onResend = {
                     scope.launch {
-                        authManager.sendOTP(currentPhoneNumber)
+                        authManager.sendOTP(currentEmail)
                     }
                 }
             )
@@ -94,10 +94,10 @@ fun HomeScreen(
 
         OnboardingState.PASSWORD_CREATION -> {
             PasswordCreationScreen(
-                phoneNumber = currentPhoneNumber,
+                email = currentEmail,
                 onCreate = { password ->
                     scope.launch {
-                        val result = authManager.createAccount(currentPhoneNumber, password)
+                        val result = authManager.createAccount(currentEmail, password)
                         if (result.isSuccess) {
                             isAuthenticated = true
                             onboardingState = OnboardingState.AUTHENTICATED
@@ -109,18 +109,18 @@ fun HomeScreen(
 
         OnboardingState.LOGIN -> {
             LoginScreen(
-                onLogin = { phone, password ->
+                onLogin = { email, password ->
                     scope.launch {
-                        val result = authManager.login(phone, password)
+                        val result = authManager.login(email, password)
                         if (result.isSuccess) {
                             isAuthenticated = true
-                            currentPhoneNumber = phone
+                            currentEmail = email
                             onboardingState = OnboardingState.AUTHENTICATED
                         }
                     }
                 },
                 onSignUpClick = {
-                    onboardingState = OnboardingState.PHONE_ENTRY
+                    onboardingState = OnboardingState.EMAIL_ENTRY
                 }
             )
         }
@@ -148,7 +148,7 @@ fun HomeScreen(
                                 scope.launch {
                                     authManager.logout()
                                     isAuthenticated = false
-                                    onboardingState = OnboardingState.PHONE_ENTRY
+                                    onboardingState = OnboardingState.EMAIL_ENTRY
                                 }
                             }) {
                                 Text("↪", style = MaterialTheme.typography.headlineMedium)

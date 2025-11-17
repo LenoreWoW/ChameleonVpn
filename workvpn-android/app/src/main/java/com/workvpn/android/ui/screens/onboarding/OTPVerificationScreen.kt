@@ -24,7 +24,7 @@ import com.barqnet.android.ui.theme.*
 
 @Composable
 fun OTPVerificationScreen(
-    phoneNumber: String,
+    email: String,
     onVerify: (String) -> Unit,
     onResend: () -> Unit
 ) {
@@ -73,7 +73,7 @@ fun OTPVerificationScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Verify Your Number",
+                text = "Verify Your Email",
                 style = MaterialTheme.typography.headlineLarge,
                 color = CyanBlue,
                 textAlign = TextAlign.Center
@@ -82,7 +82,7 @@ fun OTPVerificationScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             Text(
-                text = "We've sent a 6-digit code to $phoneNumber",
+                text = "We've sent a 6-digit code to $email",
                 style = MaterialTheme.typography.bodyLarge,
                 color = Color.White.copy(alpha = 0.6f),
                 textAlign = TextAlign.Center

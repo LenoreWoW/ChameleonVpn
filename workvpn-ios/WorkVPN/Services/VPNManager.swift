@@ -4,6 +4,9 @@
 //
 //  Manages VPN connection using NetworkExtension
 //
+//  NOTE: Uses OpenVPNAdapter (archived) - See TECHNICAL_DEBT.md for rationale
+//  Status: Production-ready and stable | Last Reviewed: November 2025
+//
 
 import Foundation
 import NetworkExtension

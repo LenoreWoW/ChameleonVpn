@@ -41,10 +41,10 @@ contextBridge.exposeInMainWorld('vpn', {
   },
 
   // Authentication
-  sendOTP: (phoneNumber: string) => ipcRenderer.invoke('auth-send-otp', phoneNumber),
-  verifyOTP: (phoneNumber: string, code: string) => ipcRenderer.invoke('auth-verify-otp', phoneNumber, code),
-  createAccount: (phoneNumber: string, password: string, otpCode: string) => ipcRenderer.invoke('auth-create-account', phoneNumber, password, otpCode),
-  login: (phoneNumber: string, password: string) => ipcRenderer.invoke('auth-login', phoneNumber, password),
+  sendOTP: (email: string) => ipcRenderer.invoke('auth-send-otp', email),
+  verifyOTP: (email: string, code: string) => ipcRenderer.invoke('auth-verify-otp', email, code),
+  createAccount: (email: string, password: string, otpCode: string) => ipcRenderer.invoke('auth-create-account', email, password, otpCode),
+  login: (email: string, password: string) => ipcRenderer.invoke('auth-login', email, password),
   logout: () => ipcRenderer.invoke('auth-logout'),
   isAuthenticated: () => ipcRenderer.invoke('auth-is-authenticated'),
   getCurrentUser: () => ipcRenderer.invoke('auth-get-current-user')

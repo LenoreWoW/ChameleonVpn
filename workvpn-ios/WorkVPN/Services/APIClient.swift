@@ -31,11 +31,11 @@ struct AuthTokens: Codable {
 
 struct User: Codable {
     let id: String
-    let phoneNumber: String
+    let email: String
 
     enum CodingKeys: String, CodingKey {
         case id
-        case phoneNumber = "phone_number"
+        case email
     }
 }
 
@@ -426,9 +426,9 @@ class APIClient: NSObject, URLSessionDelegate {
 
     // MARK: - Authentication API Methods
 
-    /// Send OTP to phone number
-    func sendOTP(phoneNumber: String, completion: @escaping (Result<String?, Error>) -> Void) {
-        let request = ["phone_number": phoneNumber]
+    /// Send OTP to email
+    func sendOTP(email: String, completion: @escaping (Result<String?, Error>) -> Void) {
+        let request = ["email": email]
 
         post("/v1/auth/send-otp", body: request) { (result: Result<APIResponse<OTPSessionData>, Error>) in
             switch result {
@@ -452,9 +452,9 @@ class APIClient: NSObject, URLSessionDelegate {
     }
 
     /// Verify OTP code
-    func verifyOTP(phoneNumber: String, code: String, sessionId: String?, completion: @escaping (Result<String?, Error>) -> Void) {
+    func verifyOTP(email: String, code: String, sessionId: String?, completion: @escaping (Result<String?, Error>) -> Void) {
         var request: [String: Any] = [
-            "phone_number": phoneNumber,
+            "email": email,
             "otp": code
         ]
 
@@ -484,9 +484,9 @@ class APIClient: NSObject, URLSessionDelegate {
     }
 
     /// Register new account
-    func register(phoneNumber: String, password: String, otpCode: String, completion: @escaping (Result<(tokens: AuthTokens, user: User?), Error>) -> Void) {
+    func register(email: String, password: String, otpCode: String, completion: @escaping (Result<(tokens: AuthTokens, user: User?), Error>) -> Void) {
         let request = [
-            "phone_number": phoneNumber,
+            "email": email,
             "password": password,
             "otp": otpCode
         ]
@@ -523,10 +523,10 @@ class APIClient: NSObject, URLSessionDelegate {
         }
     }
 
-    /// Login with phone number and password
-    func login(phoneNumber: String, password: String, completion: @escaping (Result<(tokens: AuthTokens, user: User?), Error>) -> Void) {
+    /// Login with email and password
+    func login(email: String, password: String, completion: @escaping (Result<(tokens: AuthTokens, user: User?), Error>) -> Void) {
         let request = [
-            "phone_number": phoneNumber,
+            "email": email,
             "password": password
         ]
 

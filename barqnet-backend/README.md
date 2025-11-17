@@ -47,6 +47,9 @@ A modern, distributed VPN management system with centralized PostgreSQL database
 - **Scalable Design** - Easy to add new VPN servers
 
 ### 🛡️ **Enterprise Security**
+- **Email OTP Authentication** - Secure email-based OTP with Resend (NEW - Nov 2025)
+- **JWT Tokens** - Access and refresh tokens with automatic rotation
+- **Beautiful Email Templates** - Branded HTML emails for OTP delivery
 - **EasyRSA PKI** - Industry-standard certificate management
 - **Certificate Revocation** - Real-time certificate revocation with CRL
 - **API Authentication** - Secure API key-based authentication
@@ -149,6 +152,11 @@ sudo bash scripts/install.sh
   "web_ui": {
     "enabled": true,
     "port": 8080
+  },
+  "email": {
+    "service_mode": "resend",
+    "resend_api_key": "re_your_api_key_here",
+    "from_email": "onboarding@resend.dev"
   }
 }
 ```
@@ -189,6 +197,15 @@ Access the web interface at `http://management-server:8080` to:
 ## 📡 API Endpoints
 
 ### **Management Server API**
+
+**Authentication Endpoints (v1 API):**
+- `POST /v1/auth/send-otp` - Send OTP to email address
+- `POST /v1/auth/register` - Register with email, password, and OTP
+- `POST /v1/auth/login` - Login with email and password
+- `POST /v1/auth/refresh` - Refresh JWT access token
+- `POST /v1/auth/logout` - Logout and revoke tokens
+
+**Management Endpoints:**
 - `GET /health` - Health check
 - `GET /api/users` - List all users
 - `POST /api/users` - Create user
