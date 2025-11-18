@@ -3,9 +3,13 @@ import path from 'path';
 
 export function createMainWindow(): BrowserWindow {
   const mainWindow = new BrowserWindow({
-    width: 500,
-    height: 700,
-    resizable: false,
+    width: 520,
+    height: 800,
+    minWidth: 480,
+    minHeight: 600,
+    maxWidth: 800,
+    maxHeight: 1200,
+    resizable: true,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
