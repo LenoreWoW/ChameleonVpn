@@ -16,7 +16,6 @@
 		A010000000000000000000006 /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = A020000000000000000000006 /* Colors.swift */; };
 		A010000000000000000000007 /* OVPNParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = A020000000000000000000007 /* OVPNParser.swift */; };
 		A010000000000000000000008 /* CertificatePinning.swift in Sources */ = {isa = PBXBuildFile; fileRef = A020000000000000000000008 /* CertificatePinning.swift */; };
-		A010000000000000000000009 /* PhoneNumberView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A020000000000000000000009 /* PhoneNumberView.swift */; };
 		A01000000000000000000000A /* OTPVerificationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A02000000000000000000000A /* OTPVerificationView.swift */; };
 		A01000000000000000000000B /* PasswordCreationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A02000000000000000000000B /* PasswordCreationView.swift */; };
 		A01000000000000000000000C /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A02000000000000000000000C /* LoginView.swift */; };
@@ -66,7 +65,6 @@
 		A020000000000000000000006 /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
 		A020000000000000000000007 /* OVPNParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OVPNParser.swift; sourceTree = "<group>"; };
 		A020000000000000000000008 /* CertificatePinning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CertificatePinning.swift; sourceTree = "<group>"; };
-		A020000000000000000000009 /* PhoneNumberView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneNumberView.swift; sourceTree = "<group>"; };
 		A02000000000000000000000A /* OTPVerificationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OTPVerificationView.swift; sourceTree = "<group>"; };
 		A02000000000000000000000B /* PasswordCreationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasswordCreationView.swift; sourceTree = "<group>"; };
 		A02000000000000000000000C /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
@@ -220,7 +218,6 @@
 		A09000000000000000000000A /* Onboarding */ = {
 			isa = PBXGroup;
 			children = (
-				A020000000000000000000009 /* PhoneNumberView.swift */,
 				A02000000000000000000000A /* OTPVerificationView.swift */,
 				A02000000000000000000000B /* PasswordCreationView.swift */,
 				A02000000000000000000000C /* LoginView.swift */,
@@ -402,7 +399,6 @@
 				A010000000000000000000006 /* Colors.swift in Sources */,
 				A010000000000000000000007 /* OVPNParser.swift in Sources */,
 				A010000000000000000000008 /* CertificatePinning.swift in Sources */,
-				A010000000000000000000009 /* PhoneNumberView.swift in Sources */,
 				A01000000000000000000000A /* OTPVerificationView.swift in Sources */,
 				A01000000000000000000000B /* PasswordCreationView.swift in Sources */,
 				A01000000000000000000000C /* LoginView.swift in Sources */,

@@ -188,6 +188,9 @@ extension PacketTunnelProvider: OpenVPNAdapterDelegate {
         case .addRoutes:
             NSLog("[PacketTunnel] Adding routes...")
 
+        case .exiting:
+            NSLog("[PacketTunnel] Exiting...")
+
         @unknown default:
             NSLog("[PacketTunnel] Unknown event: \(event)")
             break
