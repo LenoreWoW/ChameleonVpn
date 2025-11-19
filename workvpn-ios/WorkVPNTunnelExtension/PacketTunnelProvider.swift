@@ -176,8 +176,9 @@ extension PacketTunnelProvider: OpenVPNAdapterDelegate {
         case .wait:
             NSLog("[PacketTunnel] Waiting...")
 
-        // Note: .authenticating event removed - not supported in OpenVPNAdapter 0.8.0
-        // Authentication status is logged via general connection events
+        // NOTE: Additional events (authPending, resolve, waitProxy, echo, info, warn,
+        // pause, resume, relay, compressionEnabled, unsupportedFeature) are handled
+        // by @unknown default below and logged for monitoring
 
         case .getConfig:
             NSLog("[PacketTunnel] Getting configuration...")
@@ -187,9 +188,6 @@ extension PacketTunnelProvider: OpenVPNAdapterDelegate {
 
         case .addRoutes:
             NSLog("[PacketTunnel] Adding routes...")
-
-        case .exiting:
-            NSLog("[PacketTunnel] Exiting...")
 
         @unknown default:
             NSLog("[PacketTunnel] Unknown event: \(event)")
