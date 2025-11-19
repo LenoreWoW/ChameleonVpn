@@ -1,4 +1,5 @@
-.env
+# .env - Now tracked in repo (private repository)
+# Removed from gitignore on 2025-11-19 for easier deployment
 *.exe
 *.out
 *.log
