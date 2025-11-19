@@ -27,15 +27,23 @@
    - **Space Saved:** ~116px vertical space through optimized spacing
    - **Files Modified:** `workvpn-desktop/src/renderer/styles.css` (40+ lines)
 
+**🍎 iOS Fixes - CRITICAL:**
+
+3. ✅ **CRITICAL:** Fixed iOS Assets.xcassets location
+   - **Problem:** Assets were in wrong directory (root instead of WorkVPN/)
+   - **Fix:** Moved from `workvpn-ios/Assets.xcassets` → `workvpn-ios/WorkVPN/Assets.xcassets`
+   - **Impact:** Xcode can now find AppIcon and AccentColor
+   - **Commit:** `f56b14e` (Nov 18, 2025)
+
 **🍎 iOS Build Errors - CRITICAL FIXES:**
 
-3. ✅ **CRITICAL:** Removed PhoneNumberView.swift references
+4. ✅ **CRITICAL:** Removed PhoneNumberView.swift references
    - **Problem:** Xcode looking for deleted file (phone → email migration)
    - **Fix:** Removed all 4 references from Xcode project file
    - **Impact:** iOS builds without "missing file" error
    - **Files Modified:** `workvpn-ios/WorkVPN.xcodeproj/project.pbxproj`
 
-4. ✅ **CRITICAL:** Fixed exhaustive switch in PacketTunnelProvider
+5. ✅ **CRITICAL:** Fixed exhaustive switch in PacketTunnelProvider
    - **Problem:** Missing `.exiting` case in OpenVPN event handler
    - **Fix:** Added missing case to switch statement
    - **Impact:** iOS builds without compiler errors
@@ -43,12 +51,12 @@
 
 **📊 New Reports Created:**
 
-5. ✅ **NEW:** `DESKTOP_UI_FIXES_REPORT.md`
+6. ✅ **NEW:** `DESKTOP_UI_FIXES_REPORT.md`
    - Complete documentation of all desktop UI fixes
    - Before/after comparisons
    - Testing checklist
 
-6. ✅ **NEW:** `IOS_COMPREHENSIVE_AUDIT_REPORT.md`
+7. ✅ **NEW:** `IOS_COMPREHENSIVE_AUDIT_REPORT.md`
    - Full iOS app security and code quality audit
    - Grade: A+ (96/100)
    - Production readiness assessment
