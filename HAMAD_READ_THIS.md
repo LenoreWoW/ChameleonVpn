@@ -69,6 +69,143 @@
 
 ---
 
+## 🏗️ BACKEND ARCHITECTURE OVERVIEW
+
+**Understanding the BarqNet Backend Structure**
+
+The backend consists of **two separate server applications** that work together:
+
+### 📍 Server Locations
+
+**1. Management Server**
+- **Path:** `barqnet-backend/apps/management/`
+- **Entry Point:** `apps/management/main.go`
+- **Port:** 8080
+- **Purpose:** Central authentication & user management hub
+
+**2. Endnode Server** (VPN Server)
+- **Path:** `barqnet-backend/apps/endnode/`
+- **Entry Point:** `apps/endnode/main.go`
+- **Port:** 8080 (runs on separate machines)
+- **Purpose:** VPN connection handling & traffic routing
+
+### 🔄 How They Work Together
+
+```
+Clients (Desktop/iOS/Android)
+        ↓
+Management Server (Port 8080)
+  - User authentication & JWT tokens
+  - Email OTP verification
+  - Direct PostgreSQL database access
+  - Endnode monitoring & coordination
+        ↓ (coordinates)
+Endnode Servers (Port 8080 each)
+  - VPN connections (OpenVPN)
+  - Traffic routing
+  - NO direct database access
+  - Syncs via Management API
+        ↓
+    VPN Traffic
+```
+
+### 🔑 Key Differences
+
+| Feature | Management Server | Endnode Server |
+|---------|------------------|----------------|
+| **Database** | ✅ Direct PostgreSQL access | ❌ No database (API only) |
+| **Purpose** | Auth, OTP, User management | VPN connections, Traffic |
+| **Clients** | Mobile/Desktop apps | VPN traffic only |
+| **Count** | Usually 1 (or cluster) | Multiple (geo-distributed) |
+| **Registration** | Clients register here | Registers with Management |
+
+### 🚀 How to Run
+
+**Management Server:**
+```bash
+cd barqnet-backend/apps/management
+go build -o management main.go
+./management
+# Shows: [ENV] ✅ Loaded configuration from .env file
+# Starts on port 8080
+```
+
+**Endnode Server:**
+```bash
+cd barqnet-backend/apps/endnode
+go build -o endnode main.go
+./endnode -server-id server-1
+# Requires: MANAGEMENT_URL, ENDNODE_SERVER_ID, API_KEY in .env
+# Registers with Management server on startup
+# Starts on port 8080
+```
+
+### ⚙️ Environment Variables
+
+**Management Server (.env):**
+- `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` - PostgreSQL
+- `JWT_SECRET` - Token signing
+- `SMTP_*` - Email OTP sending
+- `API_KEY` - Authentication
+- `REDIS_HOST`, `REDIS_PORT` - Rate limiting (optional)
+
+**Endnode Server (.env):**
+- `ENDNODE_SERVER_ID` - Unique identifier (e.g., "server-1")
+- `MANAGEMENT_URL` - Management server URL (e.g., "http://management:8080")
+- `API_KEY` - Authentication with Management
+- **NO database variables needed** (gets data from Management API)
+
+### 💡 Design Philosophy
+
+**Why separate servers?**
+
+1. **Security:** Endnodes don't need database credentials
+2. **Scalability:** Add more endnodes without database overhead
+3. **Geo-Distribution:** Place endnodes worldwide, one central management
+4. **Isolation:** VPN traffic separate from authentication logic
+
+**Communication Flow:**
+```
+Client Login: Client → Management → PostgreSQL → JWT Token
+VPN Connect:  Client → Management → Get Endnode List
+              Client → Endnode → Establish VPN
+Endnode Sync: Endnode → Management → User Data Sync
+```
+
+### 📂 Project Structure
+
+```
+barqnet-backend/
+├── apps/
+│   ├── management/          ← Management Server
+│   │   ├── main.go         ← Entry point
+│   │   ├── api/            ← REST API endpoints
+│   │   └── manager/        ← Business logic
+│   │
+│   └── endnode/             ← Endnode Server
+│       ├── main.go          ← Entry point
+│       ├── api/             ← REST API endpoints
+│       └── manager/         ← VPN & sync logic
+│
+└── pkg/
+    └── shared/              ← Shared code (DB, JWT, etc.)
+```
+
+### ✅ Current Implementation Status
+
+- ✅ Management server: Fully implemented with email OTP
+- ✅ Endnode server: Fully implemented with auto-registration
+- ✅ Database: PostgreSQL with complete schema
+- ✅ Auto-loading .env files on both servers
+- ✅ JWT authentication working
+- ✅ Rate limiting with Redis (optional)
+- ✅ Health checks and monitoring
+- ✅ User sync coordination
+
+**For deployment:** See Ubuntu automation section below for one-command deployment of both servers.
+
+---
+
 ## ⚡ PREVIOUS UPDATE (November 17, 2025) - COMPREHENSIVE AUDIT & AUTOMATION
 
 **🎉 MAJOR MILESTONE:** Complete system audit performed! ALL issues fixed + deployment automation added!
