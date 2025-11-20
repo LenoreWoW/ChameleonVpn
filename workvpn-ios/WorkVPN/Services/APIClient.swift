@@ -175,7 +175,7 @@ class APIClient: NSObject, URLSessionDelegate {
         //   openssl x509 -pubkey -noout | openssl pkey -pubin -outform der | \
         //   openssl dgst -sha256 -binary | base64
 
-        let pins = [
+        let pins: [String] = [
             // "sha256/PRIMARY_CERTIFICATE_PIN_HERE",
             // "sha256/BACKUP_CERTIFICATE_PIN_HERE"
         ]

@@ -29,7 +29,6 @@
 		EEBCA73FA7DAA301BA17377A /* Pods_WorkVPNTunnelExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FD9720463523C384759011BA /* Pods_WorkVPNTunnelExtension.framework */; };
 CA22CF61E1C7BF531616C40D /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7BAAC4ED878A01DBA2D333E /* KeychainHelper.swift */; };
 EA5F3387718456C250512F1F /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC24B1B0B4A2C1270E53F35 /* APIClient.swift */; };
-F2752EAD1A7BAF919E85C264 /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFA5B1433628AE7633E4C60D /* AuthManager.swift */; };
 	/* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -404,7 +403,6 @@ FFA5B1433628AE7633E4C60D /* AuthManager.swift */ = {isa = PBXFileReference; last
 				A010000000000000000000002 /* ContentView.swift in Sources */,
 				A010000000000000000000003 /* VPNManager.swift in Sources */,
 				EA5F3387718456C250512F1F /* APIClient.swift in Sources */,
-				F2752EAD1A7BAF919E85C264 /* AuthManager.swift in Sources */,
 				CA22CF61E1C7BF531616C40D /* KeychainHelper.swift in Sources */,
 				A010000000000000000000004 /* AuthManager.swift in Sources */,
 				A010000000000000000000005 /* VPNConfig.swift in Sources */,
