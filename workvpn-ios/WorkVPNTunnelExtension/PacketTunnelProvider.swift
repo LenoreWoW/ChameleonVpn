@@ -189,6 +189,42 @@ extension PacketTunnelProvider: OpenVPNAdapterDelegate {
         case .addRoutes:
             NSLog("[PacketTunnel] Adding routes...")
 
+        case .authPending:
+            NSLog("[PacketTunnel] Authentication pending...")
+
+        case .resolve:
+            NSLog("[PacketTunnel] Resolving...")
+
+        case .waitProxy:
+            NSLog("[PacketTunnel] Waiting for proxy...")
+
+        case .echo:
+            NSLog("[PacketTunnel] Echo...")
+
+        case .info:
+            NSLog("[PacketTunnel] Info...")
+
+        case .warn:
+            NSLog("[PacketTunnel] Warning...")
+
+        case .pause:
+            NSLog("[PacketTunnel] Paused...")
+
+        case .resume:
+            NSLog("[PacketTunnel] Resumed...")
+
+        case .relay:
+            NSLog("[PacketTunnel] Relay...")
+
+        case .compressionEnabled:
+            NSLog("[PacketTunnel] Compression enabled...")
+
+        case .unsupportedFeature:
+            NSLog("[PacketTunnel] Unsupported feature...")
+
+        case .unknown:
+            NSLog("[PacketTunnel] Unknown event...")
+
         @unknown default:
             NSLog("[PacketTunnel] Unknown event: \(event)")
             break

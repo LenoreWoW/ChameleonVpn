@@ -27,7 +27,10 @@
 		A010000000000000000000012 /* PacketTunnelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A020000000000000000000012 /* PacketTunnelProvider.swift */; };
 		A010000000000000000000013 /* WorkVPNTunnelExtension.appex in Embed Extensions */ = {isa = PBXBuildFile; fileRef = A030000000000000000000001 /* WorkVPNTunnelExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		EEBCA73FA7DAA301BA17377A /* Pods_WorkVPNTunnelExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FD9720463523C384759011BA /* Pods_WorkVPNTunnelExtension.framework */; };
-/* End PBXBuildFile section */
+CA22CF61E1C7BF531616C40D /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7BAAC4ED878A01DBA2D333E /* KeychainHelper.swift */; };
+EA5F3387718456C250512F1F /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC24B1B0B4A2C1270E53F35 /* APIClient.swift */; };
+F2752EAD1A7BAF919E85C264 /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFA5B1433628AE7633E4C60D /* AuthManager.swift */; };
+	/* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
 		A040000000000000000000001 /* PBXContainerItemProxy */ = {
@@ -81,7 +84,10 @@
 		E4C071B0D4AF6A496C2192C4 /* Pods-WorkVPN.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WorkVPN.release.xcconfig"; path = "Target Support Files/Pods-WorkVPN/Pods-WorkVPN.release.xcconfig"; sourceTree = "<group>"; };
 		EB3419E118C39D8DA2763124 /* Pods-WorkVPNTunnelExtension.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WorkVPNTunnelExtension.release.xcconfig"; path = "Target Support Files/Pods-WorkVPNTunnelExtension/Pods-WorkVPNTunnelExtension.release.xcconfig"; sourceTree = "<group>"; };
 		FD9720463523C384759011BA /* Pods_WorkVPNTunnelExtension.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_WorkVPNTunnelExtension.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-/* End PBXFileReference section */
+A7BAAC4ED878A01DBA2D333E /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
+8AC24B1B0B4A2C1270E53F35 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+FFA5B1433628AE7633E4C60D /* AuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManager.swift; sourceTree = "<group>"; };
+	/* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		A080000000000000000000001 /* Frameworks */ = {
@@ -186,7 +192,9 @@
 			children = (
 				A020000000000000000000003 /* VPNManager.swift */,
 				A020000000000000000000004 /* AuthManager.swift */,
-			);
+			
+				8AC24B1B0B4A2C1270E53F35 /* APIClient.swift */,
+				FFA5B1433628AE7633E4C60D /* AuthManager.swift */,);
 			path = Services;
 			sourceTree = "<group>";
 		};
@@ -211,7 +219,8 @@
 			children = (
 				A020000000000000000000007 /* OVPNParser.swift */,
 				A020000000000000000000008 /* CertificatePinning.swift */,
-			);
+			
+				A7BAAC4ED878A01DBA2D333E /* KeychainHelper.swift */,);
 			path = Utils;
 			sourceTree = "<group>";
 		};
@@ -394,6 +403,9 @@
 				A010000000000000000000001 /* WorkVPNApp.swift in Sources */,
 				A010000000000000000000002 /* ContentView.swift in Sources */,
 				A010000000000000000000003 /* VPNManager.swift in Sources */,
+				EA5F3387718456C250512F1F /* APIClient.swift in Sources */,
+				F2752EAD1A7BAF919E85C264 /* AuthManager.swift in Sources */,
+				CA22CF61E1C7BF531616C40D /* KeychainHelper.swift in Sources */,
 				A010000000000000000000004 /* AuthManager.swift in Sources */,
 				A010000000000000000000005 /* VPNConfig.swift in Sources */,
 				A010000000000000000000006 /* Colors.swift in Sources */,
