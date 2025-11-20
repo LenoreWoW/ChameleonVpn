@@ -99,7 +99,7 @@ CREATE TRIGGER update_servers_updated_at
 -- Add comments to document the schema
 COMMENT ON TABLE users IS 'VPN users with authentication and status tracking';
 COMMENT ON TABLE servers IS 'VPN server nodes (management and end-nodes)';
-COMMENT ON TABLE audit_logs IS 'Audit trail for all system operations';
+COMMENT ON TABLE audit_log IS 'Audit trail for all system operations';
 COMMENT ON TABLE schema_migrations IS 'Tracks which database migrations have been applied';
 
 COMMENT ON COLUMN users.username IS 'Unique username for VPN access';
@@ -112,9 +112,9 @@ COMMENT ON COLUMN servers.port IS 'OpenVPN server port (default 1194)';
 COMMENT ON COLUMN servers.server_type IS 'Server type: management or endnode';
 COMMENT ON COLUMN servers.last_sync IS 'Last successful sync with management server';
 
-COMMENT ON COLUMN audit_logs.action IS 'Action performed (e.g., user.create, user.delete)';
-COMMENT ON COLUMN audit_logs.resource_type IS 'Type of resource affected';
-COMMENT ON COLUMN audit_logs.details IS 'Additional details in JSON format';
+COMMENT ON COLUMN audit_log.action IS 'Action performed (e.g., user.create, user.delete)';
+COMMENT ON COLUMN audit_log.resource_type IS 'Type of resource affected';
+COMMENT ON COLUMN audit_log.details IS 'Additional details in JSON format';
 
 -- ============== ROLLBACK DOWN ==============
 
@@ -129,7 +129,7 @@ DROP TRIGGER IF EXISTS update_users_updated_at ON users;
 DROP FUNCTION IF EXISTS update_updated_at_column();
 
 -- Drop tables (in reverse order of dependencies)
-DROP TABLE IF EXISTS audit_logs CASCADE;
+DROP TABLE IF EXISTS audit_log CASCADE;
 DROP TABLE IF EXISTS servers CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 DROP TABLE IF EXISTS schema_migrations CASCADE;

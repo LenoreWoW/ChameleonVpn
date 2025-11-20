@@ -104,15 +104,18 @@ func (db *DB) initSchema() error {
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);
 
-	-- Audit log table
+	-- Audit log table (matches migrations schema)
 	CREATE TABLE IF NOT EXISTS audit_log (
 		id SERIAL PRIMARY KEY,
-		timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
 		action VARCHAR(255) NOT NULL,
-		username VARCHAR(255),
-		details TEXT,
+		resource_type VARCHAR(100),
+		resource_id VARCHAR(255),
+		details JSONB,
 		ip_address INET,
-		server_id VARCHAR(255) NOT NULL
+		user_agent TEXT,
+		status VARCHAR(50) DEFAULT 'success',
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);
 
 	-- Server health table
@@ -180,8 +183,11 @@ func (db *DB) initSchema() error {
 	CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 	CREATE INDEX IF NOT EXISTS idx_users_active ON users(active);
 	CREATE INDEX IF NOT EXISTS idx_users_server_id ON users(server_id);
-	CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_log(timestamp);
-	CREATE INDEX IF NOT EXISTS idx_audit_server_id ON audit_log(server_id);
+	CREATE INDEX IF NOT EXISTS idx_audit_log_created_at ON audit_log(created_at);
+	CREATE INDEX IF NOT EXISTS idx_audit_log_action ON audit_log(action);
+	CREATE INDEX IF NOT EXISTS idx_audit_log_status ON audit_log(status);
+	CREATE INDEX IF NOT EXISTS idx_audit_log_user_id ON audit_log(user_id);
+	CREATE INDEX IF NOT EXISTS idx_audit_log_resource_type ON audit_log(resource_type);
 	CREATE INDEX IF NOT EXISTS idx_servers_enabled ON servers(enabled);
 	CREATE INDEX IF NOT EXISTS idx_servers_type ON servers(server_type);
 	CREATE INDEX IF NOT EXISTS idx_server_health_server_id ON server_health(server_id);
