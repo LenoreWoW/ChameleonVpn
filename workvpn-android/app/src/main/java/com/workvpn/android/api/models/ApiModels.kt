@@ -24,7 +24,9 @@ data class VerifyOtpRequest(
     @SerializedName("email")
     val email: String,
     @SerializedName("otp")
-    val otp: String
+    val otp: String,
+    @SerializedName("session_id")
+    val sessionId: String? = null
 )
 
 data class RegisterRequest(

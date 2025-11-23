@@ -124,7 +124,9 @@ class AuthManager(private val context: Context) {
         return try {
             Log.d(TAG, "Verifying OTP for: $email")
 
-            val result = ApiService.verifyOtp(email, code)
+            // Get current session ID to send with verification
+            val sessionId = currentOtpSessionId ?: tokenStorage.getOtpSessionId()
+            val result = ApiService.verifyOtp(email, code, sessionId)
 
             if (result.isSuccess) {
                 val response = result.getOrNull()!!

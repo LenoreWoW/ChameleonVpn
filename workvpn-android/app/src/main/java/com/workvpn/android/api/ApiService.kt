@@ -198,9 +198,9 @@ object ApiService {
     /**
      * Verify OTP code
      */
-    suspend fun verifyOtp(email: String, otp: String): Result<VerifyOtpResponse> {
+    suspend fun verifyOtp(email: String, otp: String, sessionId: String? = null): Result<VerifyOtpResponse> {
         return try {
-            val response = api.verifyOtp(VerifyOtpRequest(email, otp))
+            val response = api.verifyOtp(VerifyOtpRequest(email, otp, sessionId))
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!)
             } else {
