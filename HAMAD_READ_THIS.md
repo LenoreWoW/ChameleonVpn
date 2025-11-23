@@ -809,6 +809,193 @@ open -a "Android Studio" .
 
 ---
 
+## Endnode Server Setup (Optional - For VPN Traffic)
+
+**Note:** You saw the endnode errors on osrv2. Here's how to fix them.
+
+### What is Endnode?
+
+**Management Server** = Authentication, users, database (what you already started)
+**Endnode Server** = VPN traffic handling (what you're trying to start now)
+
+**Important:** Endnode does NOT need database credentials! It only talks to Management API.
+
+### Step 1: Go to Endnode Directory
+
+Type:
+```bash
+cd ~/ChameleonVpn/barqnet-backend/apps/endnode
+```
+
+**Verify:**
+```bash
+pwd
+```
+
+Should show:
+```
+/home/osrv2/ChameleonVpn/barqnet-backend/apps/endnode
+```
+
+### Step 2: Create .env File
+
+**Why isn't .env in git?**
+- `.env` contains SECRETS (passwords, API keys)
+- NEVER commit secrets to git (security risk!)
+- Only `.env.example` is in git (template with fake values)
+
+**Create .env from the example:**
+```bash
+cp .env.example .env
+```
+
+**Verify it was created:**
+```bash
+ls .env
+```
+
+You should see:
+```
+.env
+```
+
+### Step 3: Edit .env File
+
+Open the file:
+```bash
+nano .env
+```
+
+**You need to set these 3 variables:**
+
+**1. JWT_SECRET** (MUST match Management Server)
+
+Go to your Management Server terminal and find this line:
+```
+[ENV] ✅ VALID: JWT_SECRET = yo**************************re
+```
+
+Or check the Management .env file:
+```bash
+# In another terminal:
+cd ~/ChameleonVpn/barqnet-backend/apps/management
+cat .env | grep JWT_SECRET
+```
+
+Copy that EXACT value.
+
+In the endnode .env, set:
+```bash
+JWT_SECRET=<paste the value here>
+```
+
+**2. API_KEY** (Create a strong random key)
+
+Generate a random key:
+```bash
+openssl rand -hex 32
+```
+
+Copy the output and set in .env:
+```bash
+API_KEY=<paste the random key here>
+```
+
+**3. MANAGEMENT_URL** (Where is Management Server?)
+
+If Management is running on the same server (osrv2):
+```bash
+MANAGEMENT_URL=http://localhost:8080
+```
+
+If Management is on a different server:
+```bash
+MANAGEMENT_URL=http://<management-server-ip>:8080
+```
+
+**Save and exit nano:**
+- Press `Ctrl+X`
+- Press `Y` to confirm
+- Press `Enter` to save
+
+### Step 4: Build Endnode
+
+Type:
+```bash
+go build -o endnode main.go
+```
+
+Wait 10-20 seconds.
+
+You should see:
+```
+(no output means success)
+```
+
+**Verify binary was created:**
+```bash
+ls endnode
+```
+
+You should see:
+```
+endnode
+```
+
+### Step 5: Run Endnode
+
+Type:
+```bash
+./endnode -server-id server-1
+```
+
+**You should see:**
+```
+========================================
+BarqNet Endnode Server - Starting...
+========================================
+[ENV] ✅ Loaded configuration from .env file
+[ENV] Validating endnode environment variables...
+[ENV] Note: Endnodes use Management API, no direct database access needed
+[ENV] ✅ VALID: JWT_SECRET = yo**************************re
+[ENV] ✅ VALID: API_KEY = a9**********6f
+[ENV] ✅ VALID: MANAGEMENT_URL = http://localhost:8080
+[ENV] ============================================================
+[ENV] ✅ Endnode environment validation PASSED
+[ENV] ============================================================
+End-node mode: No direct database connection needed
+Communication with management server via API only
+✅ API server is ready
+✅ Successfully registered with management server
+🚀 Endnode server 'server-1' started successfully
+```
+
+✅ **If you see this, Endnode is running!**
+
+**Important:** Like the Management server, keep this terminal running!
+
+### What You Fixed
+
+**Before (with database errors):**
+```
+[ENV] ❌ MISSING: DB_HOST
+[ENV] ❌ MISSING: DB_PORT
+[ENV] ❌ MISSING: DB_USER
+[ENV] ❌ MISSING: DB_PASSWORD
+[ENV] ❌ MISSING: DB_NAME
+```
+
+**After (only needs 3 variables):**
+```
+[ENV] ✅ VALID: JWT_SECRET
+[ENV] ✅ VALID: API_KEY
+[ENV] ✅ VALID: MANAGEMENT_URL
+```
+
+**This is correct!** Endnode doesn't need database - it uses Management API only.
+
+---
+
 ## Testing Checklist
 
 Copy this checklist and mark as you test:
