@@ -74,6 +74,377 @@ See detailed instructions in "iOS Setup" section below.
 
 ---
 
+## 📱 WHAT TO DO AFTER iOS APP BUILDS - COMPLETE TESTING GUIDE
+
+**So the app built successfully and launched on Simulator... now what?**
+
+This section tells you EXACTLY what to do, step by step, to test the iOS app.
+
+### Prerequisites:
+
+**1. Make sure the backend is running:**
+```bash
+# In a separate terminal window:
+cd /Users/wolf/Desktop/ChameleonVpn/barqnet-backend/apps/management
+go run main.go
+```
+
+You should see:
+```
+[ENV] ✅ Loaded configuration from .env file
+[DB] ✅ Connected to PostgreSQL successfully
+[OTP] ✅ Resend email service initialized
+[API] 🚀 Management API server starting on :8080
+```
+
+**If the backend doesn't start:**
+- Check that PostgreSQL is running
+- Verify .env file exists in barqnet-backend/apps/management/
+- See "Backend Setup" section below for detailed instructions
+
+**2. Get the backend API URL:**
+- For local testing: `http://localhost:8080`
+- For production: Your deployed backend URL
+
+---
+
+### Step-by-Step Testing Flow:
+
+#### **STEP 1: Launch the App**
+
+When the iOS app first launches, you'll see:
+
+**🎨 What You Should See:**
+- Blue gradient background (dark blue to cyan)
+- Floating email emoji 📧 (animated, moves up and down)
+- "Get Started" title in cyan blue
+- Subtitle: "Enter your email address to create your secure VPN account"
+- Email input field (empty)
+- "CONTINUE" button (blue gradient)
+- "Already have an account? Sign In" link at bottom
+
+**✅ Success Indicators:**
+- App didn't crash
+- UI is visible and not blank
+- Animation is smooth
+- Colors match (blue gradient theme)
+
+**❌ If you see errors:**
+- Blank screen → Check Xcode console for errors
+- Crash on launch → Check ContentView.swift is compiled
+- Missing UI elements → Assets.xcassets might not be loaded
+
+---
+
+#### **STEP 2: Create a New Account (Onboarding Flow)**
+
+**Action:** Enter your email address
+
+1. Tap the email input field
+2. Enter a valid email: `hamad@test.com` (or your real email if you want real OTPs)
+3. Tap "CONTINUE"
+
+**🎨 What You Should See:**
+- Loading spinner appears on the button
+- After 1-2 seconds, you're taken to OTP verification screen
+
+**Backend Behavior:**
+```
+# Backend logs should show:
+[OTP] Sending OTP to hamad@test.com
+[OTP] ✅ OTP sent successfully via Resend
+```
+
+**If using a REAL email:**
+- Check your inbox for email from BarqNet
+- Subject: "Your BarqNet Verification Code"
+- Email contains 6-digit OTP code
+
+**If using TEST email (hamad@test.com):**
+- Check backend terminal logs for the OTP code:
+```
+[OTP] DEBUG: Code for hamad@test.com = 123456
+```
+
+**❌ Common Issues:**
+- "Network error" → Backend not running on port 8080
+- "Invalid email" → Email format validation failed
+- No email received → Check backend OTP configuration (Resend API key)
+- Button stuck loading → Check Xcode console for API errors
+
+---
+
+#### **STEP 3: Verify OTP Code**
+
+**🎨 What You Should See:**
+- "Verify Your Email" title
+- Subtitle showing your email address
+- 6 individual input boxes for the OTP code
+- "VERIFY" button
+- "Didn't receive code? Resend" link
+
+**Action:** Enter the 6-digit OTP code
+
+1. Type the 6 digits from the email (or backend logs)
+2. The app auto-advances between boxes as you type
+3. Tap "VERIFY"
+
+**Expected Behavior:**
+- Loading spinner on button
+- After 1-2 seconds, you're taken to password creation screen
+
+**Backend Logs:**
+```
+[OTP] Verifying OTP for hamad@test.com
+[OTP] ✅ OTP verified successfully
+[AUTH] Creating user account for hamad@test.com
+```
+
+**❌ Common Issues:**
+- "Invalid code" → Code expired (5 minutes) or wrong code
+- "Expired" → Request new code with "Resend" link
+- Can't type → Focus issue, try tapping the first box
+
+---
+
+#### **STEP 4: Create Password**
+
+**🎨 What You Should See:**
+- "Create Password" title
+- "Secure your BarqNet account with a strong password"
+- Password input field
+- "Confirm Password" input field
+- Password strength indicator (weak/medium/strong)
+- "CREATE ACCOUNT" button
+
+**Action:** Create a secure password
+
+1. Enter password: `MySecurePass123!`
+2. Confirm password: `MySecurePass123!`
+3. Tap "CREATE ACCOUNT"
+
+**Password Requirements:**
+- Minimum 8 characters
+- Must match in both fields
+- Strength indicator updates as you type
+
+**Expected Behavior:**
+- Loading spinner on button
+- After 1-2 seconds, you're logged in and see the main VPN screen
+
+**Backend Logs:**
+```
+[AUTH] ✅ Password set for user hamad@test.com
+[AUTH] ✅ User account created successfully
+[JWT] ✅ Issued token for hamad@test.com
+```
+
+**❌ Common Issues:**
+- "Passwords don't match" → Retype carefully
+- "Password too weak" → Add numbers/special characters
+- Stuck loading → Check backend logs for database errors
+
+---
+
+#### **STEP 5: Main VPN Screen (First Time)**
+
+**🎨 What You Should See:**
+- "BarqNet" title at top
+- Settings gear icon (top right)
+- Logout icon (top left)
+- Blue gradient background
+- **"No VPN Configuration"** message
+- "Import .ovpn configuration file" button
+- OR "You need to import a VPN configuration to connect"
+
+**✅ This is NORMAL for first-time users!**
+
+You need to either:
+1. **Option A:** Import a .ovpn config file (for OpenVPN)
+2. **Option B:** Configure backend to provide server configs automatically
+
+---
+
+#### **STEP 6: Test Settings (Optional)**
+
+**Action:** Tap the gear icon (⚙️) in top right
+
+**🎨 What You Should See:**
+- Settings modal slides up
+- Your email address displayed
+- Account information
+- "Delete Account" option (red)
+- "Close" or dismiss button
+
+**Action:** Tap outside modal or close button to dismiss
+
+**✅ Success:** Modal closes, returns to main screen
+
+---
+
+#### **STEP 7: Test Logout/Login Flow**
+
+**Action:** Tap the logout icon (🚪) in top left
+
+**Expected Behavior:**
+- App returns to onboarding screen
+- Now shows "Sign In" screen (not email entry)
+
+**🎨 Login Screen Shows:**
+- "Welcome Back" title
+- Email input field
+- Password input field
+- "SIGN IN" button
+- "Don't have an account? Sign Up" link
+
+**Action:** Test login with your credentials
+
+1. Enter email: `hamad@test.com`
+2. Enter password: `MySecurePass123!`
+3. Tap "SIGN IN"
+
+**Expected Behavior:**
+- Loading spinner
+- Returns to main VPN screen
+- You're logged in (no OTP needed this time)
+
+**Backend Logs:**
+```
+[AUTH] Login attempt for hamad@test.com
+[AUTH] ✅ Password verified
+[JWT] ✅ Issued token for hamad@test.com
+```
+
+---
+
+### Testing Checklist (Complete Flow):
+
+```
+✅ Step 1: App launches without crash
+✅ Step 2: Email entry works, OTP sent
+✅ Step 3: OTP verification succeeds
+✅ Step 4: Password creation works
+✅ Step 5: Main VPN screen appears (no config message is normal)
+✅ Step 6: Settings modal opens and closes
+✅ Step 7: Logout works
+✅ Step 8: Login works with email + password
+✅ Step 9: Stays logged in (token persistence)
+```
+
+---
+
+### What Each Screen Should Look Like:
+
+**Color Scheme (All Screens):**
+- Background: Dark blue gradient (#0A1929 → #1E3A5F → #132F4C)
+- Primary buttons: Cyan blue gradient (#00BCD4 → #0D47A1)
+- Text: White or light gray
+- Accents: Cyan blue (#00BCD4)
+
+**Screen Order:**
+1. **EmailEntryView** → Email input + Continue
+2. **OTPVerificationView** → 6-digit code entry
+3. **PasswordCreationView** → Password + confirm
+4. **VPNStatusView** OR **NoConfigView** → Main app screen
+5. **LoginView** → Email + password (after logout)
+
+---
+
+### Backend API Endpoints Being Used:
+
+During testing, the app calls these endpoints:
+
+1. **POST /api/auth/send-otp**
+   - Body: `{"email": "hamad@test.com"}`
+   - Response: `{"success": true, "message": "OTP sent"}`
+
+2. **POST /api/auth/verify-otp**
+   - Body: `{"email": "hamad@test.com", "otp": "123456"}`
+   - Response: `{"success": true, "token": "temporary-token"}`
+
+3. **POST /api/auth/create-account**
+   - Body: `{"email": "hamad@test.com", "password": "MySecurePass123!", "token": "temporary-token"}`
+   - Response: `{"success": true, "token": "jwt-token", "user": {...}}`
+
+4. **POST /api/auth/login**
+   - Body: `{"email": "hamad@test.com", "password": "MySecurePass123!"}`
+   - Response: `{"success": true, "token": "jwt-token", "user": {...}}`
+
+You can monitor these in the backend terminal logs.
+
+---
+
+### Troubleshooting Common Issues:
+
+**Issue: "Network Error" or "Failed to connect"**
+- **Solution:** Make sure backend is running on port 8080
+- **Check:** `curl http://localhost:8080/health` should return `{"status":"healthy"}`
+
+**Issue: "Invalid credentials" on login**
+- **Solution:** Password might not have been saved correctly
+- **Check:** Create a new account with different email
+
+**Issue: "OTP expired"**
+- **Solution:** OTPs expire after 5 minutes, request a new one
+- **Action:** Tap "Resend OTP" link
+
+**Issue: App crashes on specific screen**
+- **Solution:** Check Xcode console for error messages
+- **Check:** Look for Swift runtime errors or API response errors
+
+**Issue: "No VPN Configuration" won't go away**
+- **Solution:** This is normal! VPN config import not implemented yet
+- **Workaround:** Backend needs to provide server configs via API
+
+---
+
+### Success Criteria (All Must Pass):
+
+✅ **Authentication Flow:**
+- Can create account with email + OTP
+- Can set password
+- Can logout
+- Can login with email + password
+- Stays logged in between app restarts
+
+✅ **UI/UX:**
+- All screens render correctly
+- Animations are smooth
+- Colors match design
+- Buttons respond to taps
+- No crashes or freezes
+
+✅ **Backend Integration:**
+- All API calls succeed
+- OTP emails are sent
+- Passwords are hashed and stored
+- JWT tokens are issued
+- Token validation works
+
+---
+
+### Next Steps After Testing:
+
+Once you've confirmed all the above works:
+
+1. **VPN Configuration:**
+   - Import .ovpn file manually, OR
+   - Implement server config API in backend
+
+2. **Production Testing:**
+   - Deploy backend to production server
+   - Update API_URL in iOS app
+   - Test with real email addresses
+   - Test on real iPhone device (not just Simulator)
+
+3. **Additional Features:**
+   - Server selection
+   - Connection statistics
+   - Auto-reconnect
+   - Kill switch
+
+---
+
 ## 📝 PREVIOUS UPDATE (November 18, 2025) - DESKTOP UI FIXED
 
 **ALL CRITICAL ISSUES FIXED! App now fully testable on all platforms.**
