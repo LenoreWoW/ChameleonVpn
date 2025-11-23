@@ -30,4 +30,36 @@ post_install do |installer|
       config.build_settings['ENABLE_BITCODE'] = 'NO'
     end
   end
+
+  # Xcode 16 Fix: Patch CocoaPods framework embedding script to skip Simulator builds
+  # This prevents sandbox/rsync errors when embedding OpenVPNAdapter.framework
+  frameworks_script_path = 'Pods/Target Support Files/Pods-WorkVPN/Pods-WorkVPN-frameworks.sh'
+  if File.exist?(frameworks_script_path)
+    frameworks_script = File.read(frameworks_script_path)
+
+    # Check if already patched
+    unless frameworks_script.include?('EFFECTIVE_PLATFORM_NAME')
+      puts "Patching #{frameworks_script_path} for Xcode 16 Simulator compatibility..."
+
+      # Replace the install_framework calls with platform check
+      patched_script = frameworks_script.gsub(
+        /if \[\[ "\$CONFIGURATION" == "Debug" \]\]; then\n  install_framework.*\nfi\nif \[\[ "\$CONFIGURATION" == "Release" \]\]; then\n  install_framework.*\nfi/,
+        '# Xcode 16 Fix: Skip framework embedding for Simulator builds to avoid sandbox rsync errors
+# OpenVPNAdapter is built from source and linked automatically - no need to embed/sign for Simulator
+if [[ "${EFFECTIVE_PLATFORM_NAME}" != "-iphonesimulator" ]]; then
+  if [[ "$CONFIGURATION" == "Debug" ]]; then
+    install_framework "${BUILT_PRODUCTS_DIR}/OpenVPNAdapter/OpenVPNAdapter.framework"
+  fi
+  if [[ "$CONFIGURATION" == "Release" ]]; then
+    install_framework "${BUILT_PRODUCTS_DIR}/OpenVPNAdapter/OpenVPNAdapter.framework"
+  fi
+else
+  echo "Skipping OpenVPNAdapter framework embedding for Simulator (Xcode 16 sandbox compatibility)"
+fi'
+      )
+
+      File.write(frameworks_script_path, patched_script)
+      puts "✓ Successfully patched frameworks script for Xcode 16"
+    end
+  end
 end
