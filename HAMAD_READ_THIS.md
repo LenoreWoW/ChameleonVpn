@@ -5,6 +5,28 @@
 
 ---
 
+## Step 0: Install Prerequisites (First Time Only!)
+
+**Run this ONCE before anything else:**
+
+```bash
+cd ~/ChameleonVpn
+./setup-prereqs.sh
+```
+
+This script will automatically:
+- ✅ Check and install PostgreSQL
+- ✅ Check and install Go (Golang)
+- ✅ Check and install Node.js/npm
+- ✅ Check and install CocoaPods (iOS)
+- ✅ Check and install Java (Android)
+- ✅ Create the BarqNet database
+- ✅ Create .env files from templates
+
+**If everything is already installed, it just confirms and exits.**
+
+---
+
 ## Quick Start - 3 Steps
 
 ### 1. Start Backend (Required!)
