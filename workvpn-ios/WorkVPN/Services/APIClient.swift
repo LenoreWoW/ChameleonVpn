@@ -428,7 +428,11 @@ class APIClient: NSObject, URLSessionDelegate {
 
     /// Send OTP to email
     func sendOTP(email: String, completion: @escaping (Result<String?, Error>) -> Void) {
-        let request = ["email": email]
+        struct SendOTPRequest: Encodable {
+            let email: String
+        }
+
+        let request = SendOTPRequest(email: email)
 
         post("/v1/auth/send-otp", body: request) { (result: Result<APIResponse<OTPSessionData>, Error>) in
             switch result {
@@ -453,14 +457,24 @@ class APIClient: NSObject, URLSessionDelegate {
 
     /// Verify OTP code
     func verifyOTP(email: String, code: String, sessionId: String?, completion: @escaping (Result<String?, Error>) -> Void) {
-        var request: [String: Any] = [
-            "email": email,
-            "otp": code
-        ]
+        // Use proper struct for encoding to ensure session_id is correctly sent
+        struct VerifyOTPRequest: Encodable {
+            let email: String
+            let otp: String
+            let session_id: String?
 
-        if let sessionId = sessionId {
-            request["session_id"] = sessionId
+            enum CodingKeys: String, CodingKey {
+                case email
+                case otp
+                case session_id = "session_id"
+            }
         }
+
+        let request = VerifyOTPRequest(
+            email: email,
+            otp: code,
+            session_id: sessionId
+        )
 
         post("/v1/auth/verify-otp", body: request) { (result: Result<APIResponse<OTPVerificationData>, Error>) in
             switch result {
@@ -485,11 +499,17 @@ class APIClient: NSObject, URLSessionDelegate {
 
     /// Register new account
     func register(email: String, password: String, otpCode: String, completion: @escaping (Result<(tokens: AuthTokens, user: User?), Error>) -> Void) {
-        let request = [
-            "email": email,
-            "password": password,
-            "otp": otpCode
-        ]
+        struct RegisterRequest: Encodable {
+            let email: String
+            let password: String
+            let otp: String
+        }
+
+        let request = RegisterRequest(
+            email: email,
+            password: password,
+            otp: otpCode
+        )
 
         post("/v1/auth/register", body: request) { [weak self] (result: Result<APIResponse<AuthData>, Error>) in
             guard let self = self else { return }
@@ -525,10 +545,15 @@ class APIClient: NSObject, URLSessionDelegate {
 
     /// Login with email and password
     func login(email: String, password: String, completion: @escaping (Result<(tokens: AuthTokens, user: User?), Error>) -> Void) {
-        let request = [
-            "email": email,
-            "password": password
-        ]
+        struct LoginRequest: Encodable {
+            let email: String
+            let password: String
+        }
+
+        let request = LoginRequest(
+            email: email,
+            password: password
+        )
 
         post("/v1/auth/login", body: request) { [weak self] (result: Result<APIResponse<AuthData>, Error>) in
             guard let self = self else { return }
