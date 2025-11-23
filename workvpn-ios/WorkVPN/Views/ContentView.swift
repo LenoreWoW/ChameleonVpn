@@ -141,9 +141,10 @@ struct ContentView: View {
                             .foregroundColor(.cyanBlue)
                     }
                 }
-
-                if vpnManager.hasConfig {
-                    ToolbarItem(placement: .navigationBarLeading) {
+            }
+            .toolbar {
+                ToolbarItemGroup(placement: .navigationBarLeading) {
+                    if vpnManager.hasConfig {
                         Button(action: {
                             showingImportConfig = true
                         }) {

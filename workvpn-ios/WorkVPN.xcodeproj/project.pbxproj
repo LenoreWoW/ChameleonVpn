@@ -19,6 +19,7 @@
 		A01000000000000000000000A /* OTPVerificationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A02000000000000000000000A /* OTPVerificationView.swift */; };
 		A01000000000000000000000B /* PasswordCreationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A02000000000000000000000B /* PasswordCreationView.swift */; };
 		A01000000000000000000000C /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A02000000000000000000000C /* LoginView.swift */; };
+		E1A96CEA0483E049D886C50A /* EmailEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01E87105B9F254AFF98DCCB /* EmailEntryView.swift */; };
 		A01000000000000000000000D /* VPNStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A02000000000000000000000D /* VPNStatusView.swift */; };
 		A01000000000000000000000E /* NoConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A02000000000000000000000E /* NoConfigView.swift */; };
 		A01000000000000000000000F /* ConfigImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A02000000000000000000000F /* ConfigImportView.swift */; };
@@ -70,6 +71,7 @@ EA5F3387718456C250512F1F /* APIClient.swift in Sources */ = {isa = PBXBuildFile;
 		A02000000000000000000000A /* OTPVerificationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OTPVerificationView.swift; sourceTree = "<group>"; };
 		A02000000000000000000000B /* PasswordCreationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasswordCreationView.swift; sourceTree = "<group>"; };
 		A02000000000000000000000C /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		E01E87105B9F254AFF98DCCB /* EmailEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailEntryView.swift; sourceTree = "<group>"; };
 		A02000000000000000000000D /* VPNStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPNStatusView.swift; sourceTree = "<group>"; };
 		A02000000000000000000000E /* NoConfigView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoConfigView.swift; sourceTree = "<group>"; };
 		A02000000000000000000000F /* ConfigImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigImportView.swift; sourceTree = "<group>"; };
@@ -228,7 +230,8 @@ FFA5B1433628AE7633E4C60D /* AuthManager.swift */ = {isa = PBXFileReference; last
 			children = (
 				A02000000000000000000000A /* OTPVerificationView.swift */,
 				A02000000000000000000000B /* PasswordCreationView.swift */,
-				A02000000000000000000000C /* LoginView.swift */,
+				A02000000000000000000000C /* E01E87105B9F254AFF98DCCB /* EmailEntryView.swift */,
+				E01E87105B9F254AFF98DCCB /* LoginView.swift */,
 			);
 			path = Onboarding;
 			sourceTree = "<group>";
@@ -411,7 +414,8 @@ FFA5B1433628AE7633E4C60D /* AuthManager.swift */ = {isa = PBXFileReference; last
 				A010000000000000000000008 /* CertificatePinning.swift in Sources */,
 				A01000000000000000000000A /* OTPVerificationView.swift in Sources */,
 				A01000000000000000000000B /* PasswordCreationView.swift in Sources */,
-				A01000000000000000000000C /* LoginView.swift in Sources */,
+				A01000000000000000000000C /* E1A96CEA0483E049D886C50A /* EmailEntryView.swift in Sources */,
+				E1A96CEA0483E049D886C50A /* LoginView.swift in Sources */,
 				A01000000000000000000000D /* VPNStatusView.swift in Sources */,
 				A01000000000000000000000E /* NoConfigView.swift in Sources */,
 				A01000000000000000000000F /* ConfigImportView.swift in Sources */,
