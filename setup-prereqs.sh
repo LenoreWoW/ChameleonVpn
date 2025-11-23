@@ -112,23 +112,7 @@ fi
 echo ""
 
 echo -e "${BLUE}[4/8]${NC} Checking Node.js and npm..."
-if command -v node &> /dev/null; then
-    NODE_VERSION=$(node --version)
-    print_status 0 "Node.js installed: $NODE_VERSION"
-else
-    print_status 1 "Node.js not found"
-    NEEDS_INSTALL+=("node")
-fi
-
-if command -v npm &> /dev/null; then
-    NPM_VERSION=$(npm --version)
-    print_status 0 "npm installed: v$NPM_VERSION"
-else
-    print_status 1 "npm not found"
-    if [[ ! " ${NEEDS_INSTALL[@]} " =~ " node " ]]; then
-        NEEDS_INSTALL+=("npm")
-    fi
-fi
+print_info "Skipping - Desktop support will be added later"
 echo ""
 
 echo -e "${BLUE}[5/8]${NC} Checking CocoaPods (for iOS)..."
@@ -160,13 +144,7 @@ fi
 echo ""
 
 echo -e "${BLUE}[7/8]${NC} Checking Java (for Android)..."
-if command -v java &> /dev/null; then
-    JAVA_VERSION=$(java -version 2>&1 | head -n1)
-    print_status 0 "Java installed: $JAVA_VERSION"
-else
-    print_status 1 "Java not found"
-    NEEDS_INSTALL+=("java")
-fi
+print_info "Skipping - Android support will be added later"
 echo ""
 
 echo -e "${BLUE}[8/8]${NC} Checking BarqNet Database..."
@@ -222,7 +200,10 @@ if [ ${#NEEDS_INSTALL[@]} -eq 0 ]; then
     echo -e "${BLUE}Next steps:${NC}"
     echo "  1. Start backend: cd barqnet-backend/apps/management && go run main.go"
     echo "  2. Test iOS: ./setup-ios.sh"
-    echo "  3. Test Desktop: cd workvpn-desktop && npm start"
+    echo ""
+    echo -e "${BLUE}Coming later:${NC}"
+    echo "  - Desktop (requires Node.js/npm)"
+    echo "  - Android (requires Java/Android SDK)"
     exit 0
 fi
 
@@ -257,14 +238,8 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
                 go)
                     echo "  Go: brew install go"
                     ;;
-                node)
-                    echo "  Node.js: brew install node"
-                    ;;
                 cocoapods)
                     echo "  CocoaPods: sudo gem install cocoapods"
-                    ;;
-                java)
-                    echo "  Java: brew install openjdk@17"
                     ;;
             esac
         done
@@ -276,12 +251,6 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
                     ;;
                 go)
                     echo "  Go: sudo apt-get install golang-go"
-                    ;;
-                node)
-                    echo "  Node.js: sudo apt-get install nodejs npm"
-                    ;;
-                java)
-                    echo "  Java: sudo apt-get install openjdk-17-jdk"
                     ;;
             esac
         done
@@ -330,27 +299,11 @@ if [[ "$OS" == "macos" ]]; then
         echo ""
     fi
 
-    # Install Node.js
-    if [[ " ${NEEDS_INSTALL[@]} " =~ " node " ]]; then
-        echo -e "${BLUE}Installing Node.js...${NC}"
-        brew install node
-        print_status 0 "Node.js installed"
-        echo ""
-    fi
-
     # Install CocoaPods
     if [[ " ${NEEDS_INSTALL[@]} " =~ " cocoapods " ]]; then
         echo -e "${BLUE}Installing CocoaPods...${NC}"
         sudo gem install cocoapods
         print_status 0 "CocoaPods installed"
-        echo ""
-    fi
-
-    # Install Java
-    if [[ " ${NEEDS_INSTALL[@]} " =~ " java " ]]; then
-        echo -e "${BLUE}Installing Java...${NC}"
-        brew install openjdk@17
-        print_status 0 "Java installed"
         echo ""
     fi
 
@@ -387,21 +340,6 @@ elif [[ "$OS" == "linux" ]]; then
         echo ""
     fi
 
-    # Install Node.js
-    if [[ " ${NEEDS_INSTALL[@]} " =~ " node " ]]; then
-        echo -e "${BLUE}Installing Node.js...${NC}"
-        sudo apt-get install -y nodejs npm
-        print_status 0 "Node.js installed"
-        echo ""
-    fi
-
-    # Install Java
-    if [[ " ${NEEDS_INSTALL[@]} " =~ " java " ]]; then
-        echo -e "${BLUE}Installing Java...${NC}"
-        sudo apt-get install -y openjdk-17-jdk
-        print_status 0 "Java installed"
-        echo ""
-    fi
 fi
 
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -411,7 +349,10 @@ echo ""
 echo -e "${BLUE}Next steps:${NC}"
 echo "  1. Start backend: cd barqnet-backend/apps/management && go run main.go"
 echo "  2. Test iOS: ./setup-ios.sh"
-echo "  3. Test Desktop: cd workvpn-desktop && npm start"
+echo ""
+echo -e "${BLUE}Coming later:${NC}"
+echo "  - Desktop (requires Node.js/npm)"
+echo "  - Android (requires Java/Android SDK)"
 echo ""
 echo -e "${YELLOW}Note:${NC} You may need to restart your terminal for some changes to take effect."
 echo ""
