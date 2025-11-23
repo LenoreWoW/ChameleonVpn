@@ -42,7 +42,9 @@ func main() {
 	}
 
 	// Validate environment variables before proceeding
-	if _, err := shared.ValidateEnvironment(); err != nil {
+	// Note: Endnodes use ValidateEndnodeEnvironment() which doesn't require database credentials
+	// Endnodes communicate with Management API only, no direct database access needed
+	if _, err := shared.ValidateEndnodeEnvironment(); err != nil {
 		log.Fatalf("❌ Environment validation failed: %v", err)
 	}
 

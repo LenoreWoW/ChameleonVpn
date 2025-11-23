@@ -254,3 +254,103 @@ func MustGetEnv(key string) string {
 	}
 	return value
 }
+
+// ValidateEndnodeEnvironment validates environment variables for endnode servers
+// Endnodes do NOT need database access - they communicate with Management API only
+func ValidateEndnodeEnvironment() (*EnvValidationResult, error) {
+	result := &EnvValidationResult{
+		Valid:    true,
+		Missing:  []string{},
+		Warnings: []string{},
+	}
+
+	log.Println("[ENV] Validating endnode environment variables...")
+	log.Println("[ENV] Note: Endnodes use Management API, no direct database access needed")
+
+	// Endnode-specific required variables (NO database credentials)
+	endnodeRequiredVars := []RequiredEnvVar{
+		// Security Configuration (CRITICAL)
+		{Name: "JWT_SECRET", Description: "JWT signing secret (must match management server)", DefaultValue: "", MinLength: 32},
+		{Name: "API_KEY", Description: "API key for management server authentication", DefaultValue: "", MinLength: 16},
+
+		// Management Server Connection (CRITICAL)
+		{Name: "MANAGEMENT_URL", Description: "Management server API URL", DefaultValue: "", MinLength: 0},
+
+		// Redis Configuration (OPTIONAL - for caching)
+		{Name: "REDIS_HOST", Description: "Redis host", DefaultValue: "localhost", MinLength: 0},
+		{Name: "REDIS_PORT", Description: "Redis port", DefaultValue: "6379", MinLength: 0},
+		{Name: "REDIS_DB", Description: "Redis database number", DefaultValue: "0", MinLength: 0},
+	}
+
+	for _, envVar := range endnodeRequiredVars {
+		value := os.Getenv(envVar.Name)
+
+		// Check if variable is set
+		if value == "" {
+			if envVar.DefaultValue == "" {
+				// No default - this is REQUIRED
+				result.Valid = false
+				result.Missing = append(result.Missing, envVar.Name)
+				log.Printf("[ENV] ❌ MISSING: %s (%s)", envVar.Name, envVar.Description)
+			} else {
+				// Has default - use it
+				os.Setenv(envVar.Name, envVar.DefaultValue)
+				log.Printf("[ENV] ⚠️  USING DEFAULT: %s = %s", envVar.Name, envVar.DefaultValue)
+				result.Warnings = append(result.Warnings,
+					fmt.Sprintf("%s not set, using default: %s", envVar.Name, envVar.DefaultValue))
+			}
+			continue
+		}
+
+		// Validate minimum length for security-sensitive variables
+		if envVar.MinLength > 0 && len(value) < envVar.MinLength {
+			result.Valid = false
+			result.Missing = append(result.Missing,
+				fmt.Sprintf("%s (too short: %d chars, minimum: %d chars)",
+					envVar.Name, len(value), envVar.MinLength))
+			log.Printf("[ENV] ❌ INVALID: %s is too short (%d chars, minimum %d required)",
+				envVar.Name, len(value), envVar.MinLength)
+			continue
+		}
+
+		// Security warnings
+		if envVar.Name == "JWT_SECRET" && isWeakSecret(value) {
+			result.Warnings = append(result.Warnings,
+				"JWT_SECRET appears weak - use a strong random value")
+			log.Printf("[ENV] ⚠️  WARNING: JWT_SECRET may be weak")
+		}
+
+		// Mask sensitive values in logs
+		maskedValue := value
+		if isSensitiveVar(envVar.Name) {
+			maskedValue = maskSensitiveValue(value)
+		}
+
+		log.Printf("[ENV] ✅ VALID: %s = %s", envVar.Name, maskedValue)
+	}
+
+	// Validate Redis port is numeric
+	if redisPort := os.Getenv("REDIS_PORT"); redisPort != "" {
+		if _, err := strconv.Atoi(redisPort); err != nil {
+			result.Valid = false
+			result.Missing = append(result.Missing, fmt.Sprintf("REDIS_PORT must be a valid integer (got: %s)", redisPort))
+		}
+	}
+
+	// Print summary
+	log.Println("[ENV] " + strings.Repeat("=", 60))
+	if result.Valid {
+		log.Println("[ENV] ✅ Endnode environment validation PASSED")
+		if len(result.Warnings) > 0 {
+			log.Printf("[ENV] ⚠️  %d warnings (see above)", len(result.Warnings))
+		}
+	} else {
+		log.Println("[ENV] ❌ Endnode environment validation FAILED")
+		log.Printf("[ENV] Missing/invalid variables: %d", len(result.Missing))
+		return result, fmt.Errorf("missing required endnode environment variables: %s",
+			strings.Join(result.Missing, ", "))
+	}
+	log.Println("[ENV] " + strings.Repeat("=", 60))
+
+	return result, nil
+}
