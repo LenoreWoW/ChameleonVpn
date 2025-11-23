@@ -259,14 +259,17 @@ func (db *DB) RunMigrations(migrationsPath string) error {
 }
 
 // createMigrationsTable creates the schema_migrations table for tracking applied migrations
+// Note: Uses VARCHAR for version to match existing migration files (e.g., '001_initial_schema')
 func (db *DB) createMigrationsTable() error {
 	schema := `
 	CREATE TABLE IF NOT EXISTS schema_migrations (
-		version INTEGER PRIMARY KEY,
+		id SERIAL PRIMARY KEY,
+		version INTEGER NOT NULL UNIQUE,
 		name VARCHAR(255) NOT NULL,
 		applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		checksum VARCHAR(64) -- For future integrity checking
 	);
+	CREATE INDEX IF NOT EXISTS idx_migrations_version ON schema_migrations(version);
 	CREATE INDEX IF NOT EXISTS idx_migrations_applied_at ON schema_migrations(applied_at);
 	`
 	_, err := db.conn.Exec(schema)
@@ -347,6 +350,7 @@ func (db *DB) readMigrationFiles(migrationsPath string) ([]Migration, error) {
 }
 
 // extractUpMigration extracts the UP migration SQL, excluding rollback section
+// Also removes schema_migrations table creation and INSERT statements since those are handled by the migration system
 func (db *DB) extractUpMigration(content string) string {
 	// Remove commented rollback section (everything after "ROLLBACK DOWN")
 	if idx := strings.Index(content, "-- ============== ROLLBACK DOWN =============="); idx != -1 {
@@ -355,7 +359,38 @@ func (db *DB) extractUpMigration(content string) string {
 	if idx := strings.Index(content, "/*"); idx != -1 {
 		content = content[:idx]
 	}
-	return strings.TrimSpace(content)
+
+	// Remove schema_migrations table creation (handled by migration system)
+	lines := strings.Split(content, "\n")
+	var filtered []string
+	skipUntilSemicolon := false
+
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+
+		// Skip schema_migrations table creation
+		if strings.Contains(trimmed, "CREATE TABLE") && strings.Contains(trimmed, "schema_migrations") {
+			skipUntilSemicolon = true
+			continue
+		}
+
+		// Skip INSERT into schema_migrations
+		if strings.Contains(trimmed, "INSERT INTO schema_migrations") {
+			skipUntilSemicolon = true
+			continue
+		}
+
+		if skipUntilSemicolon {
+			if strings.Contains(trimmed, ";") {
+				skipUntilSemicolon = false
+			}
+			continue
+		}
+
+		filtered = append(filtered, line)
+	}
+
+	return strings.TrimSpace(strings.Join(filtered, "\n"))
 }
 
 // applyMigration applies a single migration within a transaction

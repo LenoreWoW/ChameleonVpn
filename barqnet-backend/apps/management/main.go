@@ -57,6 +57,14 @@ func main() {
 	}
 	defer db.Close()
 
+	// Run database migrations
+	log.Println("[DB] Running database migrations...")
+	migrationsPath := "../../migrations"
+	if err := db.RunMigrations(migrationsPath); err != nil {
+		log.Fatalf("Failed to run database migrations: %v", err)
+	}
+	log.Println("[DB] ✅ Database migrations completed successfully")
+
 	// Initialize rate limiter
 	rateLimiter, err := shared.NewRateLimiter()
 	if err != nil {
