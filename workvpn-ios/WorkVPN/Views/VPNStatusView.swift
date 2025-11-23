@@ -41,11 +41,18 @@ struct VPNStatusView: View {
             }
 
             // Status Text
-            Text(statusText)
-                .font(.system(size: 32, weight: .bold))
-                .foregroundColor(.cyanBlue)
-                .textCase(.uppercase)
-                .tracking(2)
+            Group {
+                let base = Text(statusText)
+                    .font(.system(size: 32, weight: .bold))
+                    .foregroundColor(.cyanBlue)
+                    .textCase(.uppercase)
+
+                if #available(iOS 16.0, *) {
+                    base.tracking(2)
+                } else {
+                    base
+                }
+            }
 
             // Connection Info
             if vpnManager.isConnected {
@@ -205,11 +212,18 @@ struct StatBox: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            Text(title)
-                .foregroundColor(.white.opacity(0.5))
-                .font(.system(size: 12, weight: .medium))
-                .textCase(.uppercase)
-                .tracking(1)
+            Group {
+                let base = Text(title)
+                    .foregroundColor(.white.opacity(0.5))
+                    .font(.system(size: 12, weight: .medium))
+                    .textCase(.uppercase)
+
+                if #available(iOS 16.0, *) {
+                    base.tracking(1)
+                } else {
+                    base
+                }
+            }
 
             Text(value)
                 .foregroundColor(.cyanBlue)
