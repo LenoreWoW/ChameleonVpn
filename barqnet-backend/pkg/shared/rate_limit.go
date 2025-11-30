@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -74,7 +75,14 @@ func NewRateLimiter() (*RateLimiter, error) {
 	defer cancel()
 
 	if err := client.Ping(ctx).Err(); err != nil {
-		log.Printf("[RATE-LIMIT] WARNING: Failed to connect to Redis: %v", err)
+		// Distinguish auth failures from connection failures
+		errMsg := err.Error()
+		if strings.Contains(errMsg, "WRONGPASS") || strings.Contains(errMsg, "NOAUTH") {
+			log.Printf("[RATE-LIMIT] ⚠️  CRITICAL: Redis authentication failed: %v", err)
+			log.Printf("[RATE-LIMIT] Check REDIS_PASSWORD in .env and Redis server configuration")
+		} else {
+			log.Printf("[RATE-LIMIT] WARNING: Failed to connect to Redis: %v", err)
+		}
 		log.Println("[RATE-LIMIT] Rate limiting will operate in DEGRADED mode (allow all requests)")
 
 		// Return limiter with client but note connection failure
@@ -85,7 +93,7 @@ func NewRateLimiter() (*RateLimiter, error) {
 		}, nil
 	}
 
-	log.Printf("[RATE-LIMIT] Successfully connected to Redis at %s:%s", redisHost, redisPort)
+	log.Printf("[RATE-LIMIT] ✅ Successfully connected to Redis at %s:%s", redisHost, redisPort)
 	log.Println("[RATE-LIMIT] Rate limiting is ENABLED")
 
 	return &RateLimiter{
@@ -305,4 +313,19 @@ func (rl *RateLimiter) CheckRateLimit(limitType RateLimitType, key string) (*Rat
 		Remaining: remaining,
 		ResetAt:   resetTime,
 	}, nil
+}
+
+// ValidateProductionConfig validates Redis configuration for production
+func ValidateProductionConfig() error {
+	env := os.Getenv("ENVIRONMENT")
+	if env == "production" {
+		redisPassword := os.Getenv("REDIS_PASSWORD")
+		if redisPassword == "" {
+			return fmt.Errorf("REDIS_PASSWORD is required when ENVIRONMENT=production")
+		}
+		if len(redisPassword) < 16 {
+			log.Printf("[RATE-LIMIT] ⚠️  WARNING: REDIS_PASSWORD is weak (<%d chars)", len(redisPassword))
+		}
+	}
+	return nil
 }

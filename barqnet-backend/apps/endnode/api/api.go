@@ -17,7 +17,8 @@ import (
 
 // EndNodeAPI handles API requests for the end-node
 type EndNodeAPI struct {
-	manager *manager.EndNodeManager
+	manager     *manager.EndNodeManager
+	auditLogger *shared.AuditLogger
 }
 
 // NewEndNodeAPI creates a new end-node API
@@ -27,6 +28,16 @@ func NewEndNodeAPI(manager *manager.EndNodeManager) *EndNodeAPI {
 
 // Start starts the API server
 func (api *EndNodeAPI) Start(port int) error {
+	// Initialize audit logger with file-only logging (endnode doesn't have DB connection)
+	auditDir := os.Getenv("AUDIT_LOG_DIR")
+	if auditDir == "" {
+		auditDir = "/var/log/vpnmanager"
+	}
+
+	fileEnabled := getEnvBool("AUDIT_FILE_ENABLED", true)
+	// Endnode uses file-only logging (no database connection)
+	api.auditLogger = shared.NewAuditLogger(auditDir, fileEnabled, false, nil)
+
 	mux := http.NewServeMux()
 
 	// Health check endpoint
@@ -820,23 +831,29 @@ func (api *EndNodeAPI) logSecurityEvent(r *http.Request) {
 	api.logAudit("api_request", "", fmt.Sprintf("%s %s", r.Method, r.URL.Path), r.RemoteAddr)
 }
 
-// logAudit logs audit events
+// logAudit logs audit events using the audit logger (file-only logging for endnode)
 func (api *EndNodeAPI) logAudit(action, username, details, ipAddress string) {
-	// Log to local file for end-node audit trail
-	logFile := "/var/log/vpnmanager/endnode-audit.log"
-	
-	auditEntry := fmt.Sprintf("[%s] %s %s %s %s\n", 
-		time.Now().Format("2006-01-02 15:04:05"),
-		action,
-		username,
-		details,
-		ipAddress)
-	
-	// Append to audit log file
-	if file, err := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0640); err == nil {
-		file.WriteString(auditEntry)
-		file.Close()
+	if api.auditLogger != nil {
+		// Get server ID from environment or use default
+		serverID := os.Getenv("SERVER_ID")
+		if serverID == "" {
+			serverID = "endnode"
+		}
+
+		if err := api.auditLogger.LogAudit("endnode-audit.log", action, username, details, ipAddress, serverID); err != nil {
+			log.Printf("[AUDIT] ⚠️  Audit logging failed: %v", err)
+		}
+	} else {
+		log.Printf("[AUDIT] ⚠️  Audit logger not initialized")
 	}
+}
+
+// getEnvBool retrieves a boolean environment variable with a default value
+func getEnvBool(key string, defaultValue bool) bool {
+	if value := os.Getenv(key); value != "" {
+		return value == "true" || value == "1"
+	}
+	return defaultValue
 }
 
 // isWritable checks if a directory is writable

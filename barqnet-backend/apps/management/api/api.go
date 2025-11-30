@@ -20,6 +20,7 @@ type ManagementAPI struct {
 	manager     *manager.ManagementManager
 	httpClient  *http.Client
 	rateLimiter *shared.RateLimiter
+	auditLogger *shared.AuditLogger
 }
 
 // NewManagementAPI creates a new management API
@@ -71,6 +72,18 @@ func (api *ManagementAPI) Start(port int) error {
 	// Create OTP service with email delivery
 	otpService := shared.NewLocalOTPService(emailService)
 	authHandler := NewAuthHandler(conn, otpService, api.rateLimiter)
+
+	// Initialize audit logger with dual logging (file + database)
+	auditDir := os.Getenv("AUDIT_LOG_DIR")
+	if auditDir == "" {
+		auditDir = "/var/log/vpnmanager"
+	}
+
+	fileEnabled := getEnvBool("AUDIT_FILE_ENABLED", true)
+	dbEnabled := getEnvBool("AUDIT_DB_ENABLED", true)
+
+	auditManager := api.manager.GetAuditManager()
+	api.auditLogger = shared.NewAuditLogger(auditDir, fileEnabled, dbEnabled, auditManager)
 
 	// Authentication endpoints (v1 API)
 	mux.HandleFunc("/v1/auth/send-otp", authHandler.HandleSendOTP)
@@ -956,21 +969,27 @@ func (api *ManagementAPI) logSecurityEvent(r *http.Request) {
 	api.logAudit("api_request", "", fmt.Sprintf("%s %s", r.Method, r.URL.Path), r.RemoteAddr)
 }
 
-// logAudit logs audit events
+// logAudit logs audit events using the audit logger (dual logging: file + database)
 func (api *ManagementAPI) logAudit(action, username, details, ipAddress string) {
-	// Log audit to file
-	logFile := "/var/log/vpnmanager/management-audit.log"
-	auditEntry := fmt.Sprintf("[%s] %s %s %s %s\n", 
-		time.Now().Format("2006-01-02 15:04:05"),
-		action,
-		username,
-		details,
-		ipAddress)
-	
-	if file, err := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0640); err == nil {
-		file.WriteString(auditEntry)
-		file.Close()
+	if api.auditLogger != nil {
+		// serverID can be obtained from manager or environment
+		serverID := os.Getenv("SERVER_ID")
+		if serverID == "" {
+			serverID = "management-server"
+		}
+
+		if err := api.auditLogger.LogAudit("management-audit.log", action, username, details, ipAddress, serverID); err != nil {
+			log.Printf("[AUDIT] ⚠️  Audit logging failed: %v", err)
+		}
 	} else {
-		fmt.Printf("Failed to log audit: %v\n", err)
+		log.Printf("[AUDIT] ⚠️  Audit logger not initialized")
 	}
+}
+
+// getEnvBool retrieves a boolean environment variable with a default value
+func getEnvBool(key string, defaultValue bool) bool {
+	if value := os.Getenv(key); value != "" {
+		return value == "true" || value == "1"
+	}
+	return defaultValue
 }

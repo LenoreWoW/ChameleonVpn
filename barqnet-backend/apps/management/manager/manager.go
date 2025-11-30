@@ -471,3 +471,8 @@ func (mm *ManagementManager) RemoveEndNode(serverID string) error {
 func (mm *ManagementManager) GetDB() *shared.DB {
 	return mm.userManager.GetDB()
 }
+
+// GetAuditManager returns the audit manager for use by API handlers
+func (mm *ManagementManager) GetAuditManager() *shared.AuditManager {
+	return mm.auditManager
+}

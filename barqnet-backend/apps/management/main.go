@@ -44,6 +44,11 @@ func main() {
 		log.Fatalf("❌ Environment validation failed: %v", err)
 	}
 
+	// Validate production configuration (Redis password, etc.)
+	if err := shared.ValidateProductionConfig(); err != nil {
+		log.Fatalf("[STARTUP] ❌ Production validation failed: %v", err)
+	}
+
 	// Load configuration
 	config, err := loadConfig(*configFile)
 	if err != nil {

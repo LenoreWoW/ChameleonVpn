@@ -277,6 +277,7 @@ func (db *DB) createMigrationsTable() error {
 }
 
 // getAppliedMigrations returns a map of already applied migration versions
+// Handles both INTEGER and VARCHAR(255) version columns for backward compatibility
 func (db *DB) getAppliedMigrations() (map[int]bool, error) {
 	rows, err := db.conn.Query("SELECT version FROM schema_migrations ORDER BY version")
 	if err != nil {
@@ -286,11 +287,22 @@ func (db *DB) getAppliedMigrations() (map[int]bool, error) {
 
 	applied := make(map[int]bool)
 	for rows.Next() {
-		var version int
-		if err := rows.Scan(&version); err != nil {
+		// Try to scan as string first (handles VARCHAR versions like "001_initial_schema")
+		var versionStr string
+		if err := rows.Scan(&versionStr); err != nil {
 			return nil, err
 		}
-		applied[version] = true
+
+		// Parse version number from string (e.g., "001_initial_schema" -> 1)
+		var versionNum int
+		_, parseErr := fmt.Sscanf(versionStr, "%d", &versionNum)
+		if parseErr != nil {
+			// If parsing fails, try to use the string as-is (backward compatibility)
+			log.Printf("[DB] Warning: Could not parse version string '%s': %v", versionStr, parseErr)
+			continue
+		}
+
+		applied[versionNum] = true
 	}
 	return applied, rows.Err()
 }
