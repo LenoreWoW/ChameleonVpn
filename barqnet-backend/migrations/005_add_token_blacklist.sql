@@ -33,8 +33,8 @@ CREATE TABLE IF NOT EXISTS token_blacklist (
 CREATE UNIQUE INDEX IF NOT EXISTS idx_blacklist_token_hash ON token_blacklist(token_hash);
 
 -- Cleanup queries: Delete expired entries efficiently
-CREATE INDEX IF NOT EXISTS idx_blacklist_expires_at ON token_blacklist(expires_at)
-WHERE expires_at > CURRENT_TIMESTAMP; -- Partial index: only active entries
+-- Note: Removed WHERE clause because CURRENT_TIMESTAMP is STABLE, not IMMUTABLE
+CREATE INDEX IF NOT EXISTS idx_blacklist_expires_at ON token_blacklist(expires_at);
 
 -- User queries: Find all revoked tokens for a user
 CREATE INDEX IF NOT EXISTS idx_blacklist_user_id ON token_blacklist(user_id);
@@ -151,20 +151,22 @@ BEGIN
 
     -- Log cleanup operation
     INSERT INTO audit_log (
-        timestamp,
         action,
         username,
         details,
         ip_address,
-        server_id
+        server_id,
+        resource_type,
+        status
     )
     VALUES (
-        CURRENT_TIMESTAMP,
         'TOKEN_BLACKLIST_CLEANUP',
         'system',
-        format('Cleaned up %s expired blacklist entries', v_deleted_count),
+        format('{"deleted_count": %s}', v_deleted_count)::jsonb,
         NULL,
-        'management-server'
+        'management-server',
+        'token_blacklist',
+        'success'
     );
 
     -- Return statistics
@@ -203,20 +205,24 @@ BEGIN
 
     -- Log the mass revocation event
     INSERT INTO audit_log (
-        timestamp,
         action,
         username,
         details,
         ip_address,
-        server_id
+        server_id,
+        resource_type,
+        status,
+        user_id
     )
     VALUES (
-        CURRENT_TIMESTAMP,
         'TOKEN_REVOKE_ALL',
         v_phone_number,
-        format('All tokens revoked for user_id=%s, reason=%s', p_user_id, p_reason),
+        format('{"user_id": %s, "reason": "%s"}', p_user_id, p_reason)::jsonb,
         p_ip_address,
-        'management-server'
+        'management-server',
+        'token_blacklist',
+        'success',
+        p_user_id
     );
 
     -- Return success message
@@ -277,10 +283,6 @@ COMMENT ON FUNCTION cleanup_expired_blacklist_entries() IS 'Removes expired toke
 COMMENT ON FUNCTION revoke_all_user_tokens(INTEGER, VARCHAR, VARCHAR, INET) IS 'Emergency function to revoke all tokens for a user (security incidents)';
 COMMENT ON VIEW v_active_blacklist IS 'Shows only non-expired blacklist entries';
 COMMENT ON VIEW v_blacklist_statistics IS 'Real-time statistics about token blacklist usage';
-
--- Record this migration as applied
-INSERT INTO schema_migrations (version) VALUES ('005_add_token_blacklist')
-ON CONFLICT (version) DO NOTHING;
 
 -- ============== ROLLBACK DOWN ==============
 
