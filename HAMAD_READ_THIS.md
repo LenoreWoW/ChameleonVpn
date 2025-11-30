@@ -18,6 +18,33 @@
 
 ---
 
+## 🔍 FIRST: Run Diagnostics (Before Testing iOS)
+
+**Before testing the iOS app, run this diagnostic script:**
+
+```bash
+cd ~/ChameleonVpn
+./diagnose.sh
+```
+
+This will automatically check:
+- ✅ Backend running on port 8080
+- ✅ PostgreSQL accessible
+- ✅ Test user exists
+- ✅ Login endpoint working
+- ✅ No nginx blocking (common issue)
+
+**Color-coded output:**
+- 🟢 Green = Working
+- 🔴 Red = Problem (with fix instructions)
+- 🟡 Yellow = Warning
+
+**If all checks pass**, you're ready to test iOS!
+
+**If checks fail**, follow the action items shown by the script.
+
+---
+
 ## Step 0A: Configure Redis & Database (REQUIRED - Do This First!)
 
 ### 1. Start PostgreSQL
