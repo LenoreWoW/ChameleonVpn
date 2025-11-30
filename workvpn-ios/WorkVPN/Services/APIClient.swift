@@ -129,8 +129,9 @@ class APIClient: NSObject, URLSessionDelegate {
 
     private override init() {
         // API base URL from environment or default to localhost
+        // Note: iOS Simulator requires 127.0.0.1 instead of localhost for Mac backend
         #if DEBUG
-        self.baseURL = "http://localhost:8080"
+        self.baseURL = "http://127.0.0.1:8080"
         #else
         self.baseURL = "https://api.barqnet.com"
         #endif
