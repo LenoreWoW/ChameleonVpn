@@ -1,16 +1,18 @@
 # BarqNet - Complete Testing Guide
 
 **Last Updated:** November 30, 2025
-**Status:** ⚠️ IMPORTANT: Authentication Fixes Applied - Read Carefully!
+**Status:** 🚀 NEW: iOS Quick Testing Bypass Added! + Authentication Fixes
 
 ---
 
-## 🚨 CRITICAL: New Authentication Requirements (November 30, 2025)
+## 🚨 CRITICAL: New Features & Fixes (November 30, 2025)
 
-**Recent fixes addressed 3 major bugs:**
-1. ✅ **Redis Authentication** - Password now required for production
-2. ✅ **Audit Logging** - Database schema fixed, dual logging enabled
-3. ✅ **Rate Limiting** - Properly validates credentials
+**Recent updates:**
+1. ✅ **Database Migrations** - Automatic migration system verified and working
+2. ✅ **iOS Testing Bypass** - Quick login/signup buttons in DEBUG mode (saves ~60 sec per test!)
+3. ✅ **Redis Authentication** - Password now required for production
+4. ✅ **Audit Logging** - Database schema fixed, dual logging enabled
+5. ✅ **Rate Limiting** - Properly validates credentials
 
 **YOU MUST complete Step 0A before running the backend!**
 
@@ -208,6 +210,63 @@ When the app launches:
 - Email: `hamad@test.com`
 - Password: `Test123!`
 - Should login without OTP
+
+---
+
+## 🚀 NEW: iOS Quick Testing Bypass (DEBUG Mode Only!)
+
+**No more email waiting!** In DEBUG builds, you can now bypass email/OTP entry for instant testing.
+
+### Option 1: One-Tap Quick Login (Fastest!)
+
+When the app launches:
+
+1. **Tap "Already have an account? Sign In"**
+2. **Look for the yellow ⚡ "Quick Test Login" button**
+3. **Tap it**
+4. ✅ **Instantly logged in!** (No typing needed)
+
+**Test Credentials Auto-Filled:**
+- Email: `test@barqnet.local`
+- Password: `Test1234`
+
+### Option 2: Quick Signup Flow
+
+1. **Launch app → Look for yellow ⚡ "Use Test Email" button**
+2. **Tap it** → Auto-fills email and proceeds to OTP
+3. **Look for yellow ⚡ "Use Test OTP" button**
+4. **Tap it** → Auto-fills OTP code `123456`
+5. **Create password manually**
+6. ✅ **Account created!**
+
+### How to Create More Test Accounts
+
+```bash
+cd ~/ChameleonVpn/barqnet-backend
+go run scripts/create_test_user.go \
+  -email "mytest@test.local" \
+  -username "myuser" \
+  -password "MyPass123" \
+  -force
+```
+
+Then update iOS test config in `workvpn-ios/WorkVPN/Config/TestingConfig.swift`
+
+### Important Notes
+
+- ⚡ **Yellow buttons only appear in DEBUG builds**
+- 🔒 **Automatically disabled in Release/Production**
+- 📖 **Full guide:** `workvpn-ios/TESTING_GUIDE.md`
+- 🎯 **Saves ~60 seconds per test cycle**
+
+### Visual Indicators
+
+All testing buttons have:
+- **Yellow color** with lightning bolt ⚡
+- **Dashed yellow border**
+- **Semi-transparent background**
+
+Easy to spot and won't appear in production!
 
 ---
 

@@ -160,6 +160,39 @@ struct LoginView: View {
                         .foregroundColor(.cyanBlue)
                 }
 
+                #if DEBUG
+                // Quick test login button (DEBUG only)
+                if TestingConfig.isTestingEnabled && TestingConfig.enableQuickLogin {
+                    Button(action: {
+                        TestingConfig.logTestAction("Quick test login triggered")
+                        email = TestingConfig.testEmail
+                        password = TestingConfig.testPassword
+
+                        // Trigger login after a brief delay to show auto-fill
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            isLoading = true
+                            onLogin(email, password)
+                        }
+                    }) {
+                        HStack {
+                            Image(systemName: "bolt.fill")
+                            Text("Quick Test Login")
+                                .font(.caption)
+                        }
+                        .foregroundColor(.yellow)
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 16)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.yellow.opacity(0.5), lineWidth: 1)
+                                .background(Color.yellow.opacity(0.1))
+                                .cornerRadius(8)
+                        )
+                    }
+                    .padding(.top, 8)
+                }
+                #endif
+
                 Spacer()
             }
         }

@@ -126,6 +126,38 @@ struct EmailEntryView: View {
                         .foregroundColor(.cyanBlue)
                 }
 
+                #if DEBUG
+                // Quick test email button (DEBUG only)
+                if TestingConfig.isTestingEnabled && TestingConfig.enableAutoFill {
+                    Button(action: {
+                        TestingConfig.logTestAction("Quick test email auto-fill triggered")
+                        email = TestingConfig.testEmail
+
+                        // Trigger continue after a brief delay to show auto-fill
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            isLoading = true
+                            onContinue()
+                        }
+                    }) {
+                        HStack {
+                            Image(systemName: "bolt.fill")
+                            Text("Use Test Email")
+                                .font(.caption)
+                        }
+                        .foregroundColor(.yellow)
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 16)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.yellow.opacity(0.5), lineWidth: 1)
+                                .background(Color.yellow.opacity(0.1))
+                                .cornerRadius(8)
+                        )
+                    }
+                    .padding(.top, 8)
+                }
+                #endif
+
                 Spacer()
             }
         }

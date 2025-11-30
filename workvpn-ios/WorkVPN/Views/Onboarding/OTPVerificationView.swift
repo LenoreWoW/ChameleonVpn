@@ -128,6 +128,44 @@ struct OTPVerificationView: View {
                         .foregroundColor(.cyanBlue)
                 }
 
+                #if DEBUG
+                // Quick OTP bypass button (DEBUG only)
+                if TestingConfig.isTestingEnabled && TestingConfig.enableOTPBypass {
+                    Button(action: {
+                        TestingConfig.logTestAction("Quick OTP bypass triggered")
+                        // Auto-fill test OTP
+                        let testOTPArray = Array(TestingConfig.testOTP)
+                        for (index, digit) in testOTPArray.enumerated() {
+                            if index < 6 {
+                                otpDigits[index] = String(digit)
+                            }
+                        }
+
+                        // Trigger verification after a brief delay
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            isLoading = true
+                            onVerify(TestingConfig.testOTP)
+                        }
+                    }) {
+                        HStack {
+                            Image(systemName: "bolt.fill")
+                            Text("Use Test OTP")
+                                .font(.caption)
+                        }
+                        .foregroundColor(.yellow)
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 16)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.yellow.opacity(0.5), lineWidth: 1)
+                                .background(Color.yellow.opacity(0.1))
+                                .cornerRadius(8)
+                        )
+                    }
+                    .padding(.top, 8)
+                }
+                #endif
+
                 Spacer()
             }
         }
