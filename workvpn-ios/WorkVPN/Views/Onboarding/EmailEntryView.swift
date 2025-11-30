@@ -16,6 +16,11 @@ struct EmailEntryView: View {
     @State private var errorMessage: String?
     @State private var floatOffset: CGFloat = 0
 
+    // Testing configuration (DEBUG only)
+    #if DEBUG
+    private let testEmail = "test@barqnet.local"
+    #endif
+
     var body: some View {
         ZStack {
             // Background gradient
@@ -128,17 +133,16 @@ struct EmailEntryView: View {
 
                 #if DEBUG
                 // Quick test email button (DEBUG only)
-                if TestingConfig.isTestingEnabled && TestingConfig.enableAutoFill {
-                    Button(action: {
-                        TestingConfig.logTestAction("Quick test email auto-fill triggered")
-                        email = TestingConfig.testEmail
+                Button(action: {
+                    NSLog("[TESTING] Quick test email auto-fill triggered")
+                    email = testEmail
 
-                        // Trigger continue after a brief delay to show auto-fill
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            isLoading = true
-                            onContinue()
-                        }
-                    }) {
+                    // Trigger continue after a brief delay to show auto-fill
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        isLoading = true
+                        onContinue()
+                    }
+                }) {
                         HStack {
                             Image(systemName: "bolt.fill")
                             Text("Use Test Email")
@@ -153,9 +157,8 @@ struct EmailEntryView: View {
                                 .background(Color.yellow.opacity(0.1))
                                 .cornerRadius(8)
                         )
-                    }
-                    .padding(.top, 8)
                 }
+                .padding(.top, 8)
                 #endif
 
                 Spacer()

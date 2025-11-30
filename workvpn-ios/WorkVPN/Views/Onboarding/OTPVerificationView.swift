@@ -18,6 +18,11 @@ struct OTPVerificationView: View {
     @State private var showError = false
     @State private var floatOffset: CGFloat = 0
 
+    // Testing configuration (DEBUG only)
+    #if DEBUG
+    private let testOTP = "123456"
+    #endif
+
     var body: some View {
         ZStack {
             // Background gradient
@@ -130,23 +135,22 @@ struct OTPVerificationView: View {
 
                 #if DEBUG
                 // Quick OTP bypass button (DEBUG only)
-                if TestingConfig.isTestingEnabled && TestingConfig.enableOTPBypass {
-                    Button(action: {
-                        TestingConfig.logTestAction("Quick OTP bypass triggered")
-                        // Auto-fill test OTP
-                        let testOTPArray = Array(TestingConfig.testOTP)
-                        for (index, digit) in testOTPArray.enumerated() {
-                            if index < 6 {
-                                otpDigits[index] = String(digit)
-                            }
+                Button(action: {
+                    NSLog("[TESTING] Quick OTP bypass triggered")
+                    // Auto-fill test OTP
+                    let testOTPArray = Array(testOTP)
+                    for (index, digit) in testOTPArray.enumerated() {
+                        if index < 6 {
+                            otpDigits[index] = String(digit)
                         }
+                    }
 
-                        // Trigger verification after a brief delay
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            isLoading = true
-                            onVerify(TestingConfig.testOTP)
-                        }
-                    }) {
+                    // Trigger verification after a brief delay
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        isLoading = true
+                        onVerify(testOTP)
+                    }
+                }) {
                         HStack {
                             Image(systemName: "bolt.fill")
                             Text("Use Test OTP")
@@ -161,9 +165,8 @@ struct OTPVerificationView: View {
                                 .background(Color.yellow.opacity(0.1))
                                 .cornerRadius(8)
                         )
-                    }
-                    .padding(.top, 8)
                 }
+                .padding(.top, 8)
                 #endif
 
                 Spacer()

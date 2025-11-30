@@ -17,6 +17,12 @@ struct LoginView: View {
     @State private var errorMessage: String?
     @State private var floatOffset: CGFloat = 0
 
+    // Testing configuration (DEBUG only)
+    #if DEBUG
+    private let testEmail = "test@barqnet.local"
+    private let testPassword = "Test1234"
+    #endif
+
     var body: some View {
         ZStack {
             // Background gradient
@@ -162,18 +168,17 @@ struct LoginView: View {
 
                 #if DEBUG
                 // Quick test login button (DEBUG only)
-                if TestingConfig.isTestingEnabled && TestingConfig.enableQuickLogin {
-                    Button(action: {
-                        TestingConfig.logTestAction("Quick test login triggered")
-                        email = TestingConfig.testEmail
-                        password = TestingConfig.testPassword
+                Button(action: {
+                    NSLog("[TESTING] Quick test login triggered")
+                    email = testEmail
+                    password = testPassword
 
-                        // Trigger login after a brief delay to show auto-fill
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            isLoading = true
-                            onLogin(email, password)
-                        }
-                    }) {
+                    // Trigger login after a brief delay to show auto-fill
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        isLoading = true
+                        onLogin(email, password)
+                    }
+                }) {
                         HStack {
                             Image(systemName: "bolt.fill")
                             Text("Quick Test Login")
@@ -188,9 +193,8 @@ struct LoginView: View {
                                 .background(Color.yellow.opacity(0.1))
                                 .cornerRadius(8)
                         )
-                    }
-                    .padding(.top, 8)
                 }
+                .padding(.top, 8)
                 #endif
 
                 Spacer()
