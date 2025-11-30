@@ -27,12 +27,35 @@ sudo systemctl start postgresql
 brew services start postgresql
 ```
 
-### 2. Create/Verify BarqNet Database
+### 2. Create BarqNet Database & User
+
+**Option A: Quick Setup (Recommended)**
 ```bash
-createdb -U postgres barqnet
-# If already exists, that's OK - just verify:
-psql -U postgres -d barqnet -c "\dt"
+cd ~/ChameleonVpn/barqnet-backend
+sudo -u postgres psql <<EOF
+CREATE USER barqnet WITH PASSWORD 'barqnet123';
+CREATE DATABASE barqnet OWNER barqnet;
+GRANT ALL PRIVILEGES ON DATABASE barqnet TO barqnet;
+GRANT ALL PRIVILEGES ON SCHEMA public TO barqnet;
+EOF
 ```
+
+**Option B: Manual Migration (If automatic fails)**
+```bash
+# First, create user and database with Option A above
+# Then run migrations manually:
+cd ~/ChameleonVpn/barqnet-backend/migrations
+for f in *.sql; do sudo -u postgres psql -d barqnet -f "$f"; done
+cd ..
+```
+
+**Verify Database:**
+```bash
+psql -U barqnet -d barqnet -c "\dt"
+# Should show: users, servers, audit_log, etc.
+```
+
+**Note:** User: `barqnet`, Password: `barqnet123` (matches .env defaults)
 
 ### 3. Configure Redis Password
 
@@ -78,16 +101,29 @@ redis-cli -a YOUR_PASSWORD ping
 ### 4. Update Backend .env File
 
 ```bash
-cd ~/ChameleonVpn/barqnet-backend/apps/management
+cd ~/ChameleonVpn/barqnet-backend
 nano .env
 ```
 
 **Update these lines:**
 ```bash
+# Database (matches user created in Step 2)
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=barqnet
+DB_PASSWORD=barqnet123
+DB_NAME=barqnet
+DB_SSLMODE=disable
+
+# Redis
 REDIS_PASSWORD=YOUR_GENERATED_PASSWORD_HERE
+
+# Audit Logging
 AUDIT_LOG_DIR=/var/log/vpnmanager
 AUDIT_FILE_ENABLED=true
 AUDIT_DB_ENABLED=true
+
+# Environment
 ENVIRONMENT=development  # Use 'production' when deploying
 ```
 
@@ -308,9 +344,15 @@ psql -U postgres -c "SELECT version();"
 sudo systemctl start postgresql
 ```
 
-**Create database:**
+**Create database user and database (same as Step 0A):**
 ```bash
-createdb -U postgres barqnet
+cd ~/ChameleonVpn/barqnet-backend
+sudo -u postgres psql <<EOF
+CREATE USER barqnet WITH PASSWORD 'barqnet123';
+CREATE DATABASE barqnet OWNER barqnet;
+GRANT ALL PRIVILEGES ON DATABASE barqnet TO barqnet;
+GRANT ALL PRIVILEGES ON SCHEMA public TO barqnet;
+EOF
 ```
 
 ### Backend .env File
@@ -391,18 +433,43 @@ cat .env | grep REDIS_PASSWORD
 sudo systemctl restart redis
 ```
 
-### "column 'username' does not exist"
+### "column 'username' does not exist" or Migration Errors
 
-This means the database migrations haven't run.
+This means the database migrations haven't run or failed.
 
-**Solution:**
+**Solution Option 1: Automatic (Recommended)**
 ```bash
 # Stop the backend (Ctrl+C)
-# Delete the database and recreate:
-dropdb -U postgres barqnet
-createdb -U postgres barqnet
+# Drop and recreate database with user:
+sudo -u postgres psql <<EOF
+DROP DATABASE IF EXISTS barqnet;
+CREATE DATABASE barqnet OWNER barqnet;
+GRANT ALL PRIVILEGES ON DATABASE barqnet TO barqnet;
+EOF
 
 # Restart backend - migrations will run automatically:
+cd ~/ChameleonVpn/barqnet-backend/apps/management
+go run main.go
+```
+
+**Solution Option 2: Manual Migration**
+```bash
+# Stop the backend (Ctrl+C)
+# Recreate database (same as above)
+sudo -u postgres psql <<EOF
+DROP DATABASE IF EXISTS barqnet;
+CREATE DATABASE barqnet OWNER barqnet;
+GRANT ALL PRIVILEGES ON DATABASE barqnet TO barqnet;
+EOF
+
+# Run migrations manually:
+cd ~/ChameleonVpn/barqnet-backend/migrations
+for f in *.sql; do sudo -u postgres psql -d barqnet -f "$f"; done
+
+# Verify migrations:
+psql -U barqnet -d barqnet -c "SELECT version, name FROM schema_migrations ORDER BY version;"
+
+# Restart backend:
 cd ~/ChameleonVpn/barqnet-backend/apps/management
 go run main.go
 ```
