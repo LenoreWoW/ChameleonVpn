@@ -6,28 +6,60 @@
 -- UP MIGRATION
 -- =======================
 
--- Add email column to users table
-ALTER TABLE users ADD COLUMN email VARCHAR(255);
+-- Add email column to users table (if not exists)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'users' AND column_name = 'email'
+    ) THEN
+        ALTER TABLE users ADD COLUMN email VARCHAR(255);
+    END IF;
+END $$;
 
 -- Create unique index on email (will enforce uniqueness once populated)
-CREATE UNIQUE INDEX idx_users_email ON users(email) WHERE email IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email) WHERE email IS NOT NULL;
 
 -- Make email NOT NULL after migration (done separately in production)
 -- ALTER TABLE users ALTER COLUMN email SET NOT NULL;
 
 -- Update otp_attempts table to support both phone and email
 -- Rename phone_number column to identifier for flexibility
-ALTER TABLE otp_attempts RENAME COLUMN phone_number TO identifier;
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'otp_attempts' AND column_name = 'phone_number'
+    ) THEN
+        ALTER TABLE otp_attempts RENAME COLUMN phone_number TO identifier;
+    END IF;
+END $$;
 
 -- Add identifier_type column to distinguish between phone and email
-ALTER TABLE otp_attempts ADD COLUMN identifier_type VARCHAR(20) DEFAULT 'email';
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'otp_attempts' AND column_name = 'identifier_type'
+    ) THEN
+        ALTER TABLE otp_attempts ADD COLUMN identifier_type VARCHAR(20) DEFAULT 'email';
+    END IF;
+END $$;
 
 -- Update existing records to mark as phone type (if any exist)
-UPDATE otp_attempts SET identifier_type = 'phone' WHERE identifier_type IS NULL OR identifier_type = 'email';
+UPDATE otp_attempts SET identifier_type = 'phone' WHERE identifier_type = 'email';
 
 -- For future: users can migrate their phone numbers to emails
 -- This allows gradual migration without breaking existing users
-ALTER TABLE users ADD COLUMN migrated_from_phone BOOLEAN DEFAULT false;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'users' AND column_name = 'migrated_from_phone'
+    ) THEN
+        ALTER TABLE users ADD COLUMN migrated_from_phone BOOLEAN DEFAULT false;
+    END IF;
+END $$;
 
 -- =======================
 -- DOWN MIGRATION
