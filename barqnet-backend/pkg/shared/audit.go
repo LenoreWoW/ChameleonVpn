@@ -44,6 +44,17 @@ func (am *AuditManager) LogAction(action, username, details, ipAddress, serverID
 		detailsJSON = fmt.Sprintf("{\"message\": %q}", details)
 	}
 
+	// Strip port from IP address if present (PostgreSQL INET type doesn't accept ports)
+	// Handles both "192.168.10.248:37594" and "[::1]:8080" formats
+	if idx := strings.LastIndex(ipAddress, ":"); idx != -1 {
+		// For IPv6 addresses like "[::1]:8080", keep the brackets
+		if strings.HasPrefix(ipAddress, "[") {
+			ipAddress = strings.Trim(ipAddress[:idx], "[]")
+		} else {
+			ipAddress = ipAddress[:idx]
+		}
+	}
+
 	query := `
 		INSERT INTO audit_log
 		(user_id, action, username, details, ip_address, server_id, resource_type, status, created_at)
