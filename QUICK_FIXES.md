@@ -16,6 +16,14 @@ git pull origin main
 WRONGPASS invalid username-password pair or user is disabled
 ```
 
+**Status:** ✅ IMPROVED in latest code (Commit: b81a0ea)
+
+The backend now:
+- Shows Redis error ONLY ONCE during startup (not on every request)
+- Provides clear fix instructions in the log
+- Continues running normally in degraded mode (allows all requests)
+- No more log flooding!
+
 **Quick Fix - Option A (Recommended for Development):**
 
 Disable Redis authentication for local development:
@@ -112,9 +120,11 @@ go build -o management main.go
 
 ## Summary
 
-1. ✅ **Pull latest code** - Fixes servers.go, audit.go JSON, and INET errors
-2. ⚠️ **Fix Redis password** - Remove password OR generate real one
+1. ✅ **Pull latest code** - Fixes servers.go, audit.go, and Redis error handling
+2. ⚠️ **Fix Redis password** - Remove password OR generate real one (optional now!)
 3. ✅ **Rebuild and run** - Should work now!
 
-**Latest Fix (Commit: 431eac0):**
-- ✅ Audit log INET error fixed - IP addresses now stored without port numbers
+**Latest Fixes:**
+- ✅ Audit log INET error fixed - IP addresses now stored without port numbers (Commit: 431eac0)
+- ✅ Redis error handling improved - Shows error once, no more log flooding (Commit: b81a0ea)
+- ✅ Backend runs normally even with Redis errors - Operates in degraded mode
