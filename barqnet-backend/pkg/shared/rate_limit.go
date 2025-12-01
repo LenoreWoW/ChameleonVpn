@@ -34,9 +34,10 @@ type RateLimitConfig struct {
 
 // RateLimiter provides Redis-based rate limiting functionality
 type RateLimiter struct {
-	client  *redis.Client
-	enabled bool
-	configs map[RateLimitType]RateLimitConfig
+	client   *redis.Client
+	enabled  bool
+	degraded bool // True if Redis connection failed, skip Redis operations
+	configs  map[RateLimitType]RateLimitConfig
 }
 
 // NewRateLimiter creates a new rate limiter with Redis backend
@@ -79,17 +80,19 @@ func NewRateLimiter() (*RateLimiter, error) {
 		errMsg := err.Error()
 		if strings.Contains(errMsg, "WRONGPASS") || strings.Contains(errMsg, "NOAUTH") {
 			log.Printf("[RATE-LIMIT] ⚠️  CRITICAL: Redis authentication failed: %v", err)
-			log.Printf("[RATE-LIMIT] Check REDIS_PASSWORD in .env and Redis server configuration")
+			log.Printf("[RATE-LIMIT] 💡 Quick Fix: Set REDIS_PASSWORD= (empty) in .env OR RATE_LIMIT_ENABLED=false")
+			log.Printf("[RATE-LIMIT] See QUICK_FIXES.md for detailed instructions")
 		} else {
 			log.Printf("[RATE-LIMIT] WARNING: Failed to connect to Redis: %v", err)
 		}
-		log.Println("[RATE-LIMIT] Rate limiting will operate in DEGRADED mode (allow all requests)")
+		log.Println("[RATE-LIMIT] Operating in DEGRADED mode (allowing all requests)")
 
-		// Return limiter with client but note connection failure
+		// Return limiter in degraded mode - skip Redis entirely
 		return &RateLimiter{
-			client:  client,
-			enabled: true,
-			configs: getDefaultRateLimitConfigs(),
+			client:   nil,
+			enabled:  true,
+			degraded: true, // Mark as degraded to skip Redis operations
+			configs:  getDefaultRateLimitConfigs(),
 		}, nil
 	}
 
@@ -138,6 +141,11 @@ func (rl *RateLimiter) Allow(limitType RateLimitType, key string) (bool, int, ti
 	config, exists := rl.configs[limitType]
 	if !exists {
 		return false, 0, time.Now(), fmt.Errorf("unknown rate limit type: %s", limitType)
+	}
+
+	// If in degraded mode (Redis failed during init), skip Redis entirely
+	if rl.degraded || rl.client == nil {
+		return true, config.MaxRequests, time.Now().Add(config.Window), nil
 	}
 
 	// Check Redis connection health
@@ -201,7 +209,7 @@ func (rl *RateLimiter) Allow(limitType RateLimitType, key string) (bool, int, ti
 
 // Reset resets the rate limit for a specific key (useful for testing or admin override)
 func (rl *RateLimiter) Reset(limitType RateLimitType, key string) error {
-	if !rl.enabled || rl.client == nil {
+	if !rl.enabled || rl.client == nil || rl.degraded {
 		return nil
 	}
 
@@ -220,7 +228,7 @@ func (rl *RateLimiter) Reset(limitType RateLimitType, key string) error {
 
 // GetStatus returns the current status for a specific key
 func (rl *RateLimiter) GetStatus(limitType RateLimitType, key string) (int, int, time.Time, error) {
-	if !rl.enabled || rl.client == nil {
+	if !rl.enabled || rl.client == nil || rl.degraded {
 		config := rl.configs[limitType]
 		return 0, config.MaxRequests, time.Now().Add(config.Window), nil
 	}
