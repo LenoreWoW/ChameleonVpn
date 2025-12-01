@@ -105,14 +105,14 @@ func (api *ManagementAPI) Start(port int) error {
 	mux.HandleFunc("/api/endnodes", authHandler.JWTAuthMiddleware(api.handleEndNodes))
 	mux.HandleFunc("/api/endnodes/", authHandler.JWTAuthMiddleware(api.handleEndNodeOperations))
 
-	// End-node registration endpoints (protected)
-	mux.HandleFunc("/api/endnodes/register", authHandler.JWTAuthMiddleware(api.handleEndNodeRegister))
+	// End-node registration endpoints (API key auth handled in handler)
+	mux.HandleFunc("/api/endnodes/register", api.handleEndNodeRegister)
 
-	// End-node deletion endpoint (protected)
-	mux.HandleFunc("/api/endnodes/delete/", authHandler.JWTAuthMiddleware(api.handleEndNodeDelete))
+	// End-node deletion endpoint (API key auth handled in handler)
+	mux.HandleFunc("/api/endnodes/delete/", api.handleEndNodeDelete)
 
-	// User sync endpoints (protected)
-	mux.HandleFunc("/api/users/sync", authHandler.JWTAuthMiddleware(api.handleUserSync))
+	// User sync endpoints (API key auth handled in handler)
+	mux.HandleFunc("/api/users/sync", api.handleUserSync)
 
 	// Logs endpoints (protected)
 	mux.HandleFunc("/api/logs", authHandler.JWTAuthMiddleware(api.handleLogs))
