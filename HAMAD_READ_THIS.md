@@ -1,20 +1,68 @@
 # BarqNet - Complete Testing Guide
 
-**Last Updated:** November 30, 2025
-**Status:** 🚀 NEW: iOS Quick Testing Bypass Added! + Authentication Fixes
+**Last Updated:** December 1, 2025
+**Status:** 🚀 LATEST FIXES: Pull Code First! Critical Bugs Fixed
 
 ---
 
-## 🚨 CRITICAL: New Features & Fixes (November 30, 2025)
+## 🚨 STEP 0: PULL LATEST CODE FIRST! (December 1, 2025)
+
+**⚠️ CRITICAL - DO THIS BEFORE ANYTHING ELSE:**
+
+```bash
+cd ~/ChameleonVpn
+git pull origin main
+```
+
+### Latest Fixes (Commit: 5ed5876)
+
+**If you don't pull, you'll get these errors:**
+- ❌ "column 'username' does not exist"
+- ❌ "invalid input syntax for type json"
+- ❌ Migration 007 fails on existing databases
+- ❌ iOS infinite loading on login
+
+**After pulling, these are ALL FIXED:**
+1. ✅ **Server Queries Fixed** - Removed non-existent columns (username, password, management_url)
+2. ✅ **Audit Log JSON Fixed** - Auto-converts text to proper JSON format
+3. ✅ **Migration 007 Idempotent** - Safe to run on new and existing databases
+4. ✅ **iOS Authentication Fixed** - User.id type mismatch resolved, loading state fixed
+
+### Then Fix Redis Password (Required)
+
+**Option A - Disable password for development (easiest):**
+```bash
+nano ~/ChameleonVpn/barqnet-backend/.env
+
+# Change this line:
+REDIS_PASSWORD=<GENERATE_WITH_OPENSSL>
+
+# To this (empty):
+REDIS_PASSWORD=
+```
+
+**Option B - Disable rate limiting:**
+```bash
+# In .env file:
+RATE_LIMIT_ENABLED=false
+```
+
+**Option C - Set up proper Redis password:**
+See Step 0A below for complete instructions.
+
+---
+
+## 🚨 CRITICAL: What Changed (December 1, 2025)
 
 **Recent updates:**
-1. ✅ **Database Migrations** - Automatic migration system verified and working
-2. ✅ **iOS Testing Bypass** - Quick login/signup buttons in DEBUG mode (saves ~60 sec per test!)
-3. ✅ **Redis Authentication** - Password now required for production
-4. ✅ **Audit Logging** - Database schema fixed, dual logging enabled
-5. ✅ **Rate Limiting** - Properly validates credentials
+1. ✅ **iOS Critical Fixes** - User ID type + infinite loading state fixed
+2. ✅ **Database Migrations** - All migrations now idempotent (safe to re-run)
+3. ✅ **Server Queries** - Fixed column mismatch errors
+4. ✅ **Audit Logging** - JSON formatting auto-fixed
+5. ✅ **iOS Testing Bypass** - Quick login/signup buttons in DEBUG mode
+6. ✅ **Redis Authentication** - Clear instructions for setup
 
-**YOU MUST complete Step 0A before running the backend!**
+**YOU MUST pull latest code AND configure Redis before running!**
 
 ---
 
@@ -60,29 +108,31 @@ brew services start postgresql
 ```bash
 cd ~/ChameleonVpn/barqnet-backend
 sudo -u postgres psql <<EOF
-CREATE USER barqnet WITH PASSWORD 'barqnet123';
-CREATE DATABASE barqnet OWNER barqnet;
-GRANT ALL PRIVILEGES ON DATABASE barqnet TO barqnet;
-GRANT ALL PRIVILEGES ON SCHEMA public TO barqnet;
+CREATE USER vpnmanager WITH PASSWORD 'barqnet123';
+CREATE DATABASE vpnmanager OWNER vpnmanager;
+GRANT ALL PRIVILEGES ON DATABASE vpnmanager TO vpnmanager;
+GRANT ALL PRIVILEGES ON SCHEMA public TO vpnmanager;
 EOF
 ```
+
+**Note:** Using `vpnmanager` as database/user name (matches .env defaults)
 
 **Option B: Manual Migration (If automatic fails)**
 ```bash
 # First, create user and database with Option A above
 # Then run migrations manually:
 cd ~/ChameleonVpn/barqnet-backend/migrations
-for f in *.sql; do sudo -u postgres psql -d barqnet -f "$f"; done
+for f in *.sql; do psql -U vpnmanager -d vpnmanager -f "$f"; done
 cd ..
 ```
 
 **Verify Database:**
 ```bash
-psql -U barqnet -d barqnet -c "\dt"
+psql -U vpnmanager -d vpnmanager -c "\dt"
 # Should show: users, servers, audit_log, etc.
 ```
 
-**Note:** User: `barqnet`, Password: `barqnet123` (matches .env defaults)
+**Note:** User: `vpnmanager`, Password: `barqnet123` (matches .env defaults)
 
 ### 3. Configure Redis Password
 
@@ -137,13 +187,20 @@ nano .env
 # Database (matches user created in Step 2)
 DB_HOST=localhost
 DB_PORT=5432
-DB_USER=barqnet
+DB_USER=vpnmanager
 DB_PASSWORD=barqnet123
-DB_NAME=barqnet
+DB_NAME=vpnmanager
 DB_SSLMODE=disable
 
-# Redis
-REDIS_PASSWORD=YOUR_GENERATED_PASSWORD_HERE
+# Redis (choose one option)
+# Option 1: No password (development only)
+REDIS_PASSWORD=
+
+# Option 2: With password (production)
+# REDIS_PASSWORD=YOUR_GENERATED_PASSWORD_HERE
+
+# Or disable rate limiting:
+# RATE_LIMIT_ENABLED=false
 
 # Audit Logging
 AUDIT_LOG_DIR=/var/log/vpnmanager
@@ -462,16 +519,30 @@ sudo systemctl restart redis
 
 ### "column 'username' does not exist" or Migration Errors
 
-This means the database migrations haven't run or failed.
+**⚠️ This error means you haven't pulled the latest code!**
+
+**Solution: Pull latest code first!**
+```bash
+cd ~/ChameleonVpn
+git pull origin main
+
+# Then rebuild and run:
+cd barqnet-backend/apps/management
+go build -o management main.go
+./management
+```
+
+**If error persists after pulling:**
 
 **Solution Option 1: Automatic (Recommended)**
 ```bash
 # Stop the backend (Ctrl+C)
-# Drop and recreate database with user:
+# Drop and recreate database:
 sudo -u postgres psql <<EOF
-DROP DATABASE IF EXISTS barqnet;
-CREATE DATABASE barqnet OWNER barqnet;
-GRANT ALL PRIVILEGES ON DATABASE barqnet TO barqnet;
+DROP DATABASE IF EXISTS vpnmanager;
+CREATE DATABASE vpnmanager OWNER vpnmanager;
+GRANT ALL PRIVILEGES ON DATABASE vpnmanager TO vpnmanager;
+GRANT ALL PRIVILEGES ON SCHEMA public TO vpnmanager;
 EOF
 
 # Restart backend - migrations will run automatically:
@@ -479,22 +550,25 @@ cd ~/ChameleonVpn/barqnet-backend/apps/management
 go run main.go
 ```
 
+**Note:** Database name is `vpnmanager` (not `barqnet`) - matches .env defaults
+
 **Solution Option 2: Manual Migration**
 ```bash
 # Stop the backend (Ctrl+C)
 # Recreate database (same as above)
 sudo -u postgres psql <<EOF
-DROP DATABASE IF EXISTS barqnet;
-CREATE DATABASE barqnet OWNER barqnet;
-GRANT ALL PRIVILEGES ON DATABASE barqnet TO barqnet;
+DROP DATABASE IF EXISTS vpnmanager;
+CREATE DATABASE vpnmanager OWNER vpnmanager;
+GRANT ALL PRIVILEGES ON DATABASE vpnmanager TO vpnmanager;
+GRANT ALL PRIVILEGES ON SCHEMA public TO vpnmanager;
 EOF
 
 # Run migrations manually:
 cd ~/ChameleonVpn/barqnet-backend/migrations
-for f in *.sql; do sudo -u postgres psql -d barqnet -f "$f"; done
+for f in *.sql; do psql -U vpnmanager -d vpnmanager -f "$f"; done
 
 # Verify migrations:
-psql -U barqnet -d barqnet -c "SELECT version, name FROM schema_migrations ORDER BY version;"
+psql -U vpnmanager -d vpnmanager -c "SELECT version, name FROM schema_migrations ORDER BY version;"
 
 # Restart backend:
 cd ~/ChameleonVpn/barqnet-backend/apps/management
