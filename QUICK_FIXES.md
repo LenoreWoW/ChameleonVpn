@@ -79,6 +79,22 @@ The audit system now:
 
 **After pulling, this will be fixed automatically!**
 
+## Issue 4: Audit Log INET Error
+
+**Error:**
+```
+[AUDIT] Database logging failed: pq: invalid input syntax for type inet: "192.168.10.248:37594"
+```
+
+**Status:** ✅ FIXED in latest code (Commit: 431eac0)
+
+The audit system now:
+- Strips port numbers from IP addresses before storing
+- Handles both IPv4:port and [IPv6]:port formats
+- PostgreSQL INET type only accepts IP addresses without ports
+
+**After pulling, this will be fixed automatically!**
+
 ## After Pulling - Rebuild
 
 ```bash
@@ -96,6 +112,9 @@ go build -o management main.go
 
 ## Summary
 
-1. ✅ **Pull latest code** - Fixes servers.go and audit.go
+1. ✅ **Pull latest code** - Fixes servers.go, audit.go JSON, and INET errors
 2. ⚠️ **Fix Redis password** - Remove password OR generate real one
 3. ✅ **Rebuild and run** - Should work now!
+
+**Latest Fix (Commit: 431eac0):**
+- ✅ Audit log INET error fixed - IP addresses now stored without port numbers
