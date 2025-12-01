@@ -30,7 +30,7 @@ struct AuthTokens: Codable {
 }
 
 struct User: Codable {
-    let id: String
+    let id: Int
     let email: String
 
     enum CodingKeys: String, CodingKey {

@@ -261,19 +261,53 @@ func (db *DB) RunMigrations(migrationsPath string) error {
 // createMigrationsTable creates the schema_migrations table for tracking applied migrations
 // Note: Uses VARCHAR for version to match existing migration files (e.g., '001_initial_schema')
 func (db *DB) createMigrationsTable() error {
-	schema := `
+	// First, create the table if it doesn't exist
+	createTableSQL := `
 	CREATE TABLE IF NOT EXISTS schema_migrations (
 		id SERIAL PRIMARY KEY,
 		version INTEGER NOT NULL UNIQUE,
-		name VARCHAR(255) NOT NULL,
-		applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		checksum VARCHAR(64) -- For future integrity checking
+		applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);
+	`
+	if _, err := db.conn.Exec(createTableSQL); err != nil {
+		return fmt.Errorf("failed to create schema_migrations table: %v", err)
+	}
+
+	// Add new columns if they don't exist (for existing tables)
+	alterTableSQL := `
+	DO $$
+	BEGIN
+		-- Add name column if it doesn't exist
+		IF NOT EXISTS (
+			SELECT 1 FROM information_schema.columns
+			WHERE table_name = 'schema_migrations' AND column_name = 'name'
+		) THEN
+			ALTER TABLE schema_migrations ADD COLUMN name VARCHAR(255);
+		END IF;
+
+		-- Add checksum column if it doesn't exist
+		IF NOT EXISTS (
+			SELECT 1 FROM information_schema.columns
+			WHERE table_name = 'schema_migrations' AND column_name = 'checksum'
+		) THEN
+			ALTER TABLE schema_migrations ADD COLUMN checksum VARCHAR(64);
+		END IF;
+	END $$;
+	`
+	if _, err := db.conn.Exec(alterTableSQL); err != nil {
+		return fmt.Errorf("failed to alter schema_migrations table: %v", err)
+	}
+
+	// Create indexes
+	indexSQL := `
 	CREATE INDEX IF NOT EXISTS idx_migrations_version ON schema_migrations(version);
 	CREATE INDEX IF NOT EXISTS idx_migrations_applied_at ON schema_migrations(applied_at);
 	`
-	_, err := db.conn.Exec(schema)
-	return err
+	if _, err := db.conn.Exec(indexSQL); err != nil {
+		return fmt.Errorf("failed to create indexes on schema_migrations: %v", err)
+	}
+
+	return nil
 }
 
 // getAppliedMigrations returns a map of already applied migration versions

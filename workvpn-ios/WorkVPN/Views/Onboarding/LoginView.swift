@@ -13,8 +13,8 @@ struct LoginView: View {
 
     @State private var email = ""
     @State private var password = ""
-    @State private var isLoading = false
-    @State private var errorMessage: String?
+    @Binding var isLoading: Bool
+    @Binding var errorMessage: String?
     @State private var floatOffset: CGFloat = 0
 
     // Testing configuration (DEBUG only)
@@ -207,7 +207,9 @@ struct LoginView_Previews: PreviewProvider {
     static var previews: some View {
         LoginView(
             onLogin: { _, _ in },
-            onSignUpClick: {}
+            onSignUpClick: {},
+            isLoading: .constant(false),
+            errorMessage: .constant(nil)
         )
     }
 }

@@ -22,6 +22,8 @@ struct ContentView: View {
     @State private var showingSettings = false
     @State private var onboardingState: OnboardingState = .emailEntry
     @State private var currentEmail = ""
+    @State private var isLoginLoading = false
+    @State private var loginErrorMessage: String?
 
     var body: some View {
         Group {
@@ -84,16 +86,28 @@ struct ContentView: View {
             case .login:
                 LoginView(
                     onLogin: { email, password in
+                        isLoginLoading = true
+                        loginErrorMessage = nil
+
                         authManager.login(email: email, password: password) { result in
-                            if case .success = result {
+                            isLoginLoading = false
+
+                            switch result {
+                            case .success:
                                 currentEmail = email
                                 onboardingState = .authenticated
+                                loginErrorMessage = nil
+                            case .failure(let error):
+                                loginErrorMessage = error.localizedDescription
+                                NSLog("[LOGIN] Failed: \(error.localizedDescription)")
                             }
                         }
                     },
                     onSignUpClick: {
                         onboardingState = .emailEntry
-                    }
+                    },
+                    isLoading: $isLoginLoading,
+                    errorMessage: $loginErrorMessage
                 )
 
             case .authenticated:
