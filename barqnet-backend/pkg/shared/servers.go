@@ -18,35 +18,31 @@ func NewServerManager(db *DB) *ServerManager {
 // AddServer adds a new server to the database
 func (sm *ServerManager) AddServer(name, host string, port int, username, password, serverType, managementURL string) error {
 	query := `
-		INSERT INTO servers (name, host, port, username, password, server_type, management_url, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		INSERT INTO servers (name, host, port, server_type, created_at)
+		VALUES ($1, $2, $3, $4, $5)
 		ON CONFLICT (name) DO UPDATE SET
 			host = EXCLUDED.host,
 			port = EXCLUDED.port,
-			username = EXCLUDED.username,
-			password = EXCLUDED.password,
-			server_type = EXCLUDED.server_type,
-			management_url = EXCLUDED.management_url
+			server_type = EXCLUDED.server_type
 	`
-	
-	_, err := sm.db.conn.Exec(query, name, host, port, username, password, serverType, managementURL, time.Now())
+
+	_, err := sm.db.conn.Exec(query, name, host, port, serverType, time.Now())
 	return err
 }
 
 // GetServer retrieves a server by name
 func (sm *ServerManager) GetServer(name string) (*Server, error) {
 	query := `
-		SELECT id, name, host, port, username, password, enabled, last_sync, server_type, management_url, created_at
+		SELECT id, name, host, port, enabled, last_sync, server_type, created_at
 		FROM servers WHERE name = $1
 	`
-	
+
 	var server Server
 	var lastSync sql.NullTime
-	
+
 	err := sm.db.conn.QueryRow(query, name).Scan(
-		&server.ID, &server.Name, &server.Host, &server.Port, &server.Username,
-		&server.Password, &server.Enabled, &lastSync, &server.ServerType,
-		&server.ManagementURL, &server.CreatedAt,
+		&server.ID, &server.Name, &server.Host, &server.Port,
+		&server.Enabled, &lastSync, &server.ServerType, &server.CreatedAt,
 	)
 	
 	if err != nil {
@@ -63,25 +59,24 @@ func (sm *ServerManager) GetServer(name string) (*Server, error) {
 // ListServers returns all servers
 func (sm *ServerManager) ListServers() ([]Server, error) {
 	query := `
-		SELECT id, name, host, port, username, password, enabled, last_sync, server_type, management_url, created_at
+		SELECT id, name, host, port, enabled, last_sync, server_type, created_at
 		FROM servers ORDER BY name
 	`
-	
+
 	rows, err := sm.db.conn.Query(query)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	var servers []Server
 	for rows.Next() {
 		var server Server
 		var lastSync sql.NullTime
-		
+
 		err := rows.Scan(
-			&server.ID, &server.Name, &server.Host, &server.Port, &server.Username,
-			&server.Password, &server.Enabled, &lastSync, &server.ServerType,
-			&server.ManagementURL, &server.CreatedAt,
+			&server.ID, &server.Name, &server.Host, &server.Port,
+			&server.Enabled, &lastSync, &server.ServerType, &server.CreatedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -100,25 +95,24 @@ func (sm *ServerManager) ListServers() ([]Server, error) {
 // ListEndNodes returns all end-node servers
 func (sm *ServerManager) ListEndNodes() ([]Server, error) {
 	query := `
-		SELECT id, name, host, port, username, password, enabled, last_sync, server_type, management_url, created_at
+		SELECT id, name, host, port, enabled, last_sync, server_type, created_at
 		FROM servers WHERE server_type = 'endnode' AND enabled = true ORDER BY name
 	`
-	
+
 	rows, err := sm.db.conn.Query(query)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	var servers []Server
 	for rows.Next() {
 		var server Server
 		var lastSync sql.NullTime
-		
+
 		err := rows.Scan(
-			&server.ID, &server.Name, &server.Host, &server.Port, &server.Username,
-			&server.Password, &server.Enabled, &lastSync, &server.ServerType,
-			&server.ManagementURL, &server.CreatedAt,
+			&server.ID, &server.Name, &server.Host, &server.Port,
+			&server.Enabled, &lastSync, &server.ServerType, &server.CreatedAt,
 		)
 		if err != nil {
 			return nil, err
