@@ -2,7 +2,9 @@ package shared
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
+	"strings"
 )
 
 // AuditManager handles audit log operations
@@ -29,10 +31,23 @@ func (am *AuditManager) LogAction(action, username, details, ipAddress, serverID
 		}
 	}
 
+	// Convert details string to proper JSONB format
+	// If details is already JSON, use it as-is; otherwise wrap in {"message": "..."}
+	var detailsJSON string
+	if details == "" {
+		detailsJSON = "{}"
+	} else if strings.HasPrefix(details, "{") {
+		// Assume it's already JSON
+		detailsJSON = details
+	} else {
+		// Escape and wrap plain text in JSON
+		detailsJSON = fmt.Sprintf("{\"message\": %q}", details)
+	}
+
 	query := `
 		INSERT INTO audit_log
 		(user_id, action, username, details, ip_address, server_id, resource_type, status, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+		VALUES ($1, $2, $3, $4::jsonb, $5, $6, $7, $8, NOW())
 	`
 
 	_, err := am.db.conn.Exec(
@@ -40,7 +55,7 @@ func (am *AuditManager) LogAction(action, username, details, ipAddress, serverID
 		userID,      // FK to users table
 		action,
 		username,    // Denormalized for performance
-		details,
+		detailsJSON, // Now properly formatted as JSON
 		ipAddress,
 		serverID,
 		"general",   // Default resource_type
