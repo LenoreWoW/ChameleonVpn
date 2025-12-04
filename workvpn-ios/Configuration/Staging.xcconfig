@@ -1,0 +1,8 @@
+// Staging Environment Configuration
+// Use this for testing with network servers
+
+API_BASE_URL = http:/$()/192.168.10.217:8080
+ENVIRONMENT_NAME = Staging
+ENABLE_DEBUG_LOGGING = YES
+ENABLE_CERTIFICATE_PINNING = NO
+API_TIMEOUT_INTERVAL = 30

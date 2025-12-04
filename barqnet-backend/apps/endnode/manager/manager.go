@@ -173,14 +173,15 @@ func (enm *EndNodeManager) sendHealthCheck() error {
 		return fmt.Errorf("failed to marshal health data: %v", err)
 	}
 
-	url := fmt.Sprintf("%s/api/endnodes/%s/health", enm.config.ManagementURL, enm.serverID)
+	// Use the dedicated health check endpoint (no JWT auth required)
+	url := fmt.Sprintf("%s/api/endnodes-health/%s", enm.config.ManagementURL, enm.serverID)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return fmt.Errorf("failed to create request: %v", err)
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+enm.config.APIKey)
+	// No Authorization header needed for health checks
 
 	resp, err := enm.httpClient.Do(req)
 	if err != nil {

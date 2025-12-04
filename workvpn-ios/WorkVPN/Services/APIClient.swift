@@ -128,32 +128,65 @@ class APIClient: NSObject, URLSessionDelegate {
     // MARK: - Initialization
 
     private override init() {
-        // API base URL from environment or default to localhost
-        // Note: iOS Simulator requires 127.0.0.1 instead of localhost for Mac backend
-        #if DEBUG
-        self.baseURL = "http://127.0.0.1:8080"
-        #else
-        self.baseURL = "https://api.barqnet.com"
-        #endif
+        // Read API base URL from Info.plist (configured via xcconfig files)
+        // This allows environment-specific configuration without code changes
+        if let baseURL = Bundle.main.object(forInfoDictionaryKey: "API_BASE_URL") as? String {
+            self.baseURL = baseURL
+        } else {
+            // Fallback for safety (if Info.plist not configured)
+            #if DEBUG
+            self.baseURL = "http://127.0.0.1:8080"
+            #else
+            self.baseURL = "https://api.barqnet.com"
+            #endif
+            NSLog("[APIClient] ⚠️ WARNING: API_BASE_URL not found in Info.plist, using fallback")
+        }
+
+        // Read other configuration values from Info.plist
+        let envName = Bundle.main.object(forInfoDictionaryKey: "ENVIRONMENT_NAME") as? String ?? "Unknown"
+        let debugLoggingEnabled = Bundle.main.object(forInfoDictionaryKey: "ENABLE_DEBUG_LOGGING") as? String == "YES"
+        let certPinningEnabled = Bundle.main.object(forInfoDictionaryKey: "ENABLE_CERTIFICATE_PINNING") as? String == "YES"
+
+        // Log configuration (helpful for debugging)
+        NSLog("[APIClient] ═══════════════════════════════════════")
+        NSLog("[APIClient] Environment: \(envName)")
+        NSLog("[APIClient] Base URL: \(baseURL)")
+        NSLog("[APIClient] Debug Logging: \(debugLoggingEnabled ? "Enabled" : "Disabled")")
+        NSLog("[APIClient] Certificate Pinning: \(certPinningEnabled ? "Enabled" : "Disabled")")
+        NSLog("[APIClient] ═══════════════════════════════════════")
 
         // Initialize certificate pinning
         self.certificatePinning = CertificatePinning()
 
         super.init()
 
-        // Configure URLSession with certificate pinning
+        // Configure URLSession with environment-specific settings
         let configuration = URLSessionConfiguration.default
-        configuration.timeoutIntervalForRequest = 30
+
+        // Read timeout from Info.plist or use default
+        if let timeoutString = Bundle.main.object(forInfoDictionaryKey: "API_TIMEOUT_INTERVAL") as? String,
+           let timeout = TimeInterval(timeoutString) {
+            configuration.timeoutIntervalForRequest = timeout
+            NSLog("[APIClient] Request timeout: \(timeout)s")
+        } else {
+            configuration.timeoutIntervalForRequest = 30
+        }
         configuration.timeoutIntervalForResource = 60
+
         self.session = URLSession(configuration: configuration, delegate: self, delegateQueue: nil)
 
-        // Initialize certificate pins
-        initializeCertificatePins()
+        // Initialize certificate pins only if enabled (typically only in production)
+        if certPinningEnabled {
+            initializeCertificatePins()
+            NSLog("[APIClient] Certificate pinning initialized")
+        } else {
+            NSLog("[APIClient] Certificate pinning disabled for this environment")
+        }
 
         // Start token refresh timer if authenticated
         scheduleTokenRefresh()
 
-        NSLog("[APIClient] Initialized with base URL: \(baseURL)")
+        NSLog("[APIClient] Initialization complete")
     }
 
     // MARK: - Configuration

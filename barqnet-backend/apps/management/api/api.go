@@ -108,6 +108,9 @@ func (api *ManagementAPI) Start(port int) error {
 	// End-node registration endpoints (API key auth handled in handler)
 	mux.HandleFunc("/api/endnodes/register", api.handleEndNodeRegister)
 
+	// End-node health check endpoint (no auth required for health checks)
+	mux.HandleFunc("/api/endnodes-health/", api.handleEndNodeHealthSubmission)
+
 	// End-node deletion endpoint (API key auth handled in handler)
 	mux.HandleFunc("/api/endnodes/delete/", api.handleEndNodeDelete)
 
@@ -522,6 +525,29 @@ func (api *ManagementAPI) handleEndNodeHealth(w http.ResponseWriter, r *http.Req
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
+}
+
+// handleEndNodeHealthSubmission handles end-node health check submissions (no auth required)
+func (api *ManagementAPI) handleEndNodeHealthSubmission(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Extract server ID from URL path: /api/endnodes-health/{serverID}
+	serverID := strings.TrimPrefix(r.URL.Path, "/api/endnodes-health/")
+	serverID = strings.TrimSuffix(serverID, "/")
+
+	if serverID == "" {
+		http.Error(w, "Server ID required", http.StatusBadRequest)
+		return
+	}
+
+	// Log the health check
+	log.Printf("Health check received from end-node: %s", serverID)
+
+	// Call the existing health handler logic
+	api.handleEndNodeHealth(w, r, serverID)
 }
 
 // handleEndNodeDeregister handles end-node deregistration
