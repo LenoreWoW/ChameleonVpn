@@ -173,6 +173,7 @@ func (h *AuthHandler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 	h.logAuditEvent("USER_REGISTERED", req.Email, "User registered successfully", r.RemoteAddr)
 
 	// Send success response with proper token structure
+	// Use snake_case for JSON keys (standard for REST APIs)
 	response := AuthResponse{
 		Success: true,
 		Message: "User registered successfully",
@@ -181,9 +182,9 @@ func (h *AuthHandler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 				"id":    userID,
 				"email": req.Email,
 			},
-			"accessToken":  accessToken,
-			"refreshToken": refreshToken,
-			"expiresIn":    86400, // 24 hours in seconds
+			"access_token":  accessToken,
+			"refresh_token": refreshToken,
+			"expires_in":    86400, // 24 hours in seconds
 		},
 	}
 
@@ -297,6 +298,7 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	h.logAuditEvent("LOGIN_SUCCESS", req.Email, "User logged in successfully", r.RemoteAddr)
 
 	// Send success response with proper token structure
+	// Use snake_case for JSON keys (standard for REST APIs)
 	response := AuthResponse{
 		Success: true,
 		Message: "Login successful",
@@ -305,9 +307,9 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 				"id":    userID,
 				"email": req.Email,
 			},
-			"accessToken":  accessToken,
-			"refreshToken": refreshToken,
-			"expiresIn":    86400, // 24 hours in seconds
+			"access_token":  accessToken,
+			"refresh_token": refreshToken,
+			"expires_in":    86400, // 24 hours in seconds
 		},
 	}
 
@@ -359,13 +361,14 @@ func (h *AuthHandler) HandleRefresh(w http.ResponseWriter, r *http.Request) {
 	h.logAuditEvent("TOKEN_REFRESHED", claims.Email, "Tokens refreshed successfully", r.RemoteAddr)
 
 	// Send success response with new tokens
+	// Use snake_case for JSON keys (standard for REST APIs)
 	response := AuthResponse{
 		Success: true,
 		Message: "Tokens refreshed successfully",
 		Data: map[string]interface{}{
-			"accessToken":  newAccessToken,
-			"refreshToken": newRefreshToken,
-			"expiresIn":    86400, // 24 hours
+			"access_token":  newAccessToken,
+			"refresh_token": newRefreshToken,
+			"expires_in":    86400, // 24 hours
 		},
 	}
 
