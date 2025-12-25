@@ -155,7 +155,7 @@ function hideAllStates() {
 }
 
 function showState(state: HTMLElement) {
-  if (process.env.NODE_ENV !== 'production') {
+  if (window.env?.isDevelopment) {
     console.log('[UI] showState called for:', state.id);
   }
   hideAllStates();
@@ -328,7 +328,7 @@ async function handleOTPVerify() {
               ease: 'power2.out'
             });
           } catch (animError) {
-            if (process.env.NODE_ENV !== 'production') {
+            if (window.env?.isDevelopment) {
               console.warn('[OTP] GSAP animation failed, but state transition succeeded:', animError);
             }
           }
@@ -815,7 +815,7 @@ async function checkAuthAndShowUI() {
 
 // ===== Initialization =====
 async function initialize() {
-  if (process.env.NODE_ENV !== 'production') {
+  if (window.env?.isDevelopment) {
     console.log('[App] Initializing WorkVPN Desktop...');
   }
 
@@ -926,7 +926,7 @@ async function initialize() {
       ease: 'power3.out'
     });
 
-    if (process.env.NODE_ENV !== 'production') {
+    if (window.env?.isDevelopment) {
       console.log('[App] Initialization complete!');
     }
   } catch (error) {

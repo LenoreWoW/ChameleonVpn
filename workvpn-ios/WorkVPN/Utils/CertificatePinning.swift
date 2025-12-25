@@ -57,8 +57,9 @@ class CertificatePinning {
             return (.performDefaultHandling, nil)
         }
 
-        // Get certificate chain
-        guard let certificate = SecTrustGetCertificateAtIndex(serverTrust, 0) else {
+        // Get certificate chain (iOS 15+ compatible)
+        guard let certificates = SecTrustCopyCertificateChain(serverTrust) as? [SecCertificate],
+              let certificate = certificates.first else {
             print("[CERT-PIN] Failed to get certificate")
             return (.cancelAuthenticationChallenge, nil)
         }

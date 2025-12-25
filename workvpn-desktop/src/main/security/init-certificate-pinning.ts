@@ -15,7 +15,7 @@ export function initializeCertificatePinning(): void {
   console.log('[CERT-PIN] Initializing certificate pinning...');
 
   // Parse API hostname from environment variable
-  const apiBaseUrl = process.env.API_BASE_URL || 'http://localhost:8080';
+  const apiBaseUrl = process.env.API_BASE_URL || 'http://127.0.0.1:8085';
   let apiHostname: string;
 
   try {

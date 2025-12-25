@@ -1,5 +1,5 @@
 // @ts-nocheck
-// THREE.js is loaded from CDN in index.html
+import * as THREE from 'three';
 
 /**
  * Three.js Animated Background Scene

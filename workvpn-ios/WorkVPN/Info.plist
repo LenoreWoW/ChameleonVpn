@@ -70,5 +70,15 @@
 	</array>
 	<key>NSFaceIDUsageDescription</key>
 	<string>BarqNet uses Face ID to quickly connect to your VPN</string>
+	<key>API_BASE_URL</key>
+	<string>http://127.0.0.1:8085</string>
+	<key>ENVIRONMENT_NAME</key>
+	<string>Development</string>
+	<key>ENABLE_DEBUG_LOGGING</key>
+	<string>YES</string>
+	<key>ENABLE_CERTIFICATE_PINNING</key>
+	<string>NO</string>
+	<key>API_TIMEOUT_INTERVAL</key>
+	<string>30</string>
 </dict>
 </plist>

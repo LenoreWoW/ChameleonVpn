@@ -1,5 +1,12 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
+// Expose environment info to renderer
+contextBridge.exposeInMainWorld('env', {
+  NODE_ENV: process.env.NODE_ENV || 'development',
+  isDevelopment: process.env.NODE_ENV !== 'production',
+  isProduction: process.env.NODE_ENV === 'production',
+});
+
 // Expose safe IPC methods to renderer
 contextBridge.exposeInMainWorld('vpn', {
   // API Configuration

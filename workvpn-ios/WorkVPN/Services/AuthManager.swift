@@ -130,7 +130,7 @@ class AuthManager: ObservableObject {
                 guard let self = self else { return }
 
                 switch result {
-                case .success(let (tokens, user)):
+                case .success(let (_, user)):
                     // Save current user to keychain
                     let emailToStore = user?.email ?? email
                     if let userData = emailToStore.data(using: .utf8) {
@@ -163,7 +163,7 @@ class AuthManager: ObservableObject {
                 guard let self = self else { return }
 
                 switch result {
-                case .success(let (tokens, user)):
+                case .success(let (_, user)):
                     // Save current user to keychain
                     let emailToStore = user?.email ?? email
                     if let userData = emailToStore.data(using: .utf8) {

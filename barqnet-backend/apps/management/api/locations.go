@@ -69,8 +69,8 @@ func (api *ManagementAPI) handleLocationServers(w http.ResponseWriter, r *http.R
 	}
 
 	// Extract location ID from URL path
-	// Expected format: /vpn/locations/{location_id}/servers
-	pathParts := strings.Split(strings.TrimPrefix(r.URL.Path, "/vpn/locations/"), "/")
+	// Expected format: /v1/vpn/locations/{location_id}/servers
+	pathParts := strings.Split(strings.TrimPrefix(r.URL.Path, "/v1/vpn/locations/"), "/")
 	if len(pathParts) < 1 || pathParts[0] == "" {
 		http.Error(w, "Location ID required", http.StatusBadRequest)
 		return
@@ -116,7 +116,7 @@ func (api *ManagementAPI) getServerLocationsWithMetadata() ([]shared.ServerLocat
 
 	// Get all enabled locations
 	query := `
-		SELECT id, country, city, country_code, latitude, longitude, enabled
+		SELECT location_id, country, city, country_code, latitude, longitude, enabled
 		FROM server_locations
 		WHERE enabled = true
 		ORDER BY country, city
@@ -219,8 +219,8 @@ func (api *ManagementAPI) getServersForLocation(locationID int) ([]shared.Server
 
 	// Get servers for the location
 	query := `
-		SELECT s.id, s.name, s.host, s.port, s.username, s.password, s.enabled,
-		       s.last_sync, s.server_type, s.management_url, s.created_at
+		SELECT s.id, s.name, s.host, s.port, s.enabled,
+		       s.last_sync, s.server_type, s.created_at
 		FROM servers s
 		WHERE s.location_id = $1 AND s.enabled = true
 		ORDER BY s.name
@@ -236,19 +236,16 @@ func (api *ManagementAPI) getServersForLocation(locationID int) ([]shared.Server
 	for rows.Next() {
 		var srv shared.ServerWithHealth
 		var lastSync sql.NullTime
-		var username, password, managementURL sql.NullString
+		var serverType sql.NullString
 
 		err := rows.Scan(
 			&srv.ID,
 			&srv.Name,
 			&srv.Host,
 			&srv.Port,
-			&username,
-			&password,
 			&srv.Enabled,
 			&lastSync,
-			&srv.ServerType,
-			&managementURL,
+			&serverType,
 			&srv.CreatedAt,
 		)
 
@@ -259,14 +256,8 @@ func (api *ManagementAPI) getServersForLocation(locationID int) ([]shared.Server
 		if lastSync.Valid {
 			srv.LastSync = lastSync.Time
 		}
-		if username.Valid {
-			srv.Username = username.String
-		}
-		if password.Valid {
-			srv.Password = password.String
-		}
-		if managementURL.Valid {
-			srv.ManagementURL = managementURL.String
+		if serverType.Valid {
+			srv.ServerType = serverType.String
 		}
 
 		// Get health status for this server

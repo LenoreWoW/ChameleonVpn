@@ -1,5 +1,16 @@
 // Type declarations for global libraries loaded via CDN
 
+// Environment info exposed from preload
+interface EnvInfo {
+  NODE_ENV: string;
+  isDevelopment: boolean;
+  isProduction: boolean;
+}
+
+interface Window {
+  env: EnvInfo;
+}
+
 declare namespace gsap {
   interface GSAPStatic {
     fromTo(target: any, vars: object, vars2: object): any;

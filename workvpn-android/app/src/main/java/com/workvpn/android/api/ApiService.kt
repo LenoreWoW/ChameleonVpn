@@ -68,16 +68,25 @@ object ApiService {
 
     private const val TAG = "ApiService"
 
-    // TODO: Replace with actual backend URL
-    private const val BASE_URL = "https://api.barqnet.com/"
+    // API URL Configuration
+    // Development: Use 10.0.2.2 to reach host machine from Android emulator
+    // Production: Use actual backend URL (https://api.barqnet.com/)
+    private val BASE_URL = if (BuildConfig.DEBUG) {
+        "http://10.0.2.2:8085/"  // Host machine from Android emulator
+    } else {
+        "https://api.barqnet.com/"
+    }
 
-    // TODO: Replace with actual certificate pins from backend
-    // To get certificate pin, run:
+    // Certificate pinning is disabled for development (HTTP)
+    // For production, replace with actual certificate pins:
     // openssl s_client -connect api.barqnet.com:443 | openssl x509 -pubkey -noout | openssl pkey -pubin -outform der | openssl dgst -sha256 -binary | base64
     private val CERTIFICATE_PINS = listOf(
         "sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=", // Primary certificate
         "sha256/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB="  // Backup certificate
     )
+    
+    // Whether to enable certificate pinning (disabled for HTTP/development)
+    private val ENABLE_CERT_PINNING = !BuildConfig.DEBUG && BASE_URL.startsWith("https://")
 
     private val api: BarqNetApi by lazy {
         createRetrofitInstance()
@@ -120,8 +129,12 @@ object ApiService {
         // Add header interceptor
         builder.addInterceptor(createHeaderInterceptor())
 
-        // Add certificate pinning for security
-        builder.certificatePinner(createCertificatePinner())
+        // Add certificate pinning for security (only in production with HTTPS)
+        if (ENABLE_CERT_PINNING) {
+            builder.certificatePinner(createCertificatePinner())
+        } else {
+            Log.w(TAG, "Certificate pinning DISABLED (development mode or HTTP)")
+        }
 
         return builder.build()
     }

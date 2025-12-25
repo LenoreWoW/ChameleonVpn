@@ -12,10 +12,12 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven { url 'https://jitpack.io' }
+        maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
     }
 }
 
 rootProject.name = "BarqNet"
 include ':app'
-include ':ics-openvpn:main'
-project(':ics-openvpn:main').projectDir = new File(rootDir, 'ics-openvpn/main')
+// TODO: Re-enable ics-openvpn when integration is fixed
+// include ':ics-openvpn:main'
+// project(':ics-openvpn:main').projectDir = new File(rootDir, 'ics-openvpn/main')

@@ -204,21 +204,51 @@ class APIClient: NSObject, URLSessionDelegate {
             return
         }
 
-        // TODO: Replace with your actual certificate pins
-        // Generate pins using: openssl s_client -connect api.barqnet.com:443 < /dev/null 2>/dev/null | \
-        //   openssl x509 -pubkey -noout | openssl pkey -pubin -outform der | \
-        //   openssl dgst -sha256 -binary | base64
+        // ═══════════════════════════════════════════════════════════════════
+        // CERTIFICATE PINNING CONFIGURATION
+        // ═══════════════════════════════════════════════════════════════════
+        //
+        // IMPORTANT: Before going to production, you MUST configure certificate pins.
+        //
+        // To generate pins for your server, run this command:
+        //   openssl s_client -connect api.barqnet.com:443 < /dev/null 2>/dev/null | \
+        //     openssl x509 -pubkey -noout | openssl pkey -pubin -outform der | \
+        //     openssl dgst -sha256 -binary | base64
+        //
+        // Always include:
+        //   1. Primary certificate pin (your current server certificate)
+        //   2. Backup certificate pin (for certificate rotation)
+        //
+        // ═══════════════════════════════════════════════════════════════════
 
-        let pins: [String] = [
-            // "sha256/PRIMARY_CERTIFICATE_PIN_HERE",
-            // "sha256/BACKUP_CERTIFICATE_PIN_HERE"
+        var pins: [String] = []
+
+        // Production pins for api.barqnet.com
+        // ⚠️ REPLACE THESE WITH YOUR ACTUAL CERTIFICATE PINS BEFORE PRODUCTION
+        #if !DEBUG
+        pins = [
+            // Primary certificate - Replace with your server's actual pin
+            // "sha256/your-primary-certificate-pin-here=",
+            // Backup certificate - For rotation (e.g., Let's Encrypt intermediate)
+            // "sha256/your-backup-certificate-pin-here="
         ]
+
+        // PRODUCTION SECURITY CHECK: Fail if no pins configured
+        if pins.isEmpty {
+            NSLog("[APIClient] ⚠️ CRITICAL: No certificate pins configured for production!")
+            NSLog("[APIClient] ⚠️ This app is vulnerable to MITM attacks!")
+            NSLog("[APIClient] ⚠️ Generate pins using the openssl command above")
+            // In production, you may want to crash or refuse to start:
+            // fatalError("Certificate pins must be configured for production")
+        }
+        #else
+        // Development: Skip pinning for localhost
+        NSLog("[APIClient] Certificate pinning disabled in DEBUG mode")
+        #endif
 
         if !pins.isEmpty {
             certificatePinning.addPins(hostname: hostname, pins: pins)
-            NSLog("[APIClient] Certificate pinning enabled for \(hostname)")
-        } else {
-            NSLog("[APIClient] WARNING: No certificate pins configured")
+            NSLog("[APIClient] Certificate pinning enabled for \(hostname) with \(pins.count) pins")
         }
     }
 

@@ -158,7 +158,7 @@ class VPNManager: ObservableObject {
             return
         }
 
-        guard let config = currentConfig else {
+        guard currentConfig != nil else {
             errorMessage = "No configuration available"
             return
         }

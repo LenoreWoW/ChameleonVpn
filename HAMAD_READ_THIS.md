@@ -1,748 +1,558 @@
-# BarqNet - Complete Testing Guide
+# BarqNet/ChameleonVPN - Project Status Report
+## For Hamad - Read This First!
 
-**Last Updated:** December 1, 2025
-**Status:** 🚀 LATEST FIXES: Pull Code First! Critical Bugs Fixed
-
----
-
-## 🚨 STEP 0: PULL LATEST CODE FIRST! (December 1, 2025)
-
-**⚠️ CRITICAL - DO THIS BEFORE ANYTHING ELSE:**
-
-```bash
-cd ~/ChameleonVpn
-git pull origin main
-```
-
-### Latest Fixes (Commit: 5ed5876)
-
-**If you don't pull, you'll get these errors:**
-- ❌ "column 'username' does not exist"
-- ❌ "invalid input syntax for type json"
-- ❌ Migration 007 fails on existing databases
-- ❌ iOS infinite loading on login
-
-**After pulling, these are ALL FIXED:**
-1. ✅ **Server Queries Fixed** - Removed non-existent columns (username, password, management_url)
-2. ✅ **Audit Log JSON Fixed** - Auto-converts text to proper JSON format
-3. ✅ **Migration 007 Idempotent** - Safe to run on new and existing databases
-4. ✅ **iOS Authentication Fixed** - User.id type mismatch resolved, loading state fixed
-
-### Then Fix Redis Password (Required)
-
-**Option A - Disable password for development (easiest):**
-```bash
-nano ~/ChameleonVpn/barqnet-backend/.env
-
-# Change this line:
-REDIS_PASSWORD=<GENERATE_WITH_OPENSSL>
-
-# To this (empty):
-REDIS_PASSWORD=
-```
-
-**Option B - Disable rate limiting:**
-```bash
-# In .env file:
-RATE_LIMIT_ENABLED=false
-```
-
-**Option C - Set up proper Redis password:**
-See Step 0A below for complete instructions.
+**Date:** December 25, 2025  
+**Status:** All platforms building and running ✅
 
 ---
 
-## 🚨 CRITICAL: What Changed (December 1, 2025)
+## 🚀 Quick Start
 
-**Recent updates:**
-1. ✅ **iOS Critical Fixes** - User ID type + infinite loading state fixed
-2. ✅ **Database Migrations** - All migrations now idempotent (safe to re-run)
-3. ✅ **Server Queries** - Fixed column mismatch errors
-4. ✅ **Audit Logging** - JSON formatting auto-fixed
-5. ✅ **iOS Testing Bypass** - Quick login/signup buttons in DEBUG mode
-6. ✅ **Redis Authentication** - Clear instructions for setup
-
-**YOU MUST pull latest code AND configure Redis before running!**
-
----
-
-## 🔍 FIRST: Run Diagnostics (Before Testing iOS)
-
-**Before testing the iOS app, run this diagnostic script:**
-
+### 1. Start the Backend
 ```bash
-cd ~/ChameleonVpn
-./diagnose.sh
-```
-
-This will automatically check:
-- ✅ Backend running on port 8080
-- ✅ PostgreSQL accessible
-- ✅ Test user exists
-- ✅ Login endpoint working
-- ✅ No nginx blocking (common issue)
-
-**Color-coded output:**
-- 🟢 Green = Working
-- 🔴 Red = Problem (with fix instructions)
-- 🟡 Yellow = Warning
-
-**If all checks pass**, you're ready to test iOS!
-
-**If checks fail**, follow the action items shown by the script.
-
----
-
-## Step 0A: Configure Redis & Database (REQUIRED - Do This First!)
-
-### 1. Start PostgreSQL
-```bash
-sudo systemctl start postgresql
-# OR on macOS:
-brew services start postgresql
-```
-
-### 2. Create BarqNet Database & User
-
-**Option A: Quick Setup (Recommended)**
-```bash
-cd ~/ChameleonVpn/barqnet-backend
-sudo -u postgres psql <<EOF
-CREATE USER vpnmanager WITH PASSWORD 'barqnet123';
-CREATE DATABASE vpnmanager OWNER vpnmanager;
-GRANT ALL PRIVILEGES ON DATABASE vpnmanager TO vpnmanager;
-GRANT ALL PRIVILEGES ON SCHEMA public TO vpnmanager;
-EOF
-```
-
-**Note:** Using `vpnmanager` as database/user name (matches .env defaults)
-
-**Option B: Manual Migration (If automatic fails)**
-```bash
-# First, create user and database with Option A above
-# Then run migrations manually:
-cd ~/ChameleonVpn/barqnet-backend/migrations
-for f in *.sql; do psql -U vpnmanager -d vpnmanager -f "$f"; done
-cd ..
-```
-
-**Verify Database:**
-```bash
-psql -U vpnmanager -d vpnmanager -c "\dt"
-# Should show: users, servers, audit_log, etc.
-```
-
-**Note:** User: `vpnmanager`, Password: `barqnet123` (matches .env defaults)
-
-### 3. Configure Redis Password
-
-**Check if Redis is running:**
-```bash
-redis-cli ping
-```
-
-**Generate a strong password:**
-```bash
-openssl rand -base64 32
-```
-
-**Copy the output, then edit Redis config:**
-```bash
-# Linux:
-sudo nano /etc/redis/redis.conf
-
-# macOS (Homebrew):
-nano /opt/homebrew/etc/redis.conf
-```
-
-**Find and uncomment/add this line:**
-```
-requirepass YOUR_GENERATED_PASSWORD_HERE
-```
-
-**Restart Redis:**
-```bash
-# Linux:
-sudo systemctl restart redis
-
-# macOS:
-brew services restart redis
-```
-
-**Test Redis with password:**
-```bash
-redis-cli -a YOUR_PASSWORD ping
-# Should return: PONG
-```
-
-### 4. Update Backend .env File
-
-```bash
-cd ~/ChameleonVpn/barqnet-backend
-nano .env
-```
-
-**Update these lines:**
-```bash
-# Database (matches user created in Step 2)
-DB_HOST=localhost
-DB_PORT=5432
-DB_USER=vpnmanager
-DB_PASSWORD=barqnet123
-DB_NAME=vpnmanager
-DB_SSLMODE=disable
-
-# Redis (choose one option)
-# Option 1: No password (development only)
-REDIS_PASSWORD=
-
-# Option 2: With password (production)
-# REDIS_PASSWORD=YOUR_GENERATED_PASSWORD_HERE
-
-# Or disable rate limiting:
-# RATE_LIMIT_ENABLED=false
-
-# Audit Logging
-AUDIT_LOG_DIR=/var/log/vpnmanager
-AUDIT_FILE_ENABLED=true
-AUDIT_DB_ENABLED=true
-
-# Environment
-ENVIRONMENT=development  # Use 'production' when deploying
-```
-
-**Save and exit (Ctrl+X, Y, Enter)**
-
-### 5. Create Audit Log Directory
-
-```bash
-sudo mkdir -p /var/log/vpnmanager
-sudo chown $USER:$USER /var/log/vpnmanager
-sudo chmod 750 /var/log/vpnmanager
-```
-
-**✅ Step 0A Complete! Now proceed to Step 0B.**
-
----
-
-## Step 0B: Install Prerequisites (First Time Only!)
-
-**Run this ONCE before anything else:**
-
-```bash
-cd ~/ChameleonVpn
-./setup-prereqs.sh
-```
-
-This script will automatically:
-- ✅ Check and install PostgreSQL
-- ✅ Check and install Go (Golang)
-- ✅ Check and install Node.js/npm
-- ✅ Check and install CocoaPods (iOS)
-- ✅ Check and install Java (Android)
-- ✅ Create the BarqNet database (if not already done)
-- ✅ Create .env files from templates
-
-**If everything is already installed, it just confirms and exits.**
-
----
-
-## Quick Start - 3 Steps
-
-### 1. Start Backend (Required!)
-
-```bash
-cd ~/ChameleonVpn/barqnet-backend/apps/management
-go run main.go
-```
-
-**Keep this terminal running!** Don't close it.
-
-You should see these success messages:
-```
-[ENV] ✅ Loaded configuration from .env file
-[ENV] ✅ Environment validation PASSED
-[DB] ✅ Database migrations completed successfully
-[RATE-LIMIT] ✅ Successfully connected to Redis at localhost:6379
-[RATE-LIMIT] Rate limiting is ENABLED
-[AUDIT] ✅ File logging enabled: /var/log/vpnmanager
-[AUDIT] ✅ Database logging enabled
-Management server started with ID: management-server
-API server running on port 8080
-```
-
-**⚠️ If you see these warnings instead:**
-```
-[RATE-LIMIT] ⚠️ CRITICAL: Redis authentication failed
-[RATE-LIMIT] Rate limiting will operate in DEGRADED mode
-```
-**→ Go back to Step 0A and fix your Redis password!**
-
-### 2. Test iOS
-
-Open a NEW terminal:
-```bash
-cd ~/ChameleonVpn
-./setup-ios.sh
-```
-
-The script will:
-- Install dependencies
-- Fix Xcode 16 compatibility
-- Build and launch app
-
-### 3. Test Desktop
-
-Open a NEW terminal:
-```bash
-cd ~/ChameleonVpn/workvpn-desktop
-npm start
-```
-
----
-
-## iOS Testing Steps
-
-When the app launches:
-
-1. **Enter email:** `hamad@test.com`
-2. **Tap Continue**
-3. **Check backend terminal** for OTP code:
-   ```
-   [OTP] DEBUG: Code for hamad@test.com = 123456
-   ```
-4. **Enter the 6-digit code**
-5. **Create password:** `Test123!`
-6. **Confirm password:** `Test123!`
-
-✅ You should see the main VPN screen
-
-**Test Settings:**
-- Tap gear icon ⚙️ (top right)
-- Settings should open
-- Close modal
-
-**Test Logout:**
-- Tap logout icon (top left)
-- Should return to login screen
-
-**Test Login:**
-- Email: `hamad@test.com`
-- Password: `Test123!`
-- Should login without OTP
-
----
-
-## 🚀 NEW: iOS Quick Testing Bypass (DEBUG Mode Only!)
-
-**No more email waiting!** In DEBUG builds, you can now bypass email/OTP entry for instant testing.
-
-### Option 1: One-Tap Quick Login (Fastest!)
-
-When the app launches:
-
-1. **Tap "Already have an account? Sign In"**
-2. **Look for the yellow ⚡ "Quick Test Login" button**
-3. **Tap it**
-4. ✅ **Instantly logged in!** (No typing needed)
-
-**Test Credentials Auto-Filled:**
-- Email: `test@barqnet.local`
-- Password: `Test1234`
-
-### Option 2: Quick Signup Flow
-
-1. **Launch app → Look for yellow ⚡ "Use Test Email" button**
-2. **Tap it** → Auto-fills email and proceeds to OTP
-3. **Look for yellow ⚡ "Use Test OTP" button**
-4. **Tap it** → Auto-fills OTP code `123456`
-5. **Create password manually**
-6. ✅ **Account created!**
-
-### How to Create More Test Accounts
-
-```bash
-cd ~/ChameleonVpn/barqnet-backend
-go run scripts/create_test_user.go \
-  -email "mytest@test.local" \
-  -username "myuser" \
-  -password "MyPass123" \
-  -force
-```
-
-Then update iOS test config in `workvpn-ios/WorkVPN/Config/TestingConfig.swift`
-
-### Important Notes
-
-- ⚡ **Yellow buttons only appear in DEBUG builds**
-- 🔒 **Automatically disabled in Release/Production**
-- 📖 **Full guide:** `workvpn-ios/TESTING_GUIDE.md`
-- 🎯 **Saves ~60 seconds per test cycle**
-
-### Visual Indicators
-
-All testing buttons have:
-- **Yellow color** with lightning bolt ⚡
-- **Dashed yellow border**
-- **Semi-transparent background**
-
-Easy to spot and won't appear in production!
-
----
-
-## Desktop Testing Steps
-
-Follow the same flow as iOS:
-
-1. Enter email: `hamad2@test.com`
-2. Get OTP from backend logs
-3. Enter OTP
-4. Create password
-5. Test settings
-6. Test logout/login
-
----
-
-## Android Testing
-
-```bash
-cd ~/ChameleonVpn/workvpn-android
-./gradlew installDebug
-```
-
-Follow same testing flow as iOS/Desktop.
-
----
-
-## Prerequisites (First Time Only)
-
-### PostgreSQL Setup
-
-**Check if running:**
-```bash
-psql -U postgres -c "SELECT version();"
-```
-
-**If not running:**
-```bash
-sudo systemctl start postgresql
-```
-
-**Create database user and database (same as Step 0A):**
-```bash
-cd ~/ChameleonVpn/barqnet-backend
-sudo -u postgres psql <<EOF
-CREATE USER barqnet WITH PASSWORD 'barqnet123';
-CREATE DATABASE barqnet OWNER barqnet;
-GRANT ALL PRIVILEGES ON DATABASE barqnet TO barqnet;
-GRANT ALL PRIVILEGES ON SCHEMA public TO barqnet;
-EOF
-```
-
-### Backend .env File
-
-**Check if exists:**
-```bash
-cd ~/ChameleonVpn/barqnet-backend/apps/management
-ls .env
-```
-
-**If missing:**
-```bash
-cp .env.example .env
-```
-
----
-
-## Endnode Setup (Optional)
-
-The endnode is for VPN traffic handling. Management server is for authentication.
-
-**Create .env:**
-```bash
-cd ~/ChameleonVpn/barqnet-backend/apps/endnode
-cp .env.example .env
-nano .env
-```
-
-**Set these 3 variables:**
-
-1. **JWT_SECRET** - Copy from management server:
-   ```bash
-   cd ~/ChameleonVpn/barqnet-backend/apps/management
-   cat .env | grep JWT_SECRET
-   ```
-
-2. **API_KEY** - Generate random:
-   ```bash
-   openssl rand -hex 32
-   ```
-
-3. **MANAGEMENT_URL** - If same server:
-   ```bash
-   MANAGEMENT_URL=http://localhost:8080
-   ```
-
-**Save and run:**
-```bash
-go build -o endnode main.go
-./endnode -server-id server-1
-```
-
-You should see:
-```
-[ENV] ✅ Endnode environment validation PASSED
-✅ Successfully registered with management server
-```
-
----
-
-## Troubleshooting
-
-### "Redis authentication failed: WRONGPASS"
-
-This means Redis password is not configured correctly.
-
-**Solution:**
-```bash
-# 1. Check your Redis config
-cat /etc/redis/redis.conf | grep requirepass
-
-# 2. Check your .env file
-cd ~/ChameleonVpn/barqnet-backend/apps/management
-cat .env | grep REDIS_PASSWORD
-
-# 3. Make sure they match!
-# Then restart Redis:
-sudo systemctl restart redis
-```
-
-### "column 'username' does not exist" or Migration Errors
-
-**⚠️ This error means you haven't pulled the latest code!**
-
-**Solution: Pull latest code first!**
-```bash
-cd ~/ChameleonVpn
-git pull origin main
-
-# Then rebuild and run:
 cd barqnet-backend/apps/management
-go build -o management main.go
-./management
-```
-
-**If error persists after pulling:**
-
-**Solution Option 1: Automatic (Recommended)**
-```bash
-# Stop the backend (Ctrl+C)
-# Drop and recreate database:
-sudo -u postgres psql <<EOF
-DROP DATABASE IF EXISTS vpnmanager;
-CREATE DATABASE vpnmanager OWNER vpnmanager;
-GRANT ALL PRIVILEGES ON DATABASE vpnmanager TO vpnmanager;
-GRANT ALL PRIVILEGES ON SCHEMA public TO vpnmanager;
-EOF
-
-# Restart backend - migrations will run automatically:
-cd ~/ChameleonVpn/barqnet-backend/apps/management
+export MANAGEMENT_PORT=8085
 go run main.go
 ```
+Backend runs on: `http://127.0.0.1:8085`
 
-**Note:** Database name is `vpnmanager` (not `barqnet`) - matches .env defaults
-
-**Solution Option 2: Manual Migration**
+### 2. Test Backend Health
 ```bash
-# Stop the backend (Ctrl+C)
-# Recreate database (same as above)
-sudo -u postgres psql <<EOF
-DROP DATABASE IF EXISTS vpnmanager;
-CREATE DATABASE vpnmanager OWNER vpnmanager;
-GRANT ALL PRIVILEGES ON DATABASE vpnmanager TO vpnmanager;
-GRANT ALL PRIVILEGES ON SCHEMA public TO vpnmanager;
-EOF
-
-# Run migrations manually:
-cd ~/ChameleonVpn/barqnet-backend/migrations
-for f in *.sql; do psql -U vpnmanager -d vpnmanager -f "$f"; done
-
-# Verify migrations:
-psql -U vpnmanager -d vpnmanager -c "SELECT version, name FROM schema_migrations ORDER BY version;"
-
-# Restart backend:
-cd ~/ChameleonVpn/barqnet-backend/apps/management
-go run main.go
+curl http://127.0.0.1:8085/health
 ```
 
-### "Failed to log audit: no such file or directory"
+### 3. Run Each Platform
+- **iOS:** Open `workvpn-ios/WorkVPN.xcworkspace` in Xcode, build & run
+- **Android:** Open `workvpn-android` in Android Studio, or run `./gradlew assembleDebug`
+- **Desktop:** `cd workvpn-desktop && npm run build && npm run start`
 
-The audit log directory doesn't exist.
+---
 
-**Solution:**
+## 📊 Platform Status
+
+| Platform | Status | Build Command | Notes |
+|----------|--------|---------------|-------|
+| Backend (Go) | ✅ Ready | `go run main.go` | Port 8085 |
+| iOS (Swift) | ✅ Ready | Xcode build | Simulator tested |
+| Android (Kotlin) | ✅ Ready | `./gradlew assembleDebug` | Emulator tested |
+| Desktop (Electron) | ✅ Ready | `npm run start` | macOS tested |
+
+---
+
+## 🔐 Authentication Flow (All Platforms)
+
+The auth flow works end-to-end:
+
+1. **Send OTP:** `POST /v1/auth/send-otp` with `{"email": "user@example.com"}`
+2. **Verify OTP:** `POST /v1/auth/verify-otp` with `{"email": "...", "otp": "123456"}`
+3. **Register:** `POST /v1/auth/register` with `{"email": "...", "password": "...", "otp": "..."}`
+4. **Login:** `POST /v1/auth/login` with `{"email": "...", "password": "..."}`
+
+**OTP Codes:** In development mode, OTPs are logged to the backend console (check `/tmp/backend_full.log`)
+
+---
+
+## ⚠️ Known Limitations (Development Mode)
+
+### VPN Functionality
+- **All platforms use STUB VPN implementations** - they simulate connection but don't actually tunnel traffic
+- Real VPN requires setting up OpenVPN/WireGuard servers
+
+### Android - ics-openvpn
+- The `ics-openvpn` library is **temporarily disabled**
+- It's an application module, not a library, causing integration complexity
+- Files disabled: `ProductionVPNService.kt.disabled`, `ProductionVPNViewModel.kt.disabled`
+
+### iOS - OpenVPNAdapter
+- Uses an archived/deprecated library
+- Works for now but needs long-term replacement
+
+### Security (Disabled for Dev)
+- Certificate pinning: **OFF**
+- HTTPS: Using HTTP for localhost
+- Rate limiting: **OFF**
+
+---
+
+## 📁 Key Files Modified
+
+### Backend
+- `barqnet-backend/apps/management/api/api.go` - Added `/v1/auth/verify-otp` endpoint
+- `barqnet-backend/apps/management/api/auth.go` - Added `HandleVerifyOTP` function
+- `barqnet-backend/apps/management/api/config.go` - OVPN template fallback
+- `barqnet-backend/apps/management/api/locations.go` - Fixed SQL queries
+
+### iOS
+- `workvpn-ios/WorkVPN/Info.plist` - Hardcoded API URL for dev
+- `workvpn-ios/WorkVPN.xcodeproj/project.pbxproj` - Disabled sandbox
+
+### Android
+- `workvpn-android/app/build.gradle` - Updated Kotlin/AGP, API URL
+- `workvpn-android/app/src/main/java/com/workvpn/android/api/ApiService.kt` - API URL config
+- `workvpn-android/settings.gradle` - Disabled ics-openvpn temporarily
+
+### Desktop
+- `workvpn-desktop/src/main/index.ts` - API URL to 8085
+- `workvpn-desktop/src/main/auth/service.ts` - API URL to 8085
+- `workvpn-desktop/src/preload/index.ts` - Added `window.env`
+
+---
+
+## 🧪 Testing Commands
+
+### Backend Auth Test
 ```bash
-sudo mkdir -p /var/log/vpnmanager
-sudo chown $USER:$USER /var/log/vpnmanager
-sudo chmod 750 /var/log/vpnmanager
+# Send OTP
+curl -X POST http://127.0.0.1:8085/v1/auth/send-otp \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com"}'
+
+# Get OTP from logs
+grep "Verification Code:" /tmp/backend_full.log | tail -1
+
+# Verify OTP
+curl -X POST http://127.0.0.1:8085/v1/auth/verify-otp \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","otp":"YOUR_OTP"}'
+
+# Register
+curl -X POST http://127.0.0.1:8085/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"SecurePass123!","otp":"YOUR_OTP"}'
+
+# Login
+curl -X POST http://127.0.0.1:8085/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"SecurePass123!"}'
 ```
 
-### "Port 8080 already in use"
+### Android Emulator
 ```bash
-lsof -ti:8080 | xargs kill -9
-```
+# List AVDs
+avdmanager list avd
 
-### "Database connection failed"
-```bash
-sudo systemctl start postgresql
-# macOS:
-brew services start postgresql
-```
+# Start emulator
+$ANDROID_HOME/emulator/emulator -avd barqnet_test
 
-### iOS Simulator Warnings (SAFE TO IGNORE)
+# Install APK
+adb install -r workvpn-android/app/build/outputs/apk/debug/app-debug.apk
 
-These warnings appear in **ALL** iOS apps in the simulator - they're harmless:
-
-```
-AlertService init
-AlertService starting location simulation
-Error registering event types with the diagnostic monitor server
-Error registering write types with the diagnostic monitor server
-Failed to send CA Event for app launch measurements
-domain=com.apple.preview-shell.system service=...
-```
-
-**Why they appear:**
-- AlertService: Simulator-only location services initialization
-- CA Event: Core Animation telemetry not available in simulator
-- Bootstrap services: System services that don't run in simulator
-
-**What to do:**
-✅ **Nothing! Just ignore them.**
-
-These warnings:
-- ✅ Don't affect app functionality
-- ✅ Don't appear on real devices
-- ✅ Are generated by Apple's iOS Simulator
-- ✅ Appear for every iOS app (even Apple's own apps)
-
-**If the app crashes or doesn't work,** these warnings are NOT the cause. Look for actual error messages in red.
-
-### "Cannot find module" (Desktop)
-```bash
-cd ~/ChameleonVpn/workvpn-desktop
-rm -rf node_modules package-lock.json
-npm install
-```
-
-### Redis not installed?
-
-**Ubuntu/Debian:**
-```bash
-sudo apt-get install redis-server
-sudo systemctl start redis
-```
-
-**macOS:**
-```bash
-brew install redis
-brew services start redis
+# Launch app
+adb shell am start -n com.barqnet.android.debug/com.barqnet.android.MainActivity
 ```
 
 ---
 
-## What Success Looks Like
+## 🔧 Environment Requirements
 
-**Backend:**
-- ✅ Database migrations run successfully
-- ✅ Redis authentication succeeds
-- ✅ Rate limiting is ENABLED (not degraded mode)
-- ✅ Audit logging enabled (file + database)
-- ✅ Starts on port 8080
-- ✅ Shows OTP codes in logs
-- ✅ No "WRONGPASS" errors
-- ✅ No "column does not exist" errors
+| Tool | Version | Notes |
+|------|---------|-------|
+| Go | 1.21+ | Backend |
+| Node.js | 18+ | Desktop |
+| Xcode | 15+ | iOS |
+| Android Studio | Latest | Android |
+| Java | 17+ (use AS bundled) | Android |
+| PostgreSQL | 14+ | Database |
 
-**iOS/Desktop/Android:**
-- ✅ App launches
-- ✅ Can create account
-- ✅ Can enter OTP
-- ✅ Can set password
-- ✅ Main screen shows "No VPN Configuration" (normal!)
-- ✅ Settings open
-- ✅ Logout/Login works
-
----
-
-## Testing Checklist
-
-**Pre-flight Checks:**
+### Android SDK Location
 ```
-[ ] Redis is running with password configured
-[ ] PostgreSQL is running
-[ ] BarqNet database exists
-[ ] .env file has REDIS_PASSWORD set
-[ ] Audit log directory exists (/var/log/vpnmanager)
+/opt/homebrew/share/android-commandlinetools
 ```
 
-**Backend Startup:**
-```
-[ ] Database migrations run successfully
-[ ] Redis authentication succeeds
-[ ] Rate limiting is ENABLED
-[ ] Audit logging enabled (file + database)
-[ ] Backend running on port 8080
-[ ] No WRONGPASS errors
-[ ] No column errors
-```
-
-**Client Testing:**
-```
-[ ] iOS app builds and runs
-[ ] Desktop app launches
-[ ] Can create account with email
-[ ] OTP appears in backend logs
-[ ] Can verify OTP
-[ ] Can set password
-[ ] Main screen appears
-[ ] Settings modal works
-[ ] Logout works
-[ ] Login works
+### Use Android Studio's JDK
+```bash
+export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 ```
 
 ---
 
-## Quick Reference
+## 🎯 Next Steps for Production
 
-**Backend:**
+---
+
+### Step 1: Set Up Real VPN Servers (OpenVPN)
+
+**Priority:** HIGH  
+**Estimated Time:** 2-4 hours per server
+
+#### Option A: Self-Hosted OpenVPN Server
+
+1. **Provision a VPS** (DigitalOcean, AWS, Vultr, etc.)
 ```bash
-cd ~/ChameleonVpn/barqnet-backend/apps/management
-go run main.go
-```
+   # Recommended specs per server:
+   # - 2 CPU cores
+   # - 2GB RAM
+   # - 50GB SSD
+   # - 1Gbps network
+   ```
 
-**iOS:**
+2. **Install OpenVPN using the official script:**
+   ```bash
+   # SSH into your server
+   ssh root@your-server-ip
+   
+   # Download and run OpenVPN installer
+   curl -O https://raw.githubusercontent.com/angristan/openvpn-install/master/openvpn-install.sh
+   chmod +x openvpn-install.sh
+   ./openvpn-install.sh
+   ```
+
+3. **Configure for BarqNet:**
 ```bash
-cd ~/ChameleonVpn
-./setup-ios.sh
-```
+   # Edit server config
+   nano /etc/openvpn/server.conf
+   
+   # Add these lines for better security:
+   tls-auth ta.key 0
+   cipher AES-256-GCM
+   auth SHA256
+   ```
 
-**Desktop:**
+4. **Set up the end-node API** (so management server can provision users):
 ```bash
-cd ~/ChameleonVpn/workvpn-desktop
-npm start
-```
+   # Deploy the barqnet end-node service
+   cd barqnet-backend/apps/endnode
+   go build -o endnode
+   ./endnode --port 8080 --openvpn-dir /etc/openvpn
+   ```
 
-**Android:**
+5. **Register server in database:**
+   ```sql
+   INSERT INTO servers (name, host, port, location_id, enabled, server_type)
+   VALUES ('US-East-1', '203.0.113.50', 1194, 1, true, 'openvpn');
+   ```
+
+#### Option B: Use a VPN Provider API (Faster)
+- Consider using Outline Server (by Google Jigsaw)
+- Or integrate with existing VPN infrastructure
+
+---
+
+### Step 2: Re-enable ics-openvpn on Android
+
+**Priority:** HIGH  
+**Estimated Time:** 4-8 hours
+
+#### The Problem
+The `ics-openvpn` project is structured as an Android **application**, not a library. This causes Gradle conflicts when including it as a submodule.
+
+#### Solution: Fork and Convert to Library
+
+1. **Fork ics-openvpn:**
 ```bash
-cd ~/ChameleonVpn/workvpn-android
-./gradlew installDebug
-```
+   cd workvpn-android
+   rm -rf ics-openvpn
+   git clone https://github.com/schwabe/ics-openvpn.git --depth 1
+   ```
 
-**Get OTP:**
-Check backend terminal for:
-```
-[OTP] DEBUG: Code for <email> = 123456
+2. **Convert main module to library:**
+   
+   Edit `ics-openvpn/main/build.gradle.kts`:
+   ```kotlin
+   // Change this:
+   plugins {
+       id("com.android.application")
+   }
+   
+   // To this:
+   plugins {
+       id("com.android.library")
+   }
+   ```
+
+3. **Remove application-specific code:**
+   - Remove `applicationId` from defaultConfig
+   - Remove `versionCode` and `versionName`
+   - Remove signing configs
+   - Remove `bundle { }` block
+
+4. **Re-enable in settings.gradle:**
+   ```gradle
+   include ':ics-openvpn:main'
+   project(':ics-openvpn:main').projectDir = new File(rootDir, 'ics-openvpn/main')
+   ```
+
+5. **Re-enable ProductionVPNService:**
+   ```bash
+   mv app/src/main/java/.../ProductionVPNService.kt.disabled \
+      app/src/main/java/.../ProductionVPNService.kt
+   mv app/src/main/java/.../ProductionVPNViewModel.kt.disabled \
+      app/src/main/java/.../ProductionVPNViewModel.kt
+   ```
+
+6. **Update AndroidManifest.xml** to uncomment the service
+
+#### Alternative: Use Pre-built AAR
+Download a pre-built OpenVPN library AAR and add to `app/libs/`
+
+---
+
+### Step 3: Enable HTTPS
+
+**Priority:** HIGH  
+**Estimated Time:** 1-2 hours
+
+#### Backend (Go)
+
+1. **Get SSL certificate** (Let's Encrypt recommended):
+   ```bash
+   sudo apt install certbot
+   sudo certbot certonly --standalone -d api.barqnet.com
+   ```
+
+2. **Update backend to use HTTPS:**
+   
+   Edit `barqnet-backend/apps/management/main.go`:
+   ```go
+   // Change from:
+   http.ListenAndServe(":8085", handler)
+   
+   // To:
+   http.ListenAndServeTLS(":443", 
+       "/etc/letsencrypt/live/api.barqnet.com/fullchain.pem",
+       "/etc/letsencrypt/live/api.barqnet.com/privkey.pem",
+       handler)
+   ```
+
+3. **Or use a reverse proxy (recommended):**
+   ```nginx
+   # /etc/nginx/sites-available/barqnet
+   server {
+       listen 443 ssl;
+       server_name api.barqnet.com;
+       
+       ssl_certificate /etc/letsencrypt/live/api.barqnet.com/fullchain.pem;
+       ssl_certificate_key /etc/letsencrypt/live/api.barqnet.com/privkey.pem;
+       
+       location / {
+           proxy_pass http://127.0.0.1:8085;
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+       }
+   }
 ```
 
 ---
 
-**That's it! Start with backend, then test each platform. Good luck! 🚀**
+### Step 4: Enable Certificate Pinning
+
+**Priority:** MEDIUM  
+**Estimated Time:** 2-3 hours
+
+#### Get Your Certificate Pin
+```bash
+# Get the SHA256 pin of your certificate
+openssl s_client -connect api.barqnet.com:443 | \
+  openssl x509 -pubkey -noout | \
+  openssl pkey -pubin -outform der | \
+  openssl dgst -sha256 -binary | base64
+```
+
+This will output something like: `sha256/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=`
+
+#### iOS - Update Info.plist
+```xml
+<key>CERTIFICATE_PINS</key>
+<array>
+    <string>sha256/YOUR_PRIMARY_PIN=</string>
+    <string>sha256/YOUR_BACKUP_PIN=</string>
+</array>
+<key>ENABLE_CERTIFICATE_PINNING</key>
+<string>YES</string>
+```
+
+#### Android - Update ApiService.kt
+```kotlin
+private val CERTIFICATE_PINS = listOf(
+    "sha256/YOUR_PRIMARY_PIN=",
+    "sha256/YOUR_BACKUP_PIN="
+)
+private const val ENABLE_CERT_PINNING = true
+```
+
+#### Desktop - Update init-certificate-pinning.ts
+```typescript
+const CERTIFICATE_PINS = [
+    'sha256/YOUR_PRIMARY_PIN=',
+    'sha256/YOUR_BACKUP_PIN='
+];
+```
+
+---
+
+### Step 5: Configure Production API URLs
+
+**Priority:** HIGH  
+**Estimated Time:** 30 minutes
+
+#### iOS
+Edit `workvpn-ios/Configuration/Production.xcconfig`:
+```
+API_BASE_URL = https://api.barqnet.com
+ENABLE_CERTIFICATE_PINNING = YES
+ENABLE_DEBUG_LOGGING = NO
+```
+
+#### Android
+Edit `workvpn-android/app/src/main/java/.../ApiService.kt`:
+```kotlin
+private const val BASE_URL = "https://api.barqnet.com/"
+private const val IS_DEVELOPMENT = false
+private const val ENABLE_CERT_PINNING = true
+```
+
+#### Desktop
+Edit `workvpn-desktop/src/main/index.ts`:
+```typescript
+const API_BASE_URL = process.env.API_BASE_URL || 'https://api.barqnet.com';
+```
+
+Also create `.env.production`:
+```
+API_BASE_URL=https://api.barqnet.com
+NODE_ENV=production
+```
+
+---
+
+### Step 6: Set Up Email Service (Resend)
+
+**Priority:** MEDIUM  
+**Estimated Time:** 1 hour
+
+1. **Sign up at [resend.com](https://resend.com)**
+
+2. **Get API key and verify domain**
+
+3. **Update backend environment:**
+```bash
+   # .env file
+   EMAIL_SERVICE=resend
+   RESEND_API_KEY=re_xxxxxxxxxxxx
+   EMAIL_FROM=noreply@barqnet.com
+   ```
+
+4. **The backend already supports Resend** - just set the environment variables and it will switch from local logging to actual email sending.
+
+#### Alternative: SendGrid
+```bash
+EMAIL_SERVICE=sendgrid
+SENDGRID_API_KEY=SG.xxxxxxxxxxxx
+EMAIL_FROM=noreply@barqnet.com
+```
+
+---
+
+### Step 7: Enable Rate Limiting
+
+**Priority:** MEDIUM  
+**Estimated Time:** 30 minutes
+
+1. **Ensure Redis is running:**
+   ```bash
+   # Install Redis
+   brew install redis  # macOS
+   sudo apt install redis-server  # Ubuntu
+   
+   # Start Redis
+   redis-server
+   ```
+
+2. **Update backend environment:**
+   ```bash
+   # .env file
+   RATE_LIMIT_ENABLED=true
+   REDIS_HOST=localhost
+   REDIS_PORT=6379
+   ```
+
+3. **Rate limits are pre-configured in the backend:**
+   - Login: 5 attempts per 15 minutes
+   - OTP: 5 requests per 10 minutes
+   - API: 100 requests per minute
+
+---
+
+### Step 8: iOS - Replace OpenVPNAdapter (Long-term)
+
+**Priority:** LOW (works for now)  
+**Estimated Time:** 1-2 weeks
+
+The current OpenVPNAdapter library is archived. Options:
+
+1. **Fork and maintain it yourself**
+2. **Use WireGuard instead** (NetworkExtension + WireGuardKit)
+3. **Use a commercial solution** (e.g., Passepartout)
+
+#### WireGuard Implementation (Recommended)
+```swift
+// Add to Podfile
+pod 'WireGuardKit'
+
+// Create WireGuardVPNManager.swift
+import WireGuardKit
+// ... implementation
+```
+
+---
+
+### Step 9: Production Deployment Checklist
+
+Before going live:
+
+- [ ] VPN servers deployed and tested
+- [ ] HTTPS enabled with valid SSL certificates
+- [ ] Certificate pinning enabled on all platforms
+- [ ] Production API URLs configured
+- [ ] Email service configured (Resend/SendGrid)
+- [ ] Rate limiting enabled
+- [ ] Database backups configured
+- [ ] Monitoring/logging set up (e.g., Sentry)
+- [ ] App Store / Play Store accounts ready
+- [ ] Privacy policy and terms of service
+- [ ] GDPR compliance (if serving EU users)
+
+---
+
+### Step 10: App Store Submission
+
+#### iOS (App Store)
+1. Create app in App Store Connect
+2. Configure app capabilities (Network Extension)
+3. Build with Release configuration
+4. Upload via Xcode or Transporter
+5. Submit for review
+
+#### Android (Play Store)
+1. Create app in Google Play Console
+2. Generate signed release APK/AAB:
+```bash
+   ./gradlew bundleRelease
+```
+3. Upload to Play Store
+4. Complete store listing
+5. Submit for review
+
+#### Desktop (Direct Distribution)
+1. Build for each platform:
+```bash
+   npm run build:mac
+   npm run build:win
+   npm run build:linux
+   ```
+2. Code sign the applications
+3. Notarize macOS build
+4. Distribute via website or auto-updater
+
+---
+
+## 📞 Support
+
+If you have questions:
+1. Check the backend logs: `tail -f /tmp/backend_full.log`
+2. Check Android logcat: `adb logcat | grep -i barqnet`
+3. Check Xcode console for iOS logs
+
+---
+
+**All platforms are ready for development and testing! 🎉**

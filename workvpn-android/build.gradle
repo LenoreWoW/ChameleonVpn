@@ -1,8 +1,8 @@
 // Top-level build file for WorkVPN Android
 buildscript {
-    ext.kotlin_version = '1.9.22'  // Updated from 1.9.20 for bug fixes
-    ext.compose_version = '1.5.4'
-    ext.compose_compiler_version = '1.5.10'  // Updated from 1.5.4 for compatibility with Kotlin 1.9.22
+    ext.kotlin_version = '2.1.0'  // Updated to match ics-openvpn
+    ext.compose_version = '1.7.0'
+    ext.compose_compiler_version = '2.0.0'
 
     repositories {
         google()
@@ -14,8 +14,8 @@ buildscript {
 
     dependencies {
         // Note: AGP 8.0+ requires Java 17+
-        // Updated to AGP 8.2.1 for compatibility with modern Gradle versions
-        classpath 'com.android.tools.build:gradle:8.2.1'
+        // Updated to AGP 8.9.1 for ics-openvpn dependencies (androidx.core:1.17.0)
+        classpath 'com.android.tools.build:gradle:8.9.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }

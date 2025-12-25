@@ -36,7 +36,7 @@ class AuthService {
     this.sessions = new Map();
 
     // API base URL from environment variable or default to localhost
-    this.apiBaseUrl = process.env.API_BASE_URL || 'http://localhost:8080';
+    this.apiBaseUrl = process.env.API_BASE_URL || 'http://127.0.0.1:8085';
 
     // Initialize certificate pinning with production pins
     this.certificatePinning = new CertificatePinning();

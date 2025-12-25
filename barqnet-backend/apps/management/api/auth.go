@@ -140,12 +140,17 @@ func (h *AuthHandler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Insert new user with email
+	// Generate username from email (use part before @ as base)
+	username := strings.Split(req.Email, "@")[0]
+	// Add timestamp suffix to ensure uniqueness
+	username = fmt.Sprintf("%s_%d", username, time.Now().UnixNano()%100000)
+	
 	var userID int
 	err = h.db.QueryRow(`
-		INSERT INTO users (email, password_hash, created_at, last_login, active)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO users (email, username, password_hash, server_id, created_by, created_at, last_login, active)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		RETURNING id
-	`, req.Email, string(hashedPassword), time.Now(), time.Now(), true).Scan(&userID)
+	`, req.Email, username, string(hashedPassword), "management-server", "self-registration", time.Now(), time.Now(), true).Scan(&userID)
 
 	if err != nil {
 		log.Printf("[AUTH] Failed to create user: %v", err)
@@ -272,7 +277,7 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Update last login time
-	_, err = h.db.Exec("UPDATE auth_users SET last_login = $1 WHERE id = $2", time.Now(), userID)
+	_, err = h.db.Exec("UPDATE users SET last_login = $1 WHERE id = $2", time.Now(), userID)
 	if err != nil {
 		log.Printf("[AUTH] Failed to update last login: %v", err)
 		// Non-critical error, continue
@@ -487,6 +492,63 @@ func (h *AuthHandler) HandleSendOTP(w http.ResponseWriter, r *http.Request) {
 		Data: map[string]interface{}{
 			"email":      req.Email,
 			"expires_in": 600, // 10 minutes
+		},
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+// HandleVerifyOTP handles OTP verification (without registration)
+// POST /auth/verify-otp
+// This endpoint verifies the OTP and returns a temporary token for registration
+func (h *AuthHandler) HandleVerifyOTP(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		h.sendError(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		Email string `json:"email"`
+		OTP   string `json:"otp"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.sendError(w, "Invalid JSON request", http.StatusBadRequest)
+		return
+	}
+
+	// Validate email
+	if err := h.validateEmail(req.Email); err != nil {
+		h.sendError(w, fmt.Sprintf("Invalid email: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	// Validate OTP format
+	if len(req.OTP) != 6 {
+		h.sendError(w, "Invalid OTP format", http.StatusBadRequest)
+		return
+	}
+
+	// Verify OTP
+	if !h.otpService.Verify(req.Email, req.OTP) {
+		h.sendError(w, "Invalid or expired OTP", http.StatusBadRequest)
+		h.logAuditEvent("OTP_VERIFY_FAILED", req.Email, "Invalid OTP provided", r.RemoteAddr)
+		return
+	}
+
+	// OTP verified successfully
+	h.logAuditEvent("OTP_VERIFIED", req.Email, "OTP verified successfully", r.RemoteAddr)
+
+	// Return success - the OTP has been verified and can be used for registration
+	// The app should proceed to password creation screen
+	response := AuthResponse{
+		Success: true,
+		Message: "OTP verified successfully",
+		Data: map[string]interface{}{
+			"email":      req.Email,
+			"verified":   true,
+			"expires_in": 600, // 10 minutes to complete registration
 		},
 	}
 
@@ -804,7 +866,7 @@ func (h *AuthHandler) getClientIP(r *http.Request) string {
 // logAuditEvent logs an authentication event to the audit log
 func (h *AuthHandler) logAuditEvent(action, username, details, ipAddress string) {
 	_, err := h.db.Exec(`
-		INSERT INTO audit_log (timestamp, action, username, details, ip_address, server_id)
+		INSERT INTO audit_log (created_at, action, username, details, ip_address, server_id)
 		VALUES ($1, $2, $3, $4, $5, $6)
 	`, time.Now(), action, username, details, ipAddress, "management-server")
 

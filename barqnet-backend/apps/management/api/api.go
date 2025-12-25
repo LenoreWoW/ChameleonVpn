@@ -87,6 +87,7 @@ func (api *ManagementAPI) Start(port int) error {
 
 	// Authentication endpoints (v1 API)
 	mux.HandleFunc("/v1/auth/send-otp", authHandler.HandleSendOTP)
+	mux.HandleFunc("/v1/auth/verify-otp", authHandler.HandleVerifyOTP)
 	mux.HandleFunc("/v1/auth/register", authHandler.HandleRegister)
 	mux.HandleFunc("/v1/auth/login", authHandler.HandleLogin)
 	mux.HandleFunc("/v1/auth/refresh", authHandler.HandleRefresh)
@@ -145,21 +146,66 @@ func (api *ManagementAPI) Start(port int) error {
 	return server.ListenAndServe()
 }
 
-// handleHealth handles health check requests
+// handleHealth handles health check requests with deep health checks
 func (api *ManagementAPI) handleHealth(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	response := shared.HealthCheck{
-		Status:    "healthy",
-		Timestamp: time.Now().Unix(),
-		Version:   "1.0.0",
-		ServerID:  "management-server",
+	// Deep health check: verify database connectivity
+	dbStatus := "healthy"
+	dbLatency := int64(0)
+
+	db := api.manager.GetDB()
+	if db != nil {
+		conn := db.GetConnection()
+		if conn != nil {
+			startTime := time.Now()
+			err := conn.Ping()
+			dbLatency = time.Since(startTime).Milliseconds()
+
+			if err != nil {
+				dbStatus = fmt.Sprintf("unhealthy: %v", err)
+				log.Printf("[HEALTH] Database ping failed: %v", err)
+			}
+		} else {
+			dbStatus = "unhealthy: no connection"
+		}
+	} else {
+		dbStatus = "unhealthy: database manager not initialized"
+	}
+
+	// Determine overall health status
+	overallStatus := "healthy"
+	httpStatus := http.StatusOK
+
+	if dbStatus != "healthy" {
+		overallStatus = "degraded"
+		httpStatus = http.StatusServiceUnavailable
+	}
+
+	// Get server ID from environment or use default
+	serverID := os.Getenv("SERVER_ID")
+	if serverID == "" {
+		serverID = "management-server"
+	}
+
+	response := map[string]interface{}{
+		"status":     overallStatus,
+		"timestamp":  time.Now().Unix(),
+		"version":    "1.0.0",
+		"server_id":  serverID,
+		"checks": map[string]interface{}{
+			"database": map[string]interface{}{
+				"status":     dbStatus,
+				"latency_ms": dbLatency,
+			},
+		},
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(httpStatus)
 	json.NewEncoder(w).Encode(response)
 }
 
@@ -908,14 +954,44 @@ func (api *ManagementAPI) middleware(next http.Handler) http.Handler {
 		w.Header().Set("X-XSS-Protection", "1; mode=block")
 		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
 		w.Header().Set("Content-Security-Policy", "default-src 'self'")
-		
-		// Add CORS headers (restrict in production)
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+
+		// CORS: Restrict origins in production
+		// Set ALLOWED_ORIGINS env variable with comma-separated list of allowed origins
+		// Example: ALLOWED_ORIGINS=https://app.barqnet.com,https://admin.barqnet.com
+		origin := r.Header.Get("Origin")
+		allowedOrigins := os.Getenv("ALLOWED_ORIGINS")
+
+		if allowedOrigins == "" {
+			// Development fallback - allow localhost variants
+			allowedOrigins = "http://localhost:3000,http://127.0.0.1:3000,http://localhost:8080,http://127.0.0.1:8080"
+		}
+
+		// Check if origin is allowed
+		originAllowed := false
+		for _, allowed := range strings.Split(allowedOrigins, ",") {
+			if origin == strings.TrimSpace(allowed) {
+				originAllowed = true
+				w.Header().Set("Access-Control-Allow-Origin", origin)
+				break
+			}
+		}
+
+		// If no origin header or not in allowed list, don't set CORS header
+		// This prevents CORS for unknown origins while allowing server-to-server requests
+		if origin != "" && !originAllowed {
+			log.Printf("[CORS] Blocked origin: %s (allowed: %s)", origin, allowedOrigins)
+		}
+
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-API-Key")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
 
 		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusOK)
+			if originAllowed {
+				w.WriteHeader(http.StatusOK)
+			} else {
+				w.WriteHeader(http.StatusForbidden)
+			}
 			return
 		}
 

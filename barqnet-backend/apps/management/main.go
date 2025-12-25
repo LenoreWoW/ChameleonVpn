@@ -99,9 +99,18 @@ func main() {
 	// Start API server with rate limiter
 	apiServer := api.NewManagementAPI(managementManager, rateLimiter)
 	
+	// Get port from environment variable or use default
+	port := 8080
+	if portStr := os.Getenv("MANAGEMENT_PORT"); portStr != "" {
+		if p, err := fmt.Sscanf(portStr, "%d", &port); err != nil || p != 1 {
+			log.Printf("[WARN] Invalid MANAGEMENT_PORT '%s', using default 8080", portStr)
+			port = 8080
+		}
+	}
+	
 	// Start the API server in a goroutine
 	go func() {
-		if err := apiServer.Start(8080); err != nil {
+		if err := apiServer.Start(port); err != nil {
 			log.Fatalf("Failed to start API server: %v", err)
 		}
 	}()
@@ -113,7 +122,7 @@ func main() {
 	go managementManager.StartUserSyncCoordination()
 
 	log.Printf("Management server started with ID: %s", *serverID)
-	log.Printf("API server running on port 8080")
+	log.Printf("API server running on port %d", port)
 	log.Printf("Database: %s:%d/%s", config.Database.Host, config.Database.Port, config.Database.DBName)
 
 	// Wait for shutdown signal

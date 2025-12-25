@@ -1,7 +1,7 @@
 // Development Environment Configuration
 // Use this for local development and testing
 
-API_BASE_URL = http:/$()/127.0.0.1:8080
+API_BASE_URL = http:/$()/127.0.0.1:8085
 ENVIRONMENT_NAME = Development
 ENABLE_DEBUG_LOGGING = YES
 ENABLE_CERTIFICATE_PINNING = NO

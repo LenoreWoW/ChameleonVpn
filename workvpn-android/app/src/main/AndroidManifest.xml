@@ -27,6 +27,7 @@
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/Theme.BarqNet"
+        android:usesCleartextTraffic="true"
         tools:targetApi="31">
 
         <!-- Main Activity -->
@@ -83,7 +84,8 @@
             </intent-filter>
         </service>
 
-        <!-- Production VPN Service - REAL ics-openvpn Implementation -->
+        <!-- Production VPN Service - REAL ics-openvpn Implementation
+             TODO: Re-enable when ics-openvpn integration is complete
         <service
             android:name=".vpn.ProductionVPNService"
             android:permission="android.permission.BIND_VPN_SERVICE"
@@ -93,6 +95,7 @@
                 <action android:name="android.net.VpnService" />
             </intent-filter>
         </service>
+        -->
 
         <!-- Boot Receiver for Auto-Start -->
         <receiver

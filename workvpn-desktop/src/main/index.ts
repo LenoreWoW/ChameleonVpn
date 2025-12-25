@@ -8,7 +8,7 @@ import { initializeCertificatePinning } from './security/init-certificate-pinnin
 // API Configuration
 // Set API_BASE_URL environment variable for production deployment
 // Default: http://localhost:8080 (development only)
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:8080';
+const API_BASE_URL = process.env.API_BASE_URL || 'http://127.0.0.1:8085';
 
 // Validate API URL format and enforce HTTPS in production
 try {
@@ -28,8 +28,8 @@ try {
     process.exit(1);
   } else {
     // In development, fall back to localhost
-    console.error('[Main] Falling back to http://localhost:8080 (development only)');
-    process.env.API_BASE_URL = 'http://localhost:8080';
+    console.error('[Main] Falling back to http://127.0.0.1:8085 (development only)');
+    process.env.API_BASE_URL = 'http://127.0.0.1:8085';
   }
 }
 
