@@ -32,26 +32,126 @@ A full security audit of the backend and endnode was completed. Critical vulnera
 
 ## 🚀 Quick Start
 
-### Option A: One-Shot Script (Recommended)
+### Deployment Architecture
 
-Run the backend and iOS app with a single command:
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        DEPLOYMENT SETUP                          │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                   │
+│   ┌──────────────────┐         ┌──────────────────┐              │
+│   │    SERVER 2      │         │    SERVER 1      │              │
+│   │   (Management)   │◄───────►│    (Endnode)     │              │
+│   │                  │   API   │                  │              │
+│   │ run-management.sh│         │  run-endnode.sh  │              │
+│   │    Port 8085     │         │    Port 8080     │              │
+│   └────────┬─────────┘         └──────────────────┘              │
+│            │                                                      │
+│            │ HTTPS                                                │
+│            ▼                                                      │
+│   ┌──────────────────┐                                           │
+│   │   DEVELOPER MAC  │                                           │
+│   │                  │                                           │
+│   │   run-ios.sh     │                                           │
+│   │   (iOS Testing)  │                                           │
+│   └──────────────────┘                                           │
+│                                                                   │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Script 1: Management Server (Server 2)
+
+Deploy and run on your management/API server:
 
 ```bash
-./run-backend-and-ios.sh
+# On Server 2 (Management)
+./scripts/run-management.sh
 ```
 
 This script will:
-1. ✅ Check all prerequisites (Go, Xcode)
-2. ✅ Kill any existing backend on port 8085
-3. ✅ Start the backend server
-4. ✅ Wait until the backend is healthy
-5. ✅ Build and launch the iOS app in Simulator
+- ✅ Build the Go management server
+- ✅ Start on port 8085 (configurable)
+- ✅ Wait for health check
+- ✅ Display connection info for endnodes
 
-Press `Ctrl+C` to stop everything when done.
+**Required environment variables:**
+```bash
+export DB_HOST=localhost
+export DB_PASSWORD=your-database-password
+export JWT_SECRET=your-32-char-jwt-secret
+export API_KEY=shared-api-key-for-endnodes
+```
 
 ---
 
-### Option B: Manual Setup
+### Script 2: Endnode/VPN Server (Server 1)
+
+Deploy and run on your VPN server:
+
+```bash
+# On Server 1 (Endnode)
+./scripts/run-endnode.sh --server-id server-1 --management-url http://SERVER2_IP:8085
+```
+
+This script will:
+- ✅ Build the Go endnode
+- ✅ Register with management server
+- ✅ Start VPN services on port 8080
+
+**Required:**
+```bash
+--server-id server-1              # Unique ID for this VPN server
+--management-url http://IP:8085   # Management server URL
+```
+
+**Environment variables (alternative to flags):**
+```bash
+export ENDNODE_SERVER_ID=server-1
+export MANAGEMENT_URL=http://SERVER2_IP:8085
+export API_KEY=shared-api-key-for-endnodes
+```
+
+---
+
+### Script 3: iOS App (Developer Mac)
+
+Run on your macOS development machine:
+
+```bash
+# On your Mac
+./scripts/run-ios.sh --backend-url http://SERVER2_IP:8085
+```
+
+This script will:
+- ✅ Check Xcode installation
+- ✅ Install CocoaPods if needed
+- ✅ Boot iOS Simulator
+- ✅ Build and launch the app
+
+**Options:**
+```bash
+--backend-url <url>    # Backend server URL (default: http://127.0.0.1:8085)
+--simulator "iPhone 15 Pro"   # Specific simulator
+--build-only           # Only build, don't run
+```
+
+---
+
+### Local Development (All-in-One)
+
+For local testing on a single Mac, run these in separate terminals:
+
+```bash
+# Terminal 1: Management Server
+./scripts/run-management.sh
+
+# Terminal 2: iOS App (after management is running)
+./scripts/run-ios.sh
+```
+
+---
+
+### Manual Setup
 
 ### 1. Start the Backend (Management Server)
 ```bash
