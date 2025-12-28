@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"barqnet-backend/pkg/shared"
@@ -157,28 +158,16 @@ func (mm *ManagementManager) syncUsersToEndNode(endNode shared.Server, users []s
 }
 
 // createOVPNOnEndNode creates an OVPN file on a specific end-node
+// The endnode generates real certificates using EasyRSA - we only send metadata
 func (mm *ManagementManager) createOVPNOnEndNode(endNode shared.Server, user shared.User) error {
-	// Use placeholder certificates - end-nodes will generate real certificates
-	certData := struct {
-		CA   string
-		Cert string
-		Key  string
-		TA   string
-	}{
-		CA:   "-----BEGIN CERTIFICATE-----\n[CA Certificate Content]\n-----END CERTIFICATE-----",
-		Cert: "-----BEGIN CERTIFICATE-----\n[Client Certificate Content]\n-----END CERTIFICATE-----",
-		Key:  "-----BEGIN PRIVATE KEY-----\n[Client Private Key Content]\n-----END PRIVATE KEY-----",
-		TA:   "-----BEGIN OpenVPN Static key V1-----\n[TLS Auth Key Content]\n-----END OpenVPN Static key V1-----",
-	}
-
-	// Prepare request data
+	// Prepare request data - endnode will generate certificates locally
 	requestData := map[string]interface{}{
-		"username":   user.Username,
-		"port":       user.Port,
-		"protocol":   user.Protocol,
-		"server_id":  endNode.Name,
-		"server_ip":  endNode.Host,
-		"cert_data": certData,
+		"username":           user.Username,
+		"port":               user.Port,
+		"protocol":           user.Protocol,
+		"server_id":          endNode.Name,
+		"server_ip":          endNode.Host,
+		"generate_certs":     true, // Signal endnode to generate real certs
 	}
 
 	jsonData, err := json.Marshal(requestData)
@@ -193,6 +182,12 @@ func (mm *ManagementManager) createOVPNOnEndNode(endNode shared.Server, user sha
 	}
 
 	req.Header.Set("Content-Type", "application/json")
+	
+	// SECURITY: Add API key authentication for endnode communication
+	apiKey := os.Getenv("API_KEY")
+	if apiKey != "" {
+		req.Header.Set("X-API-Key", apiKey)
+	}
 
 	resp, err := mm.httpClient.Do(req)
 	if err != nil {
@@ -200,7 +195,11 @@ func (mm *ManagementManager) createOVPNOnEndNode(endNode shared.Server, user sha
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode == http.StatusUnauthorized {
+		return fmt.Errorf("OVPN creation failed: unauthorized - check API_KEY configuration")
+	}
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
 		return fmt.Errorf("OVPN creation on end-node failed with status: %d", resp.StatusCode)
 	}
 
@@ -238,6 +237,12 @@ func (mm *ManagementManager) syncUserToEndNode(endNode shared.Server, user share
 	}
 
 	req.Header.Set("Content-Type", "application/json")
+	
+	// SECURITY: Add API key authentication for endnode communication
+	apiKey := os.Getenv("API_KEY")
+	if apiKey != "" {
+		req.Header.Set("X-API-Key", apiKey)
+	}
 
 	resp, err := mm.httpClient.Do(req)
 	if err != nil {
@@ -418,6 +423,12 @@ func (mm *ManagementManager) syncUserDeletionToEndNode(endNode shared.Server, us
 	}
 
 	req.Header.Set("Content-Type", "application/json")
+	
+	// SECURITY: Add API key authentication for endnode communication
+	apiKey := os.Getenv("API_KEY")
+	if apiKey != "" {
+		req.Header.Set("X-API-Key", apiKey)
+	}
 
 	resp, err := mm.httpClient.Do(req)
 	if err != nil {

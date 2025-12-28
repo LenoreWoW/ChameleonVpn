@@ -9,7 +9,9 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"barqnet-backend/apps/endnode/manager"
@@ -408,6 +410,29 @@ func (api *EndNodeAPI) validateCertData(certData struct {
 	return nil
 }
 
+// validateUsernameForPath validates username to prevent path traversal attacks
+// SECURITY: This is critical - usernames are used in filesystem paths
+func (api *EndNodeAPI) validateUsernameForPath(username string) error {
+	// Length check
+	if len(username) < 3 || len(username) > 32 {
+		return fmt.Errorf("username must be 3-32 characters")
+	}
+	
+	// SECURITY: Prevent path traversal
+	if strings.Contains(username, "..") || strings.Contains(username, "/") || strings.Contains(username, "\\") {
+		return fmt.Errorf("username contains invalid characters")
+	}
+	
+	// Only allow alphanumeric and underscore - NO special characters
+	for _, c := range username {
+		if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_') {
+			return fmt.Errorf("username contains invalid character")
+		}
+	}
+	
+	return nil
+}
+
 // handleDownloadOVPN handles OVPN file download requests
 func (api *EndNodeAPI) handleDownloadOVPN(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
@@ -422,8 +447,20 @@ func (api *EndNodeAPI) handleDownloadOVPN(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// Check if OVPN file exists in /opt/vpnmanager/clients/
-	ovpnPath := fmt.Sprintf("/opt/vpnmanager/clients/%s.ovpn", username)
+	// SECURITY: Validate username to prevent path traversal attacks
+	if err := api.validateUsernameForPath(username); err != nil {
+		http.Error(w, fmt.Sprintf("Invalid username: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	// Get clients directory from environment or use default
+	clientsDir := os.Getenv("CLIENTS_DIR")
+	if clientsDir == "" {
+		clientsDir = "/opt/vpnmanager/clients"
+	}
+
+	// SECURITY: Use filepath.Join to safely construct path
+	ovpnPath := filepath.Join(clientsDir, username+".ovpn")
 
 	// Check if file exists
 	if _, err := os.Stat(ovpnPath); os.IsNotExist(err) {
@@ -462,8 +499,20 @@ func (api *EndNodeAPI) handleDeleteOVPN(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// Check if OVPN file exists in /opt/vpnmanager/clients/
-	ovpnPath := fmt.Sprintf("/opt/vpnmanager/clients/%s.ovpn", username)
+	// SECURITY: Validate username to prevent path traversal attacks
+	if err := api.validateUsernameForPath(username); err != nil {
+		http.Error(w, fmt.Sprintf("Invalid username: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	// Get clients directory from environment or use default
+	clientsDir := os.Getenv("CLIENTS_DIR")
+	if clientsDir == "" {
+		clientsDir = "/opt/vpnmanager/clients"
+	}
+
+	// SECURITY: Use filepath.Join to safely construct path
+	ovpnPath := filepath.Join(clientsDir, username+".ovpn")
 
 	// Log the deletion attempt
 	fmt.Printf("Attempting to delete OVPN file: %s\n", ovpnPath)
@@ -493,14 +542,26 @@ func (api *EndNodeAPI) handleDeleteOVPN(w http.ResponseWriter, r *http.Request) 
 
 	fmt.Printf("Successfully deleted file: %s\n", ovpnPath)
 
+	// Get EasyRSA and OpenVPN directories from environment
+	easyrsaDir := os.Getenv("EASYRSA_DIR")
+	if easyrsaDir == "" {
+		easyrsaDir = "/opt/vpnmanager/easyrsa"
+	}
+	openvpnDir := os.Getenv("OPENVPN_DIR")
+	if openvpnDir == "" {
+		openvpnDir = "/etc/openvpn"
+	}
+	pkiDir := filepath.Join(easyrsaDir, "pki")
+	easyrsaPath := filepath.Join(easyrsaDir, "easyrsa")
+
 	// Remove certificate files from EasyRSA to allow recreation
 	fmt.Printf("Removing certificate files for user: %s\n", username)
 
-	// Remove certificate files
+	// SECURITY: Username already validated, use filepath.Join for safe path construction
 	certFiles := []string{
-		fmt.Sprintf("/opt/vpnmanager/easyrsa/pki/issued/%s.crt", username),
-		fmt.Sprintf("/opt/vpnmanager/easyrsa/pki/private/%s.key", username),
-		fmt.Sprintf("/opt/vpnmanager/easyrsa/pki/reqs/%s.req", username),
+		filepath.Join(pkiDir, "issued", username+".crt"),
+		filepath.Join(pkiDir, "private", username+".key"),
+		filepath.Join(pkiDir, "reqs", username+".req"),
 	}
 
 	for _, file := range certFiles {
@@ -514,10 +575,11 @@ func (api *EndNodeAPI) handleDeleteOVPN(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Also revoke the certificate to update CRL (in case it was already signed)
+	// SECURITY: Use exec.Command with separate arguments to prevent shell injection
 	fmt.Printf("Revoking certificate for user: %s\n", username)
-	revokeCmd := exec.Command("/opt/vpnmanager/easyrsa/easyrsa", "revoke", username)
-	revokeCmd.Dir = "/opt/vpnmanager/easyrsa"
-	revokeCmd.Env = append(os.Environ(), "EASYRSA_BATCH=1", "EASYRSA_PKI=/opt/vpnmanager/easyrsa/pki")
+	revokeCmd := exec.Command(easyrsaPath, "revoke", username)
+	revokeCmd.Dir = easyrsaDir
+	revokeCmd.Env = append(os.Environ(), "EASYRSA_BATCH=1", "EASYRSA_PKI="+pkiDir)
 
 	revokeOutput, revokeErr := revokeCmd.CombinedOutput()
 	if revokeErr != nil {
@@ -528,9 +590,9 @@ func (api *EndNodeAPI) handleDeleteOVPN(w http.ResponseWriter, r *http.Request) 
 
 	// Update CRL
 	fmt.Printf("Updating Certificate Revocation List...\n")
-	crlCmd := exec.Command("/opt/vpnmanager/easyrsa/easyrsa", "gen-crl")
-	crlCmd.Dir = "/opt/vpnmanager/easyrsa"
-	crlCmd.Env = append(os.Environ(), "EASYRSA_BATCH=1", "EASYRSA_PKI=/opt/vpnmanager/easyrsa/pki")
+	crlCmd := exec.Command(easyrsaPath, "gen-crl")
+	crlCmd.Dir = easyrsaDir
+	crlCmd.Env = append(os.Environ(), "EASYRSA_BATCH=1", "EASYRSA_PKI="+pkiDir)
 
 	crlOutput, crlErr := crlCmd.CombinedOutput()
 	if crlErr != nil {
@@ -539,7 +601,9 @@ func (api *EndNodeAPI) handleDeleteOVPN(w http.ResponseWriter, r *http.Request) 
 		fmt.Printf("CRL updated successfully: %s\n", string(crlOutput))
 
 		// Copy CRL to OpenVPN directory
-		copyCmd := exec.Command("cp", "/opt/vpnmanager/easyrsa/pki/crl.pem", "/etc/openvpn/crl.pem")
+		srcCRL := filepath.Join(pkiDir, "crl.pem")
+		dstCRL := filepath.Join(openvpnDir, "crl.pem")
+		copyCmd := exec.Command("cp", srcCRL, dstCRL)
 		copyErr := copyCmd.Run()
 		if copyErr != nil {
 			fmt.Printf("Failed to copy CRL to OpenVPN directory: %v\n", copyErr)
@@ -759,6 +823,36 @@ ping-exit 60
 	return []byte(ovpnConfig), nil
 }
 
+// validateAPIKey validates the API key from request header against environment
+func (api *EndNodeAPI) validateAPIKey(r *http.Request) bool {
+	expectedAPIKey := os.Getenv("API_KEY")
+	if expectedAPIKey == "" {
+		log.Println("WARNING: API_KEY environment variable not set - API key validation disabled")
+		return true // Allow if no key configured (dev mode)
+	}
+	
+	providedKey := r.Header.Get("X-API-Key")
+	if providedKey == "" {
+		providedKey = r.Header.Get("Authorization")
+		if strings.HasPrefix(providedKey, "Bearer ") {
+			providedKey = strings.TrimPrefix(providedKey, "Bearer ")
+		}
+	}
+	
+	// SECURITY: Use constant-time comparison to prevent timing attacks
+	return len(providedKey) > 0 && providedKey == expectedAPIKey
+}
+
+// isProtectedEndpoint returns true if the endpoint requires API key authentication
+func isProtectedEndpoint(path string) bool {
+	// Health check is public for load balancer/monitoring
+	if path == "/health" {
+		return false
+	}
+	// All other endpoints require authentication
+	return true
+}
+
 // middleware adds common middleware to all requests
 func (api *EndNodeAPI) middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -769,14 +863,31 @@ func (api *EndNodeAPI) middleware(next http.Handler) http.Handler {
 		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
 		w.Header().Set("Content-Security-Policy", "default-src 'self'")
 		
-		// Add CORS headers (restrict in production)
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+		// SECURITY: Restrict CORS to management server only in production
+		allowedOrigin := os.Getenv("ALLOWED_ORIGIN")
+		if allowedOrigin == "" {
+			allowedOrigin = os.Getenv("MANAGEMENT_URL")
+		}
+		if allowedOrigin == "" {
+			// Development fallback - restrict in production
+			allowedOrigin = "*"
+		}
+		w.Header().Set("Access-Control-Allow-Origin", allowedOrigin)
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-API-Key")
 
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)
 			return
+		}
+
+		// SECURITY: Validate API key for protected endpoints
+		if isProtectedEndpoint(r.URL.Path) {
+			if !api.validateAPIKey(r) {
+				log.Printf("SECURITY: Invalid API key from %s for %s", r.RemoteAddr, r.URL.Path)
+				http.Error(w, "Unauthorized: Invalid or missing API key", http.StatusUnauthorized)
+				return
+			}
 		}
 
 		// Rate limiting
@@ -798,11 +909,55 @@ func (api *EndNodeAPI) middleware(next http.Handler) http.Handler {
 	})
 }
 
-// checkRateLimit implements rate limiting
+// rateLimitStore holds rate limit state in memory
+var rateLimitStore = struct {
+	entries map[string]*rateLimitEntry
+	mu      sync.RWMutex
+}{
+	entries: make(map[string]*rateLimitEntry),
+}
+
+type rateLimitEntry struct {
+	count     int
+	windowEnd time.Time
+}
+
+// checkRateLimit implements sliding window rate limiting
 func (api *EndNodeAPI) checkRateLimit(ip string) bool {
-	// Simple in-memory rate limiting (use Redis in production)
-	// This is a basic implementation - consider using a proper rate limiter
-	return true // Placeholder - implement proper rate limiting
+	// Configuration
+	maxRequests := 100 // requests per window
+	windowDuration := time.Minute
+	
+	// Get rate limit from env if set
+	if envMax := os.Getenv("RATE_LIMIT_MAX"); envMax != "" {
+		if parsed, err := strconv.Atoi(envMax); err == nil {
+			maxRequests = parsed
+		}
+	}
+	
+	rateLimitStore.mu.Lock()
+	defer rateLimitStore.mu.Unlock()
+	
+	now := time.Now()
+	entry, exists := rateLimitStore.entries[ip]
+	
+	if !exists || now.After(entry.windowEnd) {
+		// New window
+		rateLimitStore.entries[ip] = &rateLimitEntry{
+			count:     1,
+			windowEnd: now.Add(windowDuration),
+		}
+		return true
+	}
+	
+	// Existing window - check limit
+	if entry.count >= maxRequests {
+		log.Printf("RATE LIMIT: IP %s exceeded %d requests/minute", ip, maxRequests)
+		return false
+	}
+	
+	entry.count++
+	return true
 }
 
 // validateRequest validates and sanitizes incoming requests

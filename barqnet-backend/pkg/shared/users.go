@@ -43,12 +43,13 @@ func (um *UserManager) GetUser(username string) (*User, error) {
 	
 	var user User
 	var expiresAt, lastAccess sql.NullTime
-	var checksum sql.NullString
+	var checksum, ovpnPath, protocol, serverID, createdBy sql.NullString
+	var port sql.NullInt32
 	
 	err := um.db.conn.QueryRow(query, username).Scan(
 		&user.ID, &user.Username, &user.CreatedAt, &expiresAt, &user.Active,
-		&user.OvpnPath, &user.Port, &user.Protocol, &lastAccess, &checksum,
-		&user.Synced, &user.ServerID, &user.CreatedBy,
+		&ovpnPath, &port, &protocol, &lastAccess, &checksum,
+		&user.Synced, &serverID, &createdBy,
 	)
 	
 	if err != nil {
@@ -63,6 +64,25 @@ func (um *UserManager) GetUser(username string) (*User, error) {
 	}
 	if checksum.Valid {
 		user.Checksum = checksum.String
+	}
+	if ovpnPath.Valid {
+		user.OvpnPath = ovpnPath.String
+	}
+	if protocol.Valid {
+		user.Protocol = protocol.String
+	} else {
+		user.Protocol = "udp" // Default
+	}
+	if port.Valid {
+		user.Port = int(port.Int32)
+	} else {
+		user.Port = 1194 // Default
+	}
+	if serverID.Valid {
+		user.ServerID = serverID.String
+	}
+	if createdBy.Valid {
+		user.CreatedBy = createdBy.String
 	}
 	
 	return &user, nil
@@ -86,12 +106,13 @@ func (um *UserManager) ListUsers() ([]User, error) {
 	for rows.Next() {
 		var user User
 		var expiresAt, lastAccess sql.NullTime
-		var checksum sql.NullString
+		var checksum, ovpnPath, protocol, serverID, createdBy sql.NullString
+		var port sql.NullInt32
 		
 		err := rows.Scan(
 			&user.ID, &user.Username, &user.CreatedAt, &expiresAt, &user.Active,
-			&user.OvpnPath, &user.Port, &user.Protocol, &lastAccess, &checksum,
-			&user.Synced, &user.ServerID, &user.CreatedBy,
+			&ovpnPath, &port, &protocol, &lastAccess, &checksum,
+			&user.Synced, &serverID, &createdBy,
 		)
 		if err != nil {
 			return nil, err
@@ -105,6 +126,25 @@ func (um *UserManager) ListUsers() ([]User, error) {
 		}
 		if checksum.Valid {
 			user.Checksum = checksum.String
+		}
+		if ovpnPath.Valid {
+			user.OvpnPath = ovpnPath.String
+		}
+		if protocol.Valid {
+			user.Protocol = protocol.String
+		} else {
+			user.Protocol = "udp" // Default
+		}
+		if port.Valid {
+			user.Port = int(port.Int32)
+		} else {
+			user.Port = 1194 // Default
+		}
+		if serverID.Valid {
+			user.ServerID = serverID.String
+		}
+		if createdBy.Valid {
+			user.CreatedBy = createdBy.String
 		}
 		
 		users = append(users, user)
@@ -114,14 +154,14 @@ func (um *UserManager) ListUsers() ([]User, error) {
 }
 
 // ListUsersByServer returns users for a specific server
-func (um *UserManager) ListUsersByServer(serverID string) ([]User, error) {
+func (um *UserManager) ListUsersByServer(targetServerID string) ([]User, error) {
 	query := `
 		SELECT id, username, created_at, expires_at, active, ovpn_path, port, protocol,
 		       last_access, checksum, synced, server_id, created_by
 		FROM users WHERE server_id = $1 ORDER BY created_at DESC
 	`
 	
-	rows, err := um.db.conn.Query(query, serverID)
+	rows, err := um.db.conn.Query(query, targetServerID)
 	if err != nil {
 		return nil, err
 	}
@@ -131,12 +171,13 @@ func (um *UserManager) ListUsersByServer(serverID string) ([]User, error) {
 	for rows.Next() {
 		var user User
 		var expiresAt, lastAccess sql.NullTime
-		var checksum sql.NullString
+		var checksum, ovpnPath, protocol, serverID, createdBy sql.NullString
+		var port sql.NullInt32
 		
 		err := rows.Scan(
 			&user.ID, &user.Username, &user.CreatedAt, &expiresAt, &user.Active,
-			&user.OvpnPath, &user.Port, &user.Protocol, &lastAccess, &checksum,
-			&user.Synced, &user.ServerID, &user.CreatedBy,
+			&ovpnPath, &port, &protocol, &lastAccess, &checksum,
+			&user.Synced, &serverID, &createdBy,
 		)
 		if err != nil {
 			return nil, err
@@ -150,6 +191,25 @@ func (um *UserManager) ListUsersByServer(serverID string) ([]User, error) {
 		}
 		if checksum.Valid {
 			user.Checksum = checksum.String
+		}
+		if ovpnPath.Valid {
+			user.OvpnPath = ovpnPath.String
+		}
+		if protocol.Valid {
+			user.Protocol = protocol.String
+		} else {
+			user.Protocol = "udp" // Default
+		}
+		if port.Valid {
+			user.Port = int(port.Int32)
+		} else {
+			user.Port = 1194 // Default
+		}
+		if serverID.Valid {
+			user.ServerID = serverID.String
+		}
+		if createdBy.Valid {
+			user.CreatedBy = createdBy.String
 		}
 		
 		users = append(users, user)

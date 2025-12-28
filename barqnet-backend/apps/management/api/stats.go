@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -373,15 +374,43 @@ func (api *ManagementAPI) validateJWTToken(r *http.Request) (string, error) {
 	return claims.Email, nil
 }
 
-// isAdmin checks if a user has admin privileges
-// This is a placeholder - implement actual admin check logic
-func (api *ManagementAPI) isAdmin(username string) bool {
-	// TODO: Implement actual admin check from database or configuration
-	adminUsers := []string{"admin", "root", "administrator"}
-	for _, admin := range adminUsers {
-		if username == admin {
-			return true
+// isAdmin checks if a user has admin privileges by querying the database
+func (api *ManagementAPI) isAdmin(email string) bool {
+	db := api.manager.GetDB()
+	conn := db.GetConnection()
+	
+	// Check role from auth_users table
+	query := `SELECT role FROM auth_users WHERE email = $1`
+	
+	var role string
+	err := conn.QueryRow(query, email).Scan(&role)
+	if err != nil {
+		// If user not found or error, check environment for superadmins
+		superAdmins := strings.Split(os.Getenv("SUPER_ADMINS"), ",")
+		for _, admin := range superAdmins {
+			if strings.TrimSpace(admin) == email {
+				return true
+			}
 		}
+		return false
 	}
-	return false
+	
+	// Admin or moderator roles have admin access
+	return role == "admin" || role == "superadmin"
+}
+
+// isAdminOrModerator checks if a user has admin or moderator privileges
+func (api *ManagementAPI) isAdminOrModerator(email string) bool {
+	db := api.manager.GetDB()
+	conn := db.GetConnection()
+	
+	query := `SELECT role FROM auth_users WHERE email = $1`
+	
+	var role string
+	err := conn.QueryRow(query, email).Scan(&role)
+	if err != nil {
+		return false
+	}
+	
+	return role == "admin" || role == "superadmin" || role == "moderator"
 }

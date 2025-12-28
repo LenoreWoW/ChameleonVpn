@@ -19,9 +19,13 @@ import (
 
 func main() {
 	var (
-		configFile = flag.String("config", "endnode-config.json", "Configuration file path")
-		serverID   = flag.String("server-id", "", "Server ID for this end-node")
-		help       = flag.Bool("help", false, "Show help")
+		configFile  = flag.String("config", "endnode-config.json", "Configuration file path")
+		serverID    = flag.String("server-id", "", "Server ID for this end-node")
+		port        = flag.Int("port", 8080, "API server port")
+		openvpnDir  = flag.String("openvpn-dir", "/etc/openvpn", "OpenVPN configuration directory")
+		clientsDir  = flag.String("clients-dir", "/opt/vpnmanager/clients", "Directory to store client OVPN files")
+		easyrsaDir  = flag.String("easyrsa-dir", "/opt/vpnmanager/easyrsa", "EasyRSA directory for certificate generation")
+		help        = flag.Bool("help", false, "Show help")
 	)
 	flag.Parse()
 
@@ -29,6 +33,12 @@ func main() {
 		showHelp()
 		return
 	}
+
+	// Store directories in environment for use by other components
+	os.Setenv("OPENVPN_DIR", *openvpnDir)
+	os.Setenv("CLIENTS_DIR", *clientsDir)
+	os.Setenv("EASYRSA_DIR", *easyrsaDir)
+	os.Setenv("ENDNODE_PORT", fmt.Sprintf("%d", *port))
 
 	// Load .env file if it exists
 	log.Println("========================================")
@@ -74,14 +84,15 @@ func main() {
 	
 	// Start the API server in a goroutine
 	go func() {
-		if err := apiServer.Start(8080); err != nil {
+		if err := apiServer.Start(*port); err != nil {
 			log.Fatalf("Failed to start API server: %v", err)
 		}
 	}()
 
 	// Wait for the API server to fully start and be ready
 	log.Printf("Waiting for API server to fully initialize...")
-	if err := waitForAPIServer("http://localhost:8080/health", 10*time.Second); err != nil {
+	healthURL := fmt.Sprintf("http://localhost:%d/health", *port)
+	if err := waitForAPIServer(healthURL, 10*time.Second); err != nil {
 		log.Printf("Warning: API server health check failed: %v", err)
 		log.Printf("Proceeding with registration anyway...")
 	} else {
@@ -109,7 +120,10 @@ func main() {
 	go endNodeManager.StartSyncRoutine()
 
 	log.Printf("End-node server started with ID: %s", *serverID)
-	log.Printf("API server running on port 8080")
+	log.Printf("API server running on port %d", *port)
+	log.Printf("OpenVPN directory: %s", *openvpnDir)
+	log.Printf("Clients directory: %s", *clientsDir)
+	log.Printf("EasyRSA directory: %s", *easyrsaDir)
 	log.Printf("Management URL: %s", config.ManagementURL)
 
 	// Wait for shutdown signal
@@ -175,13 +189,21 @@ func showHelp() {
 	fmt.Println("==========================")
 	fmt.Println("")
 	fmt.Println("Usage:")
-	fmt.Println("  vpnmanager-endnode -server-id <server-id> [options]")
+	fmt.Println("  endnode -server-id <server-id> [options]")
 	fmt.Println("")
 	fmt.Println("Options:")
 	fmt.Println("  -config string")
 	fmt.Println("        Configuration file path (default: endnode-config.json)")
 	fmt.Println("  -server-id string")
 	fmt.Println("        Server ID for this end-node (required)")
+	fmt.Println("  -port int")
+	fmt.Println("        API server port (default: 8080)")
+	fmt.Println("  -openvpn-dir string")
+	fmt.Println("        OpenVPN configuration directory (default: /etc/openvpn)")
+	fmt.Println("  -clients-dir string")
+	fmt.Println("        Directory to store client OVPN files (default: /opt/vpnmanager/clients)")
+	fmt.Println("  -easyrsa-dir string")
+	fmt.Println("        EasyRSA directory for certificate generation (default: /opt/vpnmanager/easyrsa)")
 	fmt.Println("  -help")
 	fmt.Println("        Show this help message")
 	fmt.Println("")
@@ -189,13 +211,12 @@ func showHelp() {
 	fmt.Println("  ENDNODE_SERVER_ID    Server ID for this end-node")
 	fmt.Println("  MANAGEMENT_URL       Management server URL")
 	fmt.Println("  API_KEY              API key for authentication")
-	fmt.Println("  DB_HOST              Database host (default: localhost)")
-	fmt.Println("  DB_USER              Database user (default: vpnmanager)")
-	fmt.Println("  DB_PASSWORD          Database password")
-	fmt.Println("  DB_NAME              Database name (default: vpnmanager)")
-	fmt.Println("  DB_SSLMODE           Database SSL mode (default: disable)")
+	fmt.Println("  OPENVPN_DIR          OpenVPN configuration directory")
+	fmt.Println("  CLIENTS_DIR          Directory to store client OVPN files")
+	fmt.Println("  EASYRSA_DIR          EasyRSA directory for certificate generation")
 	fmt.Println("")
 	fmt.Println("Examples:")
-	fmt.Println("  vpnmanager-endnode -server-id server-1")
-	fmt.Println("  ENDNODE_SERVER_ID=server-1 vpnmanager-endnode")
+	fmt.Println("  endnode -server-id server-1 -port 8080")
+	fmt.Println("  endnode -server-id server-1 -openvpn-dir /etc/openvpn -clients-dir /opt/vpnmanager/clients")
+	fmt.Println("  ENDNODE_SERVER_ID=server-1 MANAGEMENT_URL=http://management:8080 endnode")
 }

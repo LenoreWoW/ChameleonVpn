@@ -1,20 +1,66 @@
 # BarqNet/ChameleonVPN - Project Status Report
 ## For Hamad - Read This First!
 
-**Date:** December 25, 2025  
-**Status:** All platforms building and running ✅
+**Date:** December 28, 2025  
+**Status:** All platforms building and running ✅  
+**Latest:** Backend security audit completed, critical vulnerabilities fixed 🔒
+
+---
+
+## 🔒 SECURITY UPDATE (December 28, 2025)
+
+A full security audit of the backend and endnode was completed. Critical vulnerabilities were discovered and fixed:
+
+### Fixed Critical Issues:
+1. **Command Injection in EasyRSA** - Malicious usernames could execute shell commands
+2. **Path Traversal in OVPN Download** - Attackers could read arbitrary files
+3. **Missing API Authentication** - Endnode API had no authentication
+4. **Unrestricted CORS** - Any origin could make requests
+
+### Fixed Bugs:
+1. **Missing CLI flags** - `--port` and `--openvpn-dir` now work
+2. **NULL column scan error** - User sync now handles NULL database values
+
+### New Features:
+1. **Rate limiting** on endnode API (100 req/min default)
+2. **Admin role system** with database-backed roles
+3. **API key authentication** for management-endnode communication
+
+**See `AUDIT_FIX_PLAN.md` for complete details.**
 
 ---
 
 ## 🚀 Quick Start
 
-### 1. Start the Backend
+### 1. Start the Backend (Management Server)
 ```bash
 cd barqnet-backend/apps/management
+
+# Required environment variables
 export MANAGEMENT_PORT=8085
+export JWT_SECRET=your-jwt-secret-at-least-32-characters
+export API_KEY=your-secure-api-key-for-endnode-communication
+
 go run main.go
 ```
 Backend runs on: `http://127.0.0.1:8085`
+
+### 1b. Start the Endnode (VPN Server)
+```bash
+cd barqnet-backend/apps/endnode
+
+# Build first
+go build -o endnode .
+
+# Run with required flags
+./endnode --server-id server-1 --port 8080 --openvpn-dir /etc/openvpn
+
+# Or with environment variables
+export ENDNODE_SERVER_ID=server-1
+export MANAGEMENT_URL=http://127.0.0.1:8085
+export API_KEY=your-secure-api-key-for-endnode-communication
+./endnode
+```
 
 ### 2. Test Backend Health
 ```bash
@@ -76,7 +122,16 @@ The auth flow works end-to-end:
 
 ## 📁 Key Files Modified
 
-### Backend
+### Backend (Dec 28 Security Update)
+- `barqnet-backend/apps/endnode/main.go` - Added CLI flags (--port, --openvpn-dir, etc.)
+- `barqnet-backend/apps/endnode/api/api.go` - Added API key auth, rate limiting, path validation
+- `barqnet-backend/apps/endnode/manager/manager.go` - Fixed command injection vulnerabilities
+- `barqnet-backend/apps/management/manager/manager.go` - Added API key headers to endnode requests
+- `barqnet-backend/apps/management/api/stats.go` - Implemented database-backed admin roles
+- `barqnet-backend/pkg/shared/users.go` - Fixed NULL column handling
+- `barqnet-backend/migrations/009_add_user_roles.sql` - New migration for user roles
+
+### Backend (Previous)
 - `barqnet-backend/apps/management/api/api.go` - Added `/v1/auth/verify-otp` endpoint
 - `barqnet-backend/apps/management/api/auth.go` - Added `HandleVerifyOTP` function
 - `barqnet-backend/apps/management/api/config.go` - OVPN template fallback
@@ -446,8 +501,16 @@ EMAIL_FROM=noreply@barqnet.com
 ### Step 7: Enable Rate Limiting
 
 **Priority:** MEDIUM  
-**Estimated Time:** 30 minutes
+**Estimated Time:** 30 minutes  
+**Status:** ✅ Implemented on endnode (in-memory), Redis optional for management
 
+#### Endnode Rate Limiting (Now Built-in)
+The endnode now has built-in rate limiting (100 requests/minute per IP). Configure via:
+```bash
+export RATE_LIMIT_MAX=100  # Optional, defaults to 100
+```
+
+#### Management Server (Redis-based)
 1. **Ensure Redis is running:**
    ```bash
    # Install Redis
@@ -500,14 +563,29 @@ import WireGuardKit
 
 Before going live:
 
+#### Security (CRITICAL)
+- [ ] Set strong `API_KEY` (32+ characters, random) - shared between management & endnodes
+- [ ] Set strong `JWT_SECRET` (32+ characters, random)
+- [ ] Set strong `DB_PASSWORD`
+- [ ] Set `REDIS_PASSWORD` if using Redis
+- [ ] Run database migration: `009_add_user_roles.sql`
+- [ ] Create admin user with role='admin' in auth_users table
+
+#### Infrastructure
 - [ ] VPN servers deployed and tested
 - [ ] HTTPS enabled with valid SSL certificates
+- [ ] Configure `ALLOWED_ORIGIN` to management server URL on endnodes
+- [ ] Configure firewall to restrict endnode API access to management server only
+
+#### Features
 - [ ] Certificate pinning enabled on all platforms
 - [ ] Production API URLs configured
 - [ ] Email service configured (Resend/SendGrid)
 - [ ] Rate limiting enabled
 - [ ] Database backups configured
 - [ ] Monitoring/logging set up (e.g., Sentry)
+
+#### App Store
 - [ ] App Store / Play Store accounts ready
 - [ ] Privacy policy and terms of service
 - [ ] GDPR compliance (if serving EU users)

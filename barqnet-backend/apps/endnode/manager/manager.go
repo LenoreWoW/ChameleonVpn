@@ -534,6 +534,37 @@ keepalive 10 60
 	return []byte(ovpnConfig), nil
 }
 
+// validateUsernameForCommand validates username to prevent command injection
+// SECURITY: This is critical - usernames are used in filesystem paths and commands
+func validateUsernameForCommand(username string) error {
+	// Length check
+	if len(username) < 3 || len(username) > 32 {
+		return fmt.Errorf("username must be 3-32 characters")
+	}
+	
+	// Only allow alphanumeric and underscore - NO special characters
+	for _, c := range username {
+		if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_') {
+			return fmt.Errorf("username contains invalid character: %c", c)
+		}
+	}
+	
+	// Prevent path traversal
+	if strings.Contains(username, "..") || strings.Contains(username, "/") || strings.Contains(username, "\\") {
+		return fmt.Errorf("username contains path traversal characters")
+	}
+	
+	// Reserved names that could cause issues
+	reserved := []string{"admin", "root", "system", "vpnmanager", "postgres", "nobody", "ca", "server", "ta", "dh"}
+	for _, r := range reserved {
+		if strings.EqualFold(username, r) {
+			return fmt.Errorf("username '%s' is reserved", username)
+		}
+	}
+	
+	return nil
+}
+
 // generateCertificates generates certificates using EasyRSA
 func (enm *EndNodeManager) generateCertificates(username string) (struct {
 	CA   string
@@ -549,9 +580,17 @@ func (enm *EndNodeManager) generateCertificates(username string) (struct {
 		TA   string
 	}{}
 
-	// EasyRSA directory
-	easyrsaDir := "/opt/vpnmanager/easyrsa"
-	pkiDir := fmt.Sprintf("%s/pki", easyrsaDir)
+	// SECURITY: Validate username before using in commands/paths
+	if err := validateUsernameForCommand(username); err != nil {
+		return certData, fmt.Errorf("invalid username for certificate generation: %v", err)
+	}
+
+	// Get EasyRSA directory from environment or use default
+	easyrsaDir := os.Getenv("EASYRSA_DIR")
+	if easyrsaDir == "" {
+		easyrsaDir = "/opt/vpnmanager/easyrsa"
+	}
+	pkiDir := filepath.Join(easyrsaDir, "pki")
 
 	// Check if EasyRSA is available
 	if _, err := os.Stat(easyrsaDir); os.IsNotExist(err) {
@@ -567,11 +606,12 @@ func (enm *EndNodeManager) generateCertificates(username string) (struct {
 	log.Printf("PKI directory: %s", pkiDir)
 
 	// Generate client certificate
+	// SECURITY: Use exec.Command with separate arguments to prevent shell injection
 	log.Printf("Generating certificate request for user: %s", username)
-	log.Printf("Working directory: %s", easyrsaDir)
-	log.Printf("Command: cd %s && sudo -E ./easyrsa gen-req %s nopass", easyrsaDir, username)
-
-	cmd := exec.Command("bash", "-c", fmt.Sprintf("cd %s && sudo -E ./easyrsa gen-req %s nopass", easyrsaDir, username))
+	easyrsaPath := filepath.Join(easyrsaDir, "easyrsa")
+	
+	cmd := exec.Command(easyrsaPath, "gen-req", username, "nopass")
+	cmd.Dir = easyrsaDir
 	cmd.Env = append(os.Environ(), "EASYRSA_BATCH=1", "EASYRSA_PKI="+pkiDir)
 
 	output, err := cmd.CombinedOutput()
@@ -584,10 +624,11 @@ func (enm *EndNodeManager) generateCertificates(username string) (struct {
 	log.Printf("Command output: %s", string(output))
 
 	// Sign client certificate
+	// SECURITY: Use exec.Command with separate arguments to prevent shell injection
 	log.Printf("Signing certificate for user: %s", username)
-	log.Printf("Command: cd %s && sudo -E ./easyrsa sign-req client %s", easyrsaDir, username)
-
-	cmd = exec.Command("bash", "-c", fmt.Sprintf("cd %s && sudo -E ./easyrsa sign-req client %s", easyrsaDir, username))
+	
+	cmd = exec.Command(easyrsaPath, "sign-req", "client", username)
+	cmd.Dir = easyrsaDir
 	cmd.Env = append(os.Environ(), "EASYRSA_BATCH=1", "EASYRSA_PKI="+pkiDir)
 
 	output, err = cmd.CombinedOutput()
@@ -721,19 +762,23 @@ func getLocalIP() string {
 func (enm *EndNodeManager) revokeUserCertificate(username string) error {
 	log.Printf("Revoking certificate for user: %s", username)
 
-	// Change to EasyRSA directory
-	easyrsaDir := "/opt/vpnmanager/easyrsa"
-	if err := os.Chdir(easyrsaDir); err != nil {
-		return fmt.Errorf("failed to change to EasyRSA directory: %v", err)
+	// SECURITY: Validate username before using in commands
+	if err := validateUsernameForCommand(username); err != nil {
+		return fmt.Errorf("invalid username for certificate revocation: %v", err)
 	}
 
-	// Set environment variables for EasyRSA
-	os.Setenv("EASYRSA_PKI", "/opt/vpnmanager/easyrsa/pki")
+	// Get EasyRSA directory from environment or use default
+	easyrsaDir := os.Getenv("EASYRSA_DIR")
+	if easyrsaDir == "" {
+		easyrsaDir = "/opt/vpnmanager/easyrsa"
+	}
+	pkiDir := filepath.Join(easyrsaDir, "pki")
+	easyrsaPath := filepath.Join(easyrsaDir, "easyrsa")
 
-	// Revoke the certificate using EasyRSA
-	cmd := exec.Command("sudo", "-E", "./easyrsa", "revoke", username)
-	cmd.Env = os.Environ()
+	// SECURITY: Use exec.Command with separate arguments to prevent shell injection
+	cmd := exec.Command(easyrsaPath, "revoke", username)
 	cmd.Dir = easyrsaDir
+	cmd.Env = append(os.Environ(), "EASYRSA_BATCH=1", "EASYRSA_PKI="+pkiDir)
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -782,19 +827,18 @@ func (enm *EndNodeManager) disconnectUserSessions(username string) error {
 func (enm *EndNodeManager) updateCRLAndRestartServer() error {
 	log.Printf("Updating Certificate Revocation List and restarting OpenVPN server")
 
-	// Change to EasyRSA directory
-	easyrsaDir := "/opt/vpnmanager/easyrsa"
-	if err := os.Chdir(easyrsaDir); err != nil {
-		return fmt.Errorf("failed to change to EasyRSA directory: %v", err)
+	// Get EasyRSA directory from environment or use default
+	easyrsaDir := os.Getenv("EASYRSA_DIR")
+	if easyrsaDir == "" {
+		easyrsaDir = "/opt/vpnmanager/easyrsa"
 	}
+	pkiDir := filepath.Join(easyrsaDir, "pki")
+	easyrsaPath := filepath.Join(easyrsaDir, "easyrsa")
 
-	// Set environment variables for EasyRSA
-	os.Setenv("EASYRSA_PKI", "/opt/vpnmanager/easyrsa/pki")
-
-	// Generate updated CRL
-	cmd := exec.Command("sudo", "-E", "./easyrsa", "gen-crl")
-	cmd.Env = os.Environ()
+	// SECURITY: Use exec.Command with separate arguments to prevent shell injection
+	cmd := exec.Command(easyrsaPath, "gen-crl")
 	cmd.Dir = easyrsaDir
+	cmd.Env = append(os.Environ(), "EASYRSA_BATCH=1", "EASYRSA_PKI="+pkiDir)
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
