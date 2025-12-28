@@ -32,6 +32,27 @@ A full security audit of the backend and endnode was completed. Critical vulnera
 
 ## 🚀 Quick Start
 
+### Option A: One-Shot Script (Recommended)
+
+Run the backend and iOS app with a single command:
+
+```bash
+./run-backend-and-ios.sh
+```
+
+This script will:
+1. ✅ Check all prerequisites (Go, Xcode)
+2. ✅ Kill any existing backend on port 8085
+3. ✅ Start the backend server
+4. ✅ Wait until the backend is healthy
+5. ✅ Build and launch the iOS app in Simulator
+
+Press `Ctrl+C` to stop everything when done.
+
+---
+
+### Option B: Manual Setup
+
 ### 1. Start the Backend (Management Server)
 ```bash
 cd barqnet-backend/apps/management
