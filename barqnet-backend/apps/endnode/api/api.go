@@ -1,6 +1,7 @@
 package api
 
 import (
+	"crypto/subtle"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -839,8 +840,12 @@ func (api *EndNodeAPI) validateAPIKey(r *http.Request) bool {
 		}
 	}
 	
+	if len(providedKey) == 0 {
+		return false
+	}
+	
 	// SECURITY: Use constant-time comparison to prevent timing attacks
-	return len(providedKey) > 0 && providedKey == expectedAPIKey
+	return subtle.ConstantTimeCompare([]byte(providedKey), []byte(expectedAPIKey)) == 1
 }
 
 // isProtectedEndpoint returns true if the endpoint requires API key authentication
