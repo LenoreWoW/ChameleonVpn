@@ -4,17 +4,25 @@
 
 -- ==================== MIGRATION UP ====================
 
--- Add role column to auth_users table
--- Valid roles: 'user' (default), 'admin', 'moderator'
-ALTER TABLE auth_users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'user';
+-- Add role column to users table
+-- Valid roles: 'user' (default), 'admin', 'moderator', 'superadmin'
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'users' AND column_name = 'role'
+    ) THEN
+        ALTER TABLE users ADD COLUMN role VARCHAR(20) DEFAULT 'user';
+    END IF;
+END $$;
 
 -- Add index for faster role lookups
-CREATE INDEX IF NOT EXISTS idx_auth_users_role ON auth_users(role);
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
 
 -- Create admin_audit table for tracking admin actions
 CREATE TABLE IF NOT EXISTS admin_audit (
     id SERIAL PRIMARY KEY,
-    admin_user_id UUID REFERENCES auth_users(id),
+    admin_user_id UUID,
     admin_email VARCHAR(255) NOT NULL,
     action VARCHAR(100) NOT NULL,
     target_type VARCHAR(50), -- 'user', 'server', 'config', etc.
@@ -25,11 +33,11 @@ CREATE TABLE IF NOT EXISTS admin_audit (
 );
 
 -- Index for admin audit queries
-CREATE INDEX IF NOT EXISTS idx_admin_audit_admin_user_id ON admin_audit(admin_user_id);
+CREATE INDEX IF NOT EXISTS idx_admin_audit_admin_email ON admin_audit(admin_email);
 CREATE INDEX IF NOT EXISTS idx_admin_audit_created_at ON admin_audit(created_at);
 
 -- ==================== MIGRATION DOWN ====================
 -- To rollback:
--- ALTER TABLE auth_users DROP COLUMN role;
+-- ALTER TABLE users DROP COLUMN role;
 -- DROP TABLE admin_audit;
 

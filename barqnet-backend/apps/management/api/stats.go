@@ -379,8 +379,8 @@ func (api *ManagementAPI) isAdmin(email string) bool {
 	db := api.manager.GetDB()
 	conn := db.GetConnection()
 	
-	// Check role from auth_users table
-	query := `SELECT role FROM auth_users WHERE email = $1`
+	// Check role from users table
+	query := `SELECT COALESCE(role, 'user') FROM users WHERE email = $1`
 	
 	var role string
 	err := conn.QueryRow(query, email).Scan(&role)
@@ -395,7 +395,7 @@ func (api *ManagementAPI) isAdmin(email string) bool {
 		return false
 	}
 	
-	// Admin or moderator roles have admin access
+	// Admin or superadmin roles have admin access
 	return role == "admin" || role == "superadmin"
 }
 
@@ -404,7 +404,7 @@ func (api *ManagementAPI) isAdminOrModerator(email string) bool {
 	db := api.manager.GetDB()
 	conn := db.GetConnection()
 	
-	query := `SELECT role FROM auth_users WHERE email = $1`
+	query := `SELECT COALESCE(role, 'user') FROM users WHERE email = $1`
 	
 	var role string
 	err := conn.QueryRow(query, email).Scan(&role)
