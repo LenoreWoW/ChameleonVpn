@@ -73,6 +73,7 @@ type EndNodeConfig struct {
 	ServerID      string `json:"server_id"`
 	ManagementURL string `json:"management_url"`
 	APIKey        string `json:"api_key"`
+	Port          int    `json:"port"` // API server port for this end-node
 	Database      DatabaseConfig `json:"database"`
 }
 

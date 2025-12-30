@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -142,10 +143,20 @@ func main() {
 func loadConfig(configFile string) (*shared.EndNodeConfig, error) {
 	// For now, return a default config
 	// In production, this would load from JSON file
+	
+	// Get port from environment, default to 8080
+	port := 8080
+	if portStr := os.Getenv("ENDNODE_PORT"); portStr != "" {
+		if p, err := strconv.Atoi(portStr); err == nil && p > 0 {
+			port = p
+		}
+	}
+	
 	return &shared.EndNodeConfig{
 		ServerID:      os.Getenv("ENDNODE_SERVER_ID"),
 		ManagementURL: os.Getenv("MANAGEMENT_URL"),
 		APIKey:        os.Getenv("API_KEY"),
+		Port:          port,
 		Database: shared.DatabaseConfig{
 			Host:     getEnv("DB_HOST", "localhost"),
 			Port:     5432,

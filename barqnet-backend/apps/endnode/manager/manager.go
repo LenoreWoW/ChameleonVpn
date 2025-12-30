@@ -77,7 +77,7 @@ func (enm *EndNodeManager) attemptRegistration() error {
 	registrationData := map[string]interface{}{
 		"server_id": enm.serverID,
 		"host":      localIP,
-		"port":      8080,
+		"port":      enm.GetServerPort(),
 		"status":    "online",
 	}
 
@@ -741,7 +741,10 @@ func (enm *EndNodeManager) GetServerHost() string {
 
 // GetServerPort returns the server port
 func (enm *EndNodeManager) GetServerPort() int {
-	return 8080
+	if enm.config != nil && enm.config.Port > 0 {
+		return enm.config.Port
+	}
+	return 8080 // Default fallback
 }
 
 // getLocalIP gets the local IP address
