@@ -1,9 +1,72 @@
 # BarqNet/ChameleonVPN - Project Status Report
 ## For Hamad - Read This First!
 
-**Date:** December 28, 2025  
-**Status:** All platforms building and running ✅  
+**Date:** December 28, 2025
+**Status:** All platforms building and running ✅
 **Latest:** Backend security audit completed, critical vulnerabilities fixed 🔒
+
+---
+
+## ⚠️ CRITICAL: PORT CONFIGURATION FIX (December 31, 2025)
+
+**WE DISCOVERED AND FIXED A MAJOR PORT MISMATCH BUG!**
+
+### The Problem:
+- **Management server runs on port 8085** (correct)
+- **Endnode was trying to connect to port 8080** (WRONG!)
+- This caused: `connection refused` errors when endnode tried to register
+
+### What Was Fixed:
+1. ✅ Updated `.env.example` with correct ports
+2. ✅ Created `.env` file with proper configuration
+3. ✅ Changed endnode default port from 8080 → 8081 (to avoid conflicts)
+4. ✅ Hardcoded management server IP to 192.168.10.217:8085 for testing
+5. ✅ Updated all code files with correct defaults
+
+### **ACTION REQUIRED - VERIFY YOUR PORTS:**
+
+**Before running the endnode, check your configuration:**
+
+```bash
+# 1. Check the endnode .env file exists:
+cat barqnet-backend/apps/endnode/.env
+
+# Should show:
+# MANAGEMENT_URL=http://192.168.10.217:8085  ← PORT 8085 FOR MANAGEMENT!
+# PORT=8081                                   ← PORT 8081 FOR ENDNODE API!
+# API_KEY=677cd71a212c6208393ec73e04162c2e75991fa8c3faff1a2a294d59f05df95c
+```
+
+**If the .env file is missing or has wrong ports, the endnode WILL FAIL to connect!**
+
+### Correct Port Configuration:
+```
+┌─────────────────────────────────────────────────────────┐
+│  MANAGEMENT SERVER                                      │
+│  - Runs on: 0.0.0.0:8085                               │
+│  - Endnodes connect to: http://SERVER_IP:8085          │
+│  - Example: http://192.168.10.217:8085                 │
+└─────────────────────────────────────────────────────────┘
+                          ▲
+                          │
+                          │ Registration & API calls
+                          │
+┌─────────────────────────────────────────────────────────┐
+│  ENDNODE (VPN SERVER)                                   │
+│  - Runs on: 0.0.0.0:8081                               │
+│  - Local API only (not for clients)                     │
+│  - Connects to management on port 8085                  │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Files Modified:**
+- `barqnet-backend/apps/endnode/.env` (CREATED - most important!)
+- `barqnet-backend/apps/endnode/.env.example` (8080→8085, 8080→8081)
+- `barqnet-backend/apps/endnode/main.go` (default port 8080→8081)
+- `barqnet-backend/apps/endnode/manager/manager.go` (fallback 8080→8081)
+- `scripts/run-endnode.sh` (default port 8080→8081)
+
+**If you get "connection refused" errors, CHECK THE PORTS FIRST!**
 
 ---
 
@@ -44,7 +107,7 @@ A full security audit of the backend and endnode was completed. Critical vulnera
 │   │   (Management)   │◄───────►│    (Endnode)     │              │
 │   │                  │   API   │                  │              │
 │   │ run-management.sh│         │  run-endnode.sh  │              │
-│   │    Port 8085     │         │    Port 8080     │              │
+│   │    Port 8085     │         │    Port 8081     │              │
 │   └────────┬─────────┘         └──────────────────┘              │
 │            │                                                      │
 │            │ HTTPS                                                │
@@ -95,8 +158,8 @@ Deploy and run on your VPN server:
 
 This script will:
 - ✅ Build the Go endnode
-- ✅ Register with management server
-- ✅ Start VPN services on port 8080
+- ✅ Register with management server at port 8085
+- ✅ Start endnode API on port 8081
 
 **Required:**
 ```bash
@@ -174,12 +237,13 @@ cd barqnet-backend/apps/endnode
 go build -o endnode .
 
 # Run with required flags
-./endnode --server-id server-1 --port 8080 --openvpn-dir /etc/openvpn
+./endnode --server-id server-1 --port 8081 --openvpn-dir /etc/openvpn
 
-# Or with environment variables
+# Or with environment variables (RECOMMENDED - uses .env file)
 export ENDNODE_SERVER_ID=server-1
-export MANAGEMENT_URL=http://127.0.0.1:8085
+export MANAGEMENT_URL=http://127.0.0.1:8085  # ← PORT 8085 for management!
 export API_KEY=your-secure-api-key-for-endnode-communication
+export PORT=8081  # ← PORT 8081 for endnode API!
 ./endnode
 ```
 
@@ -389,7 +453,7 @@ export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
    # Deploy the barqnet end-node service
    cd barqnet-backend/apps/endnode
    go build -o endnode
-   ./endnode --port 8080 --openvpn-dir /etc/openvpn
+   ./endnode --port 8081 --openvpn-dir /etc/openvpn
    ```
 
 5. **Register server in database:**

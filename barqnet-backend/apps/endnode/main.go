@@ -22,7 +22,7 @@ func main() {
 	var (
 		configFile  = flag.String("config", "endnode-config.json", "Configuration file path")
 		serverID    = flag.String("server-id", "", "Server ID for this end-node")
-		port        = flag.Int("port", 8080, "API server port")
+		port        = flag.Int("port", 8081, "API server port")
 		openvpnDir  = flag.String("openvpn-dir", "/etc/openvpn", "OpenVPN configuration directory")
 		clientsDir  = flag.String("clients-dir", "/opt/vpnmanager/clients", "Directory to store client OVPN files")
 		easyrsaDir  = flag.String("easyrsa-dir", "/opt/vpnmanager/easyrsa", "EasyRSA directory for certificate generation")
@@ -143,9 +143,9 @@ func main() {
 func loadConfig(configFile string) (*shared.EndNodeConfig, error) {
 	// For now, return a default config
 	// In production, this would load from JSON file
-	
-	// Get port from environment, default to 8080
-	port := 8080
+
+	// Get port from environment, default to 8081
+	port := 8081
 	if portStr := os.Getenv("ENDNODE_PORT"); portStr != "" {
 		if p, err := strconv.Atoi(portStr); err == nil && p > 0 {
 			port = p
@@ -208,7 +208,7 @@ func showHelp() {
 	fmt.Println("  -server-id string")
 	fmt.Println("        Server ID for this end-node (required)")
 	fmt.Println("  -port int")
-	fmt.Println("        API server port (default: 8080)")
+	fmt.Println("        API server port (default: 8081)")
 	fmt.Println("  -openvpn-dir string")
 	fmt.Println("        OpenVPN configuration directory (default: /etc/openvpn)")
 	fmt.Println("  -clients-dir string")
@@ -227,7 +227,7 @@ func showHelp() {
 	fmt.Println("  EASYRSA_DIR          EasyRSA directory for certificate generation")
 	fmt.Println("")
 	fmt.Println("Examples:")
-	fmt.Println("  endnode -server-id server-1 -port 8080")
+	fmt.Println("  endnode -server-id server-1 -port 8081")
 	fmt.Println("  endnode -server-id server-1 -openvpn-dir /etc/openvpn -clients-dir /opt/vpnmanager/clients")
-	fmt.Println("  ENDNODE_SERVER_ID=server-1 MANAGEMENT_URL=http://management:8080 endnode")
+	fmt.Println("  ENDNODE_SERVER_ID=server-1 MANAGEMENT_URL=http://management:8085 endnode")
 }

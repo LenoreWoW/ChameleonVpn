@@ -25,7 +25,7 @@ NC='\033[0m' # No Color
 # Default configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ENDNODE_DIR="${SCRIPT_DIR}/../barqnet-backend/apps/endnode"
-ENDNODE_PORT="${ENDNODE_PORT:-8080}"
+ENDNODE_PORT="${ENDNODE_PORT:-8081}"
 OPENVPN_DIR="${OPENVPN_DIR:-/etc/openvpn}"
 CLIENTS_DIR="${CLIENTS_DIR:-/opt/vpnmanager/clients}"
 EASYRSA_DIR="${EASYRSA_DIR:-/opt/vpnmanager/easyrsa}"
@@ -64,7 +64,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --server-id <id>       Unique server identifier (e.g., server-1)"
             echo ""
             echo "Optional:"
-            echo "  --port <port>          API port (default: 8080)"
+            echo "  --port <port>          API port (default: 8081)"
             echo "  --management-url <url> Management server URL"
             echo "  --api-key <key>        API key for authentication"
             echo "  --openvpn-dir <dir>    OpenVPN config directory (default: /etc/openvpn)"

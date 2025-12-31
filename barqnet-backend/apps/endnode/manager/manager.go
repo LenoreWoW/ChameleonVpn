@@ -744,7 +744,7 @@ func (enm *EndNodeManager) GetServerPort() int {
 	if enm.config != nil && enm.config.Port > 0 {
 		return enm.config.Port
 	}
-	return 8080 // Default fallback
+	return 8081 // Default fallback
 }
 
 // getLocalIP gets the local IP address
