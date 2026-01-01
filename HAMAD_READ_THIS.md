@@ -1,10 +1,11 @@
 # BarqNet/ChameleonVPN - Project Status Report
 ## For Hamad - Read This First!
 
-**Date:** December 31, 2025
+**Date:** January 1, 2026
 **Status:** All platforms building and running ✅
 **Backend Status:** ✅ **COMPLETE AND WORKING** - Do not modify
-**Latest:** Port configuration bug fixed, endnode tested and verified working 🎉
+**iOS Status:** ✅ **FIXED** - Bundle ID and simulator issues resolved
+**Latest:** iOS app now installs and launches successfully! 🎉
 
 ---
 
@@ -68,6 +69,83 @@ cat barqnet-backend/apps/endnode/.env
 - `scripts/run-endnode.sh` (default port 8080→8081)
 
 **If you get "connection refused" errors, CHECK THE PORTS FIRST!**
+
+---
+
+## 📱 iOS APP FIXES (January 1, 2026)
+
+**FIXED TWO CRITICAL iOS ISSUES PREVENTING APP INSTALLATION!**
+
+### The Problems:
+1. **Bundle ID Mismatch** - Script had wrong bundle identifier
+2. **Simulator Destination Error** - xcodebuild couldn't find simulator
+3. **Build Cache Issues** - Stale builds causing "Missing bundle ID" error
+
+### What Was Fixed:
+
+#### Fix #1: Bundle ID Correction
+- ❌ Script had: `com.barqnet.workvpn`
+- ✅ Correct is: `com.workvpn.ios`
+- Now reads bundle ID from built app instead of hardcoding
+
+#### Fix #2: Simulator Detection
+- ✅ Improved UDID extraction with proper UUID regex
+- ✅ Added iPhone 16 simulator support
+- ✅ Check if simulator already booted before booting
+- ✅ Wait up to 30 seconds for simulator to fully boot
+- ✅ Fixed destination format: `platform=iOS Simulator,id=UDID`
+
+#### Fix #3: Build Cache Management
+- ✅ Automatically clean DerivedData before build
+- ✅ Verify bundle ID exists before installation
+- ✅ Better app path detection (exclude Index.noindex)
+
+### **⚠️ CRITICAL: DO NOT USE `sudo` WITH iOS TOOLS!**
+
+**WRONG:**
+```bash
+sudo ./run-ios.sh  # ❌ CAUSES PERMISSION ERRORS!
+```
+
+**CORRECT:**
+```bash
+./scripts/run-ios.sh --backend-url http://192.168.10.217:8085  # ✅
+```
+
+Running with `sudo` causes:
+- ❌ Xcode permission conflicts
+- ❌ Simulator access denied
+- ❌ DerivedData ownership issues
+
+### How to Run iOS App:
+
+```bash
+# Pull latest changes
+git pull
+
+# Run without sudo (important!)
+./scripts/run-ios.sh --backend-url http://192.168.10.217:8085
+```
+
+**What You'll See:**
+```
+[1/5] Checking prerequisites...
+✓ Xcode 26.0.1
+[2/5] Testing backend connectivity...
+✓ Backend is reachable at http://192.168.10.217:8085
+[3/5] Setting up iOS Simulator...
+✓ Using simulator: iPhone 16 Pro
+  UDID: [UUID shown here]
+✓ Simulator booted
+[4/5] Building iOS app...
+Cleaning build cache...
+** BUILD SUCCEEDED **
+[5/5] Installing and launching app...
+✓ App launched successfully!
+```
+
+**Files Modified:**
+- `scripts/run-ios.sh` - Fixed bundle ID, simulator detection, build cache
 
 ---
 
@@ -265,7 +343,7 @@ curl http://127.0.0.1:8085/health
 | Platform | Status | Build Command | Notes |
 |----------|--------|---------------|-------|
 | **Backend (Go)** | ✅ **COMPLETE - DO NOT TOUCH** | `go run main.go` | Port 8085 - Management / Port 8081 - Endnode |
-| iOS (Swift) | ✅ Ready | Xcode build | Simulator tested |
+| **iOS (Swift)** | ✅ **FIXED** | `./scripts/run-ios.sh` | Bundle ID and simulator issues resolved |
 | Android (Kotlin) | ✅ Ready | `./gradlew assembleDebug` | Emulator tested |
 | Desktop (Electron) | ✅ Ready | `npm run start` | macOS tested |
 
