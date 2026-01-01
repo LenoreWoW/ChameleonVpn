@@ -147,8 +147,18 @@ else
     fi
 
     SIMULATOR_NAME=$(xcrun simctl list devices | grep "$SIMULATOR_UDID" | sed -E 's/^[[:space:]]*(.+) \([A-F0-9-]+\) .*/\1/')
+
+    # Get the iOS runtime version for this simulator
+    RUNTIME_VERSION=$(xcrun simctl list devices | grep -B 1 "$SIMULATOR_UDID" | grep "-- iOS" | sed 's/-- iOS \(.*\) --.*/\1/' | head -1)
+
+    if [ -z "$RUNTIME_VERSION" ]; then
+        # Fallback: check all runtimes
+        RUNTIME_VERSION=$(xcrun simctl list runtimes | grep iOS | tail -1 | grep -oE '[0-9]+\.[0-9]+' | head -1)
+    fi
+
     echo -e "${GREEN}✓ Using simulator: $SIMULATOR_NAME${NC}"
     echo -e "${GREEN}  UDID: $SIMULATOR_UDID${NC}"
+    echo -e "${GREEN}  iOS Runtime: $RUNTIME_VERSION${NC}"
 
     # Check if already booted
     BOOT_STATUS=$(xcrun simctl list devices | grep "$SIMULATOR_UDID" | grep -o "(Booted)" || echo "")
@@ -182,7 +192,15 @@ else
     open -a Simulator
     sleep 2
 
-    DESTINATION="platform=iOS Simulator,id=$SIMULATOR_UDID"
+    # Try multiple destination formats for better compatibility
+    # For Xcode 26.x, the destination format needs to be precise
+    if [ -n "$RUNTIME_VERSION" ]; then
+        DESTINATION="platform=iOS Simulator,OS=$RUNTIME_VERSION,name=$SIMULATOR_NAME"
+        echo -e "${BLUE}Using destination: $DESTINATION${NC}"
+    else
+        DESTINATION="platform=iOS Simulator,id=$SIMULATOR_UDID"
+        echo -e "${BLUE}Using destination: $DESTINATION${NC}"
+    fi
 fi
 
 # Step 4: Build the app
@@ -202,10 +220,17 @@ else
     SDK="iphonesimulator"
 fi
 
+# Show available destinations for debugging
+echo -e "${BLUE}Available destinations:${NC}"
+xcodebuild -workspace WorkVPN.xcworkspace -scheme WorkVPN -showdestinations 2>&1 | grep -E "platform|name|id" | head -10
+
+echo ""
+echo -e "${YELLOW}Building with destination: $DESTINATION${NC}"
+echo ""
+
 xcodebuild \
     -workspace WorkVPN.xcworkspace \
     -scheme WorkVPN \
-    -sdk "$SDK" \
     -destination "$DESTINATION" \
     -configuration Debug \
     build 2>&1 | while read line; do
