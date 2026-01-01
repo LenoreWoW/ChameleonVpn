@@ -26,7 +26,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 IOS_DIR="${SCRIPT_DIR}/../workvpn-ios"
 IOS_WORKSPACE="${IOS_DIR}/WorkVPN.xcworkspace"
 BACKEND_URL="${BACKEND_URL:-http://127.0.0.1:8085}"
-BUNDLE_ID="com.barqnet.workvpn"
+BUNDLE_ID="com.workvpn.ios"
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -165,8 +165,9 @@ echo -e "${BLUE}[4/5]${NC} Building iOS app..."
 
 cd "$IOS_DIR"
 
-# Clean derived data if needed
-# rm -rf ~/Library/Developer/Xcode/DerivedData/WorkVPN-* 2>/dev/null || true
+# Clean derived data to fix bundle ID issues
+echo -e "${YELLOW}Cleaning build cache...${NC}"
+rm -rf ~/Library/Developer/Xcode/DerivedData/WorkVPN-* 2>/dev/null || true
 
 echo -e "${YELLOW}Building WorkVPN...${NC}"
 
@@ -214,19 +215,39 @@ if [ "$USE_DEVICE" = true ]; then
     echo -e "${YELLOW}For physical device, use Xcode to install and run.${NC}"
     open "$IOS_WORKSPACE"
 else
-    # Find the built app
-    APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "WorkVPN.app" -path "*Debug-iphonesimulator*" -type d 2>/dev/null | head -1)
-    
+    # Find the built app - look in Build/Products, not Index
+    APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "WorkVPN.app" -path "*/Build/Products/Debug-iphonesimulator/*" -type d 2>/dev/null | head -1)
+
     if [ -z "$APP_PATH" ]; then
-        echo -e "${YELLOW}Could not find built app. Opening Xcode...${NC}"
+        echo -e "${RED}Could not find built app in DerivedData.${NC}"
+        echo -e "${YELLOW}Trying alternative search...${NC}"
+        APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "WorkVPN.app" -path "*iphonesimulator*" -type d 2>/dev/null | grep -v "Index.noindex" | head -1)
+    fi
+
+    if [ -z "$APP_PATH" ]; then
+        echo -e "${RED}Could not find built app. Opening Xcode...${NC}"
         open "$IOS_WORKSPACE"
     else
+        echo -e "${GREEN}Found app at: $APP_PATH${NC}"
+
+        # Verify bundle ID exists in built app
+        BUILT_BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$APP_PATH/Info.plist" 2>/dev/null)
+        if [ -z "$BUILT_BUNDLE_ID" ]; then
+            echo -e "${RED}Error: Built app has no bundle identifier!${NC}"
+            echo -e "${YELLOW}This indicates a build configuration issue.${NC}"
+            echo -e "${YELLOW}Opening Xcode for manual inspection...${NC}"
+            open "$IOS_WORKSPACE"
+            exit 1
+        fi
+
+        echo -e "${GREEN}Bundle ID: $BUILT_BUNDLE_ID${NC}"
+
         echo -e "${YELLOW}Installing app to simulator...${NC}"
         xcrun simctl install "$SIMULATOR_UDID" "$APP_PATH"
-        
+
         echo -e "${YELLOW}Launching app...${NC}"
-        xcrun simctl launch "$SIMULATOR_UDID" "$BUNDLE_ID"
-        
+        xcrun simctl launch "$SIMULATOR_UDID" "$BUILT_BUNDLE_ID"
+
         echo -e "${GREEN}✓ App launched successfully!${NC}"
     fi
 fi
