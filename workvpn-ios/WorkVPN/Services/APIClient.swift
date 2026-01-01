@@ -69,9 +69,15 @@ struct OTPSessionData: Codable {
 
 struct OTPVerificationData: Codable {
     let verificationToken: String?
+    let email: String?
+    let verified: Bool?
+    let expiresIn: Int?
 
     enum CodingKeys: String, CodingKey {
         case verificationToken = "verification_token"
+        case email = "email"
+        case verified = "verified"
+        case expiresIn = "expires_in"
     }
 }
 
