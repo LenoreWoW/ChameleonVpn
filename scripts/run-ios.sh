@@ -149,11 +149,30 @@ else
     SIMULATOR_NAME=$(xcrun simctl list devices | grep "$SIMULATOR_UDID" | sed -E 's/^[[:space:]]*(.+) \([A-F0-9-]+\) .*/\1/')
 
     # Get the iOS runtime version for this simulator
-    RUNTIME_VERSION=$(xcrun simctl list devices | grep -B 1 "$SIMULATOR_UDID" | grep "-- iOS" | sed 's/-- iOS \(.*\) --.*/\1/' | head -1)
+    # Look for "-- iOS X.Y --" format in device list
+    RUNTIME_VERSION=$(xcrun simctl list devices | grep -B 2 "$SIMULATOR_UDID" | grep "^-- iOS" | sed -E 's/^-- iOS ([0-9]+\.[0-9]+).*/\1/' | head -1)
 
     if [ -z "$RUNTIME_VERSION" ]; then
-        # Fallback: check all runtimes
-        RUNTIME_VERSION=$(xcrun simctl list runtimes | grep iOS | tail -1 | grep -oE '[0-9]+\.[0-9]+' | head -1)
+        # Fallback: get from runtimes list, look for iOS runtime (not platform version)
+        RUNTIME_VERSION=$(xcrun simctl list runtimes | grep "iOS.*(" | grep -oE 'iOS [0-9]+\.[0-9]+' | sed 's/iOS //' | tail -1)
+    fi
+
+    # Validate version is reasonable (iOS versions are 10-20 range, not 26+)
+    if [ -n "$RUNTIME_VERSION" ]; then
+        MAJOR_VERSION=$(echo "$RUNTIME_VERSION" | cut -d. -f1)
+        if [ "$MAJOR_VERSION" -gt 25 ]; then
+            echo -e "${YELLOW}Warning: Detected unusual iOS version $RUNTIME_VERSION, this might be platform version${NC}"
+            # Try to get the actual iOS version from runtime list more carefully
+            RUNTIME_VERSION=$(xcrun simctl list runtimes 2>/dev/null | grep "com.apple.CoreSimulator.SimRuntime.iOS" | grep -oE '\([0-9]+\.[0-9]+' | sed 's/(//' | tail -1)
+            echo -e "${YELLOW}Corrected to: $RUNTIME_VERSION${NC}"
+        fi
+    fi
+
+    if [ -z "$RUNTIME_VERSION" ]; then
+        echo -e "${RED}Error: Could not detect iOS runtime version${NC}"
+        echo -e "${YELLOW}Available runtimes:${NC}"
+        xcrun simctl list runtimes | grep iOS
+        exit 1
     fi
 
     echo -e "${GREEN}✓ Using simulator: $SIMULATOR_NAME${NC}"
@@ -192,15 +211,10 @@ else
     open -a Simulator
     sleep 2
 
-    # Try multiple destination formats for better compatibility
-    # For Xcode 26.x, the destination format needs to be precise
-    if [ -n "$RUNTIME_VERSION" ]; then
-        DESTINATION="platform=iOS Simulator,OS=$RUNTIME_VERSION,name=$SIMULATOR_NAME"
-        echo -e "${BLUE}Using destination: $DESTINATION${NC}"
-    else
-        DESTINATION="platform=iOS Simulator,id=$SIMULATOR_UDID"
-        echo -e "${BLUE}Using destination: $DESTINATION${NC}"
-    fi
+    # Build destination for xcodebuild
+    # For Xcode 26.x with iOS 18.x, use name+OS format
+    DESTINATION="platform=iOS Simulator,OS=$RUNTIME_VERSION,name=$SIMULATOR_NAME"
+    echo -e "${BLUE}Destination: platform=iOS Simulator,OS=$RUNTIME_VERSION,name=$SIMULATOR_NAME${NC}"
 fi
 
 # Step 4: Build the app
