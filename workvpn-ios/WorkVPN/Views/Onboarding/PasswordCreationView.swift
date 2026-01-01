@@ -13,8 +13,8 @@ struct PasswordCreationView: View {
 
     @State private var password = ""
     @State private var confirmPassword = ""
-    @State private var isLoading = false
-    @State private var errorMessage: String?
+    @Binding var isLoading: Bool
+    @Binding var errorMessage: String?
     @State private var floatOffset: CGFloat = 0
 
     var body: some View {
@@ -129,7 +129,6 @@ struct PasswordCreationView: View {
                     } else if password.count < 8 {
                         errorMessage = "Password must be at least 8 characters"
                     } else {
-                        isLoading = true
                         onCreate(password)
                     }
                 }) {
@@ -165,7 +164,9 @@ struct PasswordCreationView_Previews: PreviewProvider {
     static var previews: some View {
         PasswordCreationView(
             email: "user@example.com",
-            onCreate: { _ in }
+            onCreate: { _ in },
+            isLoading: .constant(false),
+            errorMessage: .constant(nil)
         )
     }
 }

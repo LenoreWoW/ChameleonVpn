@@ -14,8 +14,8 @@ struct OTPVerificationView: View {
 
     @State private var otpDigits: [String] = Array(repeating: "", count: 6)
     @FocusState private var focusedField: Int?
-    @State private var isLoading = false
-    @State private var showError = false
+    @Binding var isLoading: Bool
+    @Binding var errorMessage: String?
     @State private var floatOffset: CGFloat = 0
 
     // Testing configuration (DEBUG only)
@@ -88,20 +88,26 @@ struct OTPVerificationView: View {
                 .frame(height: 60)
                 .padding(.horizontal, 32)
 
-                if showError {
-                    Text("Invalid code. Please try again.")
-                        .font(.caption)
-                        .foregroundColor(.red)
+                if let error = errorMessage {
+                    HStack {
+                        Text(error)
+                            .font(.caption)
+                            .foregroundColor(.red)
+                            .padding()
+                    }
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.red.opacity(0.1))
+                    )
                 }
 
                 // Verify button
                 Button(action: {
                     let code = otpDigits.joined()
                     if code.count == 6 {
-                        isLoading = true
                         onVerify(code)
                     } else {
-                        showError = true
+                        errorMessage = "Please enter a 6-digit code"
                     }
                 }) {
                     ZStack {
@@ -147,7 +153,6 @@ struct OTPVerificationView: View {
 
                     // Trigger verification after a brief delay
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        isLoading = true
                         onVerify(testOTP)
                     }
                 }) {
@@ -186,7 +191,7 @@ struct OTPVerificationView: View {
         // Filter non-digits
         otpDigits[index] = otpDigits[index].filter { $0.isNumber }
 
-        showError = false
+        errorMessage = nil
 
         // Auto-advance to next field
         if !otpDigits[index].isEmpty && index < 5 {
@@ -197,7 +202,6 @@ struct OTPVerificationView: View {
         if index == 5 && !otpDigits[index].isEmpty {
             let code = otpDigits.joined()
             if code.count == 6 {
-                isLoading = true
                 onVerify(code)
             }
         }
@@ -214,7 +218,9 @@ struct OTPVerificationView_Previews: PreviewProvider {
         OTPVerificationView(
             email: "user@example.com",
             onVerify: { _ in },
-            onResend: {}
+            onResend: {},
+            isLoading: .constant(false),
+            errorMessage: .constant(nil)
         )
     }
 }

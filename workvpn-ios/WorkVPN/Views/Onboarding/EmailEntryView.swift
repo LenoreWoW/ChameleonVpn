@@ -12,8 +12,8 @@ struct EmailEntryView: View {
     var onContinue: () -> Void
     var onLoginClick: () -> Void
 
-    @State private var isLoading = false
-    @State private var errorMessage: String?
+    @Binding var isLoading: Bool
+    @Binding var errorMessage: String?
     @State private var floatOffset: CGFloat = 0
 
     // Testing configuration (DEBUG only)
@@ -98,7 +98,6 @@ struct EmailEntryView: View {
                     if email.isEmpty {
                         errorMessage = "Please enter your email address"
                     } else {
-                        isLoading = true
                         onContinue()
                     }
                 }) {
@@ -139,7 +138,6 @@ struct EmailEntryView: View {
 
                     // Trigger continue after a brief delay to show auto-fill
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        isLoading = true
                         onContinue()
                     }
                 }) {
@@ -186,7 +184,9 @@ struct EmailEntryView_Previews: PreviewProvider {
         EmailEntryView(
             email: .constant(""),
             onContinue: {},
-            onLoginClick: {}
+            onLoginClick: {},
+            isLoading: .constant(false),
+            errorMessage: .constant(nil)
         )
     }
 }

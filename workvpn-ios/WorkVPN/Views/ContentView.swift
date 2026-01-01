@@ -22,6 +22,20 @@ struct ContentView: View {
     @State private var showingSettings = false
     @State private var onboardingState: OnboardingState = .emailEntry
     @State private var currentEmail = ""
+    
+    // Email Entry state
+    @State private var isEmailLoading = false
+    @State private var emailErrorMessage: String?
+    
+    // OTP Verification state
+    @State private var isOTPLoading = false
+    @State private var otpErrorMessage: String?
+    
+    // Password Creation state
+    @State private var isPasswordLoading = false
+    @State private var passwordErrorMessage: String?
+    
+    // Login state
     @State private var isLoginLoading = false
     @State private var loginErrorMessage: String?
 
@@ -45,42 +59,89 @@ struct ContentView: View {
                 EmailEntryView(
                     email: $currentEmail,
                     onContinue: {
+                        isEmailLoading = true
+                        emailErrorMessage = nil
+                        
                         authManager.sendOTP(email: currentEmail) { result in
-                            if case .success = result {
+                            isEmailLoading = false
+                            
+                            switch result {
+                            case .success:
+                                // Reset OTP state before transitioning
+                                isOTPLoading = false
+                                otpErrorMessage = nil
                                 onboardingState = .otpVerification
+                            case .failure(let error):
+                                emailErrorMessage = error.localizedDescription
+                                NSLog("[EMAIL] Send OTP failed: \(error.localizedDescription)")
                             }
                         }
                     },
                     onLoginClick: {
                         onboardingState = .login
-                    }
+                    },
+                    isLoading: $isEmailLoading,
+                    errorMessage: $emailErrorMessage
                 )
 
             case .otpVerification:
                 OTPVerificationView(
                     email: currentEmail,
                     onVerify: { code in
+                        isOTPLoading = true
+                        otpErrorMessage = nil
+                        
                         authManager.verifyOTP(email: currentEmail, code: code) { result in
-                            if case .success = result {
+                            isOTPLoading = false
+                            
+                            switch result {
+                            case .success:
+                                // Reset password state before transitioning
+                                isPasswordLoading = false
+                                passwordErrorMessage = nil
                                 onboardingState = .passwordCreation
+                            case .failure(let error):
+                                otpErrorMessage = error.localizedDescription
+                                NSLog("[OTP] Verification failed: \(error.localizedDescription)")
                             }
                         }
                     },
                     onResend: {
-                        authManager.sendOTP(email: currentEmail) { _ in }
-                    }
+                        otpErrorMessage = nil
+                        authManager.sendOTP(email: currentEmail) { result in
+                            switch result {
+                            case .success:
+                                NSLog("[OTP] Resend successful")
+                            case .failure(let error):
+                                otpErrorMessage = "Failed to resend: \(error.localizedDescription)"
+                            }
+                        }
+                    },
+                    isLoading: $isOTPLoading,
+                    errorMessage: $otpErrorMessage
                 )
 
             case .passwordCreation:
                 PasswordCreationView(
                     email: currentEmail,
                     onCreate: { password in
+                        isPasswordLoading = true
+                        passwordErrorMessage = nil
+                        
                         authManager.createAccount(email: currentEmail, password: password) { result in
-                            if case .success = result {
+                            isPasswordLoading = false
+                            
+                            switch result {
+                            case .success:
                                 onboardingState = .authenticated
+                            case .failure(let error):
+                                passwordErrorMessage = error.localizedDescription
+                                NSLog("[PASSWORD] Account creation failed: \(error.localizedDescription)")
                             }
                         }
-                    }
+                    },
+                    isLoading: $isPasswordLoading,
+                    errorMessage: $passwordErrorMessage
                 )
 
             case .login:
