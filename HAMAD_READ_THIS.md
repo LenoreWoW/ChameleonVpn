@@ -4,13 +4,13 @@
 **Date:** January 1, 2026
 **Status:** All platforms building and running ✅
 **Backend Status:** ✅ **COMPLETE AND WORKING** - Do not modify
-**iOS Status:** ✅ **FIXED** - iOS 26.x fully supported (commit e1023a1)
-**Latest:** iOS 26.0/26.2 compatibility confirmed! Pull latest changes! 🎉
+**iOS Status:** ✅ **FIXED** - App networking issue resolved (commit bc96d99)
+**Latest:** iOS app now correctly connects to backend! MUST pull latest! 🎉
 
 **⚠️ CRITICAL FOR HAMAD:**
 - **ALWAYS** run `git pull` before running iOS app
 - **NEVER** use `sudo` with iOS tools
-- **VERIFY** you have commit e1023a1 or later
+- **VERIFY** you have commit bc96d99 or later (REQUIRED!)
 
 ---
 
@@ -74,6 +74,105 @@ cat barqnet-backend/apps/endnode/.env
 - `scripts/run-endnode.sh` (default port 8080→8081)
 
 **If you get "connection refused" errors, CHECK THE PORTS FIRST!**
+
+---
+
+## 🔴 CRITICAL: iOS APP NETWORKING FIX (January 1, 2026)
+
+**LATEST FIX - COMMIT bc96d99 - MUST HAVE THIS!**
+
+### The Problem:
+Your iOS app was stuck on the loading screen because:
+- ❌ The script accepted `--backend-url http://192.168.10.217:8085`
+- ❌ But it **never updated the Info.plist file** before building!
+- ❌ The app was hardcoded to connect to `http://127.0.0.1:8085`
+- ❌ Backend is actually at `http://192.168.10.217:8085`
+- 🔴 **Result:** App couldn't reach backend → stuck loading forever!
+
+### What Was Fixed:
+✅ **The script now updates Info.plist BEFORE building!**
+- Uses `PlistBuddy` to dynamically set `API_BASE_URL`
+- Your `--backend-url` parameter is now actually applied
+- The built app will connect to the correct backend
+
+### **HOW TO TEST THE FIX:**
+
+**Step 1: Pull Latest Changes**
+```bash
+cd /Users/wolf/Desktop/ChameleonVpn
+git pull origin main
+
+# VERIFY you have the fix:
+git log --oneline -1
+# Should show: bc96d99 Fix: Actually update Info.plist with backend URL
+```
+
+**Step 2: Clean Everything**
+```bash
+# Kill any running simulators
+killall Simulator 2>/dev/null
+
+# Clean build cache (important!)
+rm -rf ~/Library/Developer/Xcode/DerivedData/WorkVPN-*
+```
+
+**Step 3: Run with Correct Backend URL**
+```bash
+./scripts/run-ios.sh --backend-url http://192.168.10.217:8085
+```
+
+**Step 4: What You Should See**
+```
+[1/5] Checking prerequisites...
+✓ Xcode 26.0.1
+✓ iOS workspace found
+
+[2/5] Configuring backend URL...
+Setting API_BASE_URL to: http://192.168.10.217:8085  ← NEW! This is the fix!
+✓ API_BASE_URL configured: http://192.168.10.217:8085
+Testing backend connectivity...
+✓ Backend is reachable at http://192.168.10.217:8085
+
+[3/5] Setting up iOS Simulator...
+✓ Using simulator: iPhone 16 Pro
+✓ Simulator booted
+
+[4/5] Building iOS app...
+Cleaning build cache...
+** BUILD SUCCEEDED **
+
+[5/5] Installing and launching app...
+✓ App launched successfully!
+```
+
+**Step 5: Test the App**
+- App should now load successfully (no stuck spinner!)
+- Try registering a new account
+- Backend should receive the requests
+- Check backend logs: `tail -f /tmp/barqnet_management.log`
+
+### **If It Still Doesn't Work:**
+
+1. **Verify Backend is Running**
+   ```bash
+   curl http://192.168.10.217:8085/health
+   # Should return: {"status":"ok"}
+   ```
+
+2. **Check iOS Console Logs**
+   - Open Xcode Console (Cmd+Shift+2)
+   - Look for network errors
+   - Look for "API_BASE_URL" to see what URL the app is using
+
+3. **Verify Info.plist Was Updated**
+   ```bash
+   /usr/libexec/PlistBuddy -c "Print :API_BASE_URL" \
+     workvpn-ios/WorkVPN/Info.plist
+   # Should show: http://192.168.10.217:8085
+   ```
+
+### **Files Modified in This Fix:**
+- `scripts/run-ios.sh` (lines 104-133) - Added PlistBuddy to update API_BASE_URL before build
 
 ---
 
@@ -175,7 +274,7 @@ cd /Users/wolf/Desktop/ChameleonVpn
 # Check current commit
 git log --oneline -1
 
-# Should show: e1023a1 Fix for iOS 26.x - use ID-based destination
+# Should show: bc96d99 Fix: Actually update Info.plist with backend URL
 # If not, pull latest:
 git pull origin main
 
@@ -217,7 +316,7 @@ git pull origin main
 
 # 5. Verify latest commit
 git log --oneline -5
-# Should show e1023a1 as most recent
+# Should show bc96d99 as most recent
 
 # 6. Clean up any sudo-created files
 sudo rm -rf ~/Library/Developer/Xcode/DerivedData/WorkVPN-*
@@ -278,7 +377,7 @@ Launching app...
 **Solution:**
 ```bash
 git pull origin main
-git log --oneline -1  # Verify: e1023a1
+git log --oneline -1  # Verify: bc96d99
 ./scripts/run-ios.sh --backend-url http://192.168.10.217:8085
 ```
 
@@ -338,14 +437,14 @@ Then in Xcode:
 ### **Commits History (iOS Fixes):**
 
 ```
-e1023a1 - Fix for iOS 26.x - use ID-based destination ✅ LATEST
+bc96d99 - Fix: Actually update Info.plist with backend URL ✅ LATEST & REQUIRED!
+41b4881 - Comprehensive iOS 26.x documentation for Hamad
+e1023a1 - Fix for iOS 26.x - use ID-based destination
 59c73b0 - Fix iOS runtime version detection (REVERTED)
 c16649a - Fix iOS build for Xcode 26.x (OLD)
-5560abf - Fix iOS simulator destination and boot detection
-8971690 - Fix iOS bundle ID mismatch and installation issues
 ```
 
-**Always use commit e1023a1 or later!**
+**Always use commit bc96d99 or later!**
 
 ### **Why ID-Based Destination Works Better:**
 
@@ -360,7 +459,8 @@ The ID is unique and unchanging, while names can have encoding issues.
 
 🔴 **NEVER use `sudo`** with iOS development tools
 🔴 **ALWAYS `git pull`** before running the script
-🟢 **USE commit e1023a1** or later
+🔴 **MUST HAVE commit bc96d99** or later (critical networking fix!)
+🟢 **VERIFY output** shows "Setting API_BASE_URL to: http://192.168.10.217:8085"
 🟢 **VERIFY output** shows ID-based destination
 
 ---
