@@ -4,17 +4,103 @@
 **Date:** January 1, 2026
 **Status:** All platforms building and running ✅
 **Backend Status:** ✅ **COMPLETE AND WORKING** - Do not modify
-**iOS Status:** ✅ **FIXED** - App networking issue resolved (commit bc96d99)
-**Latest:** iOS app now correctly connects to backend! MUST pull latest! 🎉
+**iOS Status:** ✅ **FIXED** - Email screen loading bug resolved (commit ed8066c)
+**Latest:** iOS OTP response format fixed - app will no longer be stuck! 🎉
 
 **⚠️ CRITICAL FOR HAMAD:**
+- **MUST PULL commit ed8066c** - Fixes stuck loading screen!
 - **ALWAYS** run `git pull` before running iOS app
 - **NEVER** use `sudo` with iOS tools
-- **VERIFY** you have commit bc96d99 or later (REQUIRED!)
+- **REBUILD after pulling** - Clean DerivedData and rebuild!
+
+---
+
+## 🎯 CRITICAL FIX: Email Screen Stuck Loading (Commit ed8066c)
+
+**THE BUG WAS FOUND AND FIXED!**
+
+### What Was Wrong:
+The iOS app was stuck on the email screen after tapping "Send OTP" because:
+
+1. **Backend sends this response:**
+   ```json
+   {
+     "success": true,
+     "data": {
+       "email": "test@barqnet.local",
+       "expires_in": 600
+     }
+   }
+   ```
+
+2. **iOS app expected different fields:**
+   - Expected: `session_id` (String)
+   - Expected: `expires_at` (String)
+   - Got: `email` and `expires_in` instead
+
+3. **Result:**
+   - JSON decoding failed
+   - Request appeared to succeed on backend (OTP was sent)
+   - But iOS couldn't parse the response
+   - Loading screen never completed
+
+### The Fix:
+Updated `OTPSessionData` struct to accept the backend's actual response format:
+- Made `session_id` optional (was required)
+- Made `expires_at` optional (was optional)
+- Added `email` field (from backend)
+- Added `expires_in` field (from backend)
+
+Now iOS can decode whatever the backend sends!
+
+### **HOW TO GET THE FIX:**
+
+```bash
+# Navigate to project
+cd /Users/wolf/Desktop/ChameleonVpn
+
+# Pull latest code
+git pull origin main
+
+# Verify you have the fix
+git log --oneline -1
+# Should show: ed8066c Fix: iOS app stuck loading - handle backend's OTP response format
+
+# Clean build cache
+rm -rf ~/Library/Developer/Xcode/DerivedData/WorkVPN-*
+
+# Rebuild and run
+./scripts/run-ios.sh --backend-url http://192.168.10.217:8085
+```
+
+### **What Should Happen Now:**
+
+1. ✅ Open app
+2. ✅ Enter email address
+3. ✅ Tap "Send OTP"
+4. ✅ **Loading spinner completes** (was stuck here before!)
+5. ✅ **App navigates to OTP entry screen** (NEW!)
+6. ✅ Enter the OTP code from backend logs
+7. ✅ Continue with registration
+
+### **Verify the Fix is Working:**
+
+Watch the Xcode console - you should see:
+```
+[APIClient] OTP sent successfully     ← This means decoding worked!
+[AuthManager] OTP sent successfully   ← This means completion handler was called!
+```
+
+Before the fix, you would see:
+```
+[APIClient] Send OTP failed: The data couldn't be read because it is missing.
+```
 
 ---
 
 ## 🚨 TROUBLESHOOTING: iOS App Stuck Loading (January 1, 2026)
+
+**Note:** If you have commit ed8066c or later, the email screen stuck loading issue should be resolved. This section is for other potential loading issues.
 
 **If your iOS app is stuck on a loading spinner, follow these diagnostic steps:**
 
