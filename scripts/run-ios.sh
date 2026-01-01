@@ -126,38 +126,63 @@ if [ "$USE_DEVICE" = true ]; then
     echo -e "${YELLOW}Building for physical device...${NC}"
     DESTINATION="generic/platform=iOS"
 else
-    # Find available simulators
+    # Find available simulators using better regex
     if [ -n "$PREFERRED_SIMULATOR" ]; then
-        SIMULATOR_UDID=$(xcrun simctl list devices available | grep "$PREFERRED_SIMULATOR" | head -1 | sed 's/.*(\([A-F0-9-]*\)).*/\1/')
+        SIMULATOR_UDID=$(xcrun simctl list devices available | grep "$PREFERRED_SIMULATOR" | grep -oE '[A-F0-9]{8}-([A-F0-9]{4}-){3}[A-F0-9]{12}' | head -1)
     fi
-    
+
     if [ -z "$SIMULATOR_UDID" ]; then
-        # Try to find iPhone 15, 14, or any iPhone
-        SIMULATOR_UDID=$(xcrun simctl list devices available | grep -E "iPhone (15|14)" | head -1 | sed 's/.*(\([A-F0-9-]*\)).*/\1/')
+        # Try to find iPhone 16, 15, 14, or any iPhone
+        SIMULATOR_UDID=$(xcrun simctl list devices available | grep -E "iPhone (16|15|14)" | grep -oE '[A-F0-9]{8}-([A-F0-9]{4}-){3}[A-F0-9]{12}' | head -1)
     fi
-    
+
     if [ -z "$SIMULATOR_UDID" ]; then
-        SIMULATOR_UDID=$(xcrun simctl list devices available | grep "iPhone" | head -1 | sed 's/.*(\([A-F0-9-]*\)).*/\1/')
+        SIMULATOR_UDID=$(xcrun simctl list devices available | grep "iPhone" | grep -oE '[A-F0-9]{8}-([A-F0-9]{4}-){3}[A-F0-9]{12}' | head -1)
     fi
-    
+
     if [ -z "$SIMULATOR_UDID" ]; then
         echo -e "${RED}Error: No iOS simulator found.${NC}"
         echo -e "${YELLOW}  Create one in Xcode: Window > Devices and Simulators${NC}"
         exit 1
     fi
-    
-    SIMULATOR_NAME=$(xcrun simctl list devices | grep "$SIMULATOR_UDID" | sed 's/ (.*//' | xargs)
+
+    SIMULATOR_NAME=$(xcrun simctl list devices | grep "$SIMULATOR_UDID" | sed -E 's/^[[:space:]]*(.+) \([A-F0-9-]+\) .*/\1/')
     echo -e "${GREEN}✓ Using simulator: $SIMULATOR_NAME${NC}"
-    
-    # Boot simulator
-    echo -e "${YELLOW}Booting simulator...${NC}"
-    xcrun simctl boot "$SIMULATOR_UDID" 2>/dev/null || true
-    
+    echo -e "${GREEN}  UDID: $SIMULATOR_UDID${NC}"
+
+    # Check if already booted
+    BOOT_STATUS=$(xcrun simctl list devices | grep "$SIMULATOR_UDID" | grep -o "(Booted)" || echo "")
+
+    if [ -z "$BOOT_STATUS" ]; then
+        # Boot simulator
+        echo -e "${YELLOW}Booting simulator...${NC}"
+        xcrun simctl boot "$SIMULATOR_UDID" 2>/dev/null || true
+
+        # Wait for simulator to fully boot
+        echo -e "${YELLOW}Waiting for simulator to be ready...${NC}"
+        for i in {1..30}; do
+            BOOT_STATUS=$(xcrun simctl list devices | grep "$SIMULATOR_UDID" | grep -o "(Booted)" || echo "")
+            if [ -n "$BOOT_STATUS" ]; then
+                echo -e "${GREEN}✓ Simulator booted${NC}"
+                break
+            fi
+            sleep 1
+            printf "."
+        done
+        echo ""
+
+        if [ -z "$BOOT_STATUS" ]; then
+            echo -e "${RED}Warning: Simulator may not be fully booted${NC}"
+        fi
+    else
+        echo -e "${GREEN}✓ Simulator already booted${NC}"
+    fi
+
     # Open Simulator app
     open -a Simulator
     sleep 2
-    
-    DESTINATION="id=$SIMULATOR_UDID"
+
+    DESTINATION="platform=iOS Simulator,id=$SIMULATOR_UDID"
 fi
 
 # Step 4: Build the app
