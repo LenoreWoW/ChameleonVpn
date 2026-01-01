@@ -54,12 +54,16 @@ struct AuthData: Codable {
 }
 
 struct OTPSessionData: Codable {
-    let sessionId: String
+    let sessionId: String?
     let expiresAt: String?
+    let email: String?
+    let expiresIn: Int?
 
     enum CodingKeys: String, CodingKey {
         case sessionId = "session_id"
         case expiresAt = "expires_at"
+        case email = "email"
+        case expiresIn = "expires_in"
     }
 }
 
