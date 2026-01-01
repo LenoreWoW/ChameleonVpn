@@ -101,9 +101,21 @@ if [ -f "${IOS_DIR}/Podfile" ]; then
     echo -e "${GREEN}✓ CocoaPods dependencies installed${NC}"
 fi
 
-# Step 2: Test backend connectivity
-echo -e "${BLUE}[2/5]${NC} Testing backend connectivity..."
+# Step 2: Configure backend URL and test connectivity
+echo -e "${BLUE}[2/5]${NC} Configuring backend URL..."
 
+# Update Info.plist with backend URL
+INFO_PLIST="${IOS_DIR}/WorkVPN/Info.plist"
+echo -e "${YELLOW}Setting API_BASE_URL to: $BACKEND_URL${NC}"
+
+# Use PlistBuddy to update the API_BASE_URL
+/usr/libexec/PlistBuddy -c "Set :API_BASE_URL $BACKEND_URL" "$INFO_PLIST" 2>/dev/null || \
+/usr/libexec/PlistBuddy -c "Add :API_BASE_URL string $BACKEND_URL" "$INFO_PLIST"
+
+echo -e "${GREEN}✓ API_BASE_URL configured: $BACKEND_URL${NC}"
+
+# Test backend connectivity
+echo -e "${YELLOW}Testing backend connectivity...${NC}"
 HEALTH_URL="${BACKEND_URL}/health"
 if curl -s -f "$HEALTH_URL" > /dev/null 2>&1; then
     echo -e "${GREEN}✓ Backend is reachable at $BACKEND_URL${NC}"
