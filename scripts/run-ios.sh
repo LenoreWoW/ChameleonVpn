@@ -153,19 +153,13 @@ else
     RUNTIME_VERSION=$(xcrun simctl list devices | grep -B 2 "$SIMULATOR_UDID" | grep "^-- iOS" | sed -E 's/^-- iOS ([0-9]+\.[0-9]+).*/\1/' | head -1)
 
     if [ -z "$RUNTIME_VERSION" ]; then
-        # Fallback: get from runtimes list, look for iOS runtime (not platform version)
+        # Fallback: get from runtimes list
         RUNTIME_VERSION=$(xcrun simctl list runtimes | grep "iOS.*(" | grep -oE 'iOS [0-9]+\.[0-9]+' | sed 's/iOS //' | tail -1)
     fi
 
-    # Validate version is reasonable (iOS versions are 10-20 range, not 26+)
-    if [ -n "$RUNTIME_VERSION" ]; then
-        MAJOR_VERSION=$(echo "$RUNTIME_VERSION" | cut -d. -f1)
-        if [ "$MAJOR_VERSION" -gt 25 ]; then
-            echo -e "${YELLOW}Warning: Detected unusual iOS version $RUNTIME_VERSION, this might be platform version${NC}"
-            # Try to get the actual iOS version from runtime list more carefully
-            RUNTIME_VERSION=$(xcrun simctl list runtimes 2>/dev/null | grep "com.apple.CoreSimulator.SimRuntime.iOS" | grep -oE '\([0-9]+\.[0-9]+' | sed 's/(//' | tail -1)
-            echo -e "${YELLOW}Corrected to: $RUNTIME_VERSION${NC}"
-        fi
+    if [ -z "$RUNTIME_VERSION" ]; then
+        # Last resort: parse from runtime identifier
+        RUNTIME_VERSION=$(xcrun simctl list runtimes 2>/dev/null | grep "com.apple.CoreSimulator.SimRuntime.iOS" | grep -oE '\([0-9]+\.[0-9]+' | sed 's/(//' | tail -1)
     fi
 
     if [ -z "$RUNTIME_VERSION" ]; then
@@ -212,9 +206,10 @@ else
     sleep 2
 
     # Build destination for xcodebuild
-    # For Xcode 26.x with iOS 18.x, use name+OS format
-    DESTINATION="platform=iOS Simulator,OS=$RUNTIME_VERSION,name=$SIMULATOR_NAME"
-    echo -e "${BLUE}Destination: platform=iOS Simulator,OS=$RUNTIME_VERSION,name=$SIMULATOR_NAME${NC}"
+    # For iOS 26.x, try ID-based destination (more reliable than name-based)
+    DESTINATION="platform=iOS Simulator,id=$SIMULATOR_UDID"
+    echo -e "${BLUE}Destination: platform=iOS Simulator,id=$SIMULATOR_UDID${NC}"
+    echo -e "${BLUE}  (Simulator: $SIMULATOR_NAME, iOS $RUNTIME_VERSION)${NC}"
 fi
 
 # Step 4: Build the app
