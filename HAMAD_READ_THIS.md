@@ -14,6 +14,220 @@
 
 ---
 
+## 🚨 TROUBLESHOOTING: iOS App Stuck Loading (January 1, 2026)
+
+**If your iOS app is stuck on a loading spinner, follow these diagnostic steps:**
+
+### Step 1: Verify You Have Latest Code
+
+**CRITICAL: Check your git commit**
+```bash
+cd /Users/wolf/Desktop/ChameleonVpn
+git log --oneline -1
+```
+
+**Expected output:**
+```
+bc96d99 Fix: Actually update Info.plist with backend URL
+```
+
+**If you see anything else, pull latest immediately:**
+```bash
+git pull origin main
+# Clean and rebuild
+rm -rf ~/Library/Developer/Xcode/DerivedData/WorkVPN-*
+./scripts/run-ios.sh --backend-url http://192.168.10.217:8085
+```
+
+### Step 2: Verify Info.plist Was Updated
+
+**Check the API URL in the built app:**
+```bash
+/usr/libexec/PlistBuddy -c "Print :API_BASE_URL" \
+  workvpn-ios/WorkVPN/Info.plist
+```
+
+**Expected output:**
+```
+http://192.168.10.217:8085
+```
+
+**If it shows `http://127.0.0.1:8085`, you're missing the fix!**
+- This means the script didn't update Info.plist
+- Pull latest code and rebuild
+
+### Step 3: Verify Backend is Running and Reachable
+
+**Test from Mac terminal:**
+```bash
+# Test health endpoint
+curl http://192.168.10.217:8085/health
+
+# Expected: {"status":"ok"}
+```
+
+**If curl fails:**
+- Backend is not running on 192.168.10.217
+- Or firewall is blocking port 8085
+- Or IP address is wrong
+
+### Step 4: Monitor Backend Logs
+
+**Open backend logs in real-time:**
+```bash
+tail -f /tmp/barqnet_management.log
+```
+
+**Then trigger the stuck loading in the iOS app and watch for:**
+
+1. **OTP Send Request** (when you tap "Send OTP"):
+   ```
+   [OTP] Successfully sent OTP to test@barqnet.local
+   Verification Code: 273181
+   ```
+   ✅ If you see this, networking is working!
+
+2. **OTP Verify Request** (when you enter OTP and tap Continue):
+   ```
+   [OTP] Verifying OTP for test@barqnet.local
+   [OTP] OTP verified successfully
+   ```
+   ❓ Do you see this? If NOT, the verify request isn't reaching backend!
+
+3. **Registration Request** (when you create password):
+   ```
+   [AUTH] User registered successfully: test@barqnet.local
+   ```
+   ❓ Do you see this?
+
+### Step 5: Check for Errors in Backend Logs
+
+**Look for these error patterns:**
+
+✅ **Safe to ignore** (doesn't block API):
+```
+[AUTH] Failed to log audit event: pq: invalid input syntax for type json
+```
+This is a known audit logging bug that doesn't affect functionality.
+
+🔴 **Critical errors** (these block the API):
+```
+[ERROR] Database connection failed
+[ERROR] Invalid JWT secret
+[ERROR] Failed to send OTP
+```
+
+### Step 6: Identify Where It's Stuck
+
+**Tell me which screen is stuck:**
+
+1. **Stuck after tapping "Send OTP" button?**
+   - Loading spinner appears but never completes
+   - Check: Is backend receiving the `/v1/auth/send-otp` request?
+   - Check: Did you see OTP in backend logs?
+
+2. **Stuck after entering OTP and tapping "Continue"?** ← MOST COMMON
+   - You got the OTP code
+   - Entered it in the app
+   - Tapped Continue
+   - Loading spinner never stops
+   - Check: Is backend receiving `/v1/auth/verify-otp` request?
+   - Check: Did backend log "OTP verified successfully"?
+
+3. **Stuck after creating password?**
+   - OTP verified
+   - Created password
+   - Tapped Register
+   - Loading spinner never stops
+   - Check: Is backend receiving `/v1/auth/register` request?
+
+### Step 7: Test Backend Directly with curl
+
+**Bypass the iOS app and test the API directly:**
+
+```bash
+# Step 1: Send OTP
+curl -X POST http://192.168.10.217:8085/v1/auth/send-otp \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@barqnet.local"}'
+
+# Step 2: Get OTP from backend logs
+grep "Verification Code:" /tmp/barqnet_management.log | tail -1
+
+# Step 3: Verify OTP (replace 123456 with actual code)
+curl -X POST http://192.168.10.217:8085/v1/auth/verify-otp \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@barqnet.local","otp":"123456"}'
+
+# Step 4: Register (replace 123456 with actual OTP)
+curl -X POST http://192.168.10.217:8085/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@barqnet.local","password":"Test1234!","otp":"123456"}'
+```
+
+**If curl works but iOS app doesn't:**
+- Problem is in the iOS app or networking
+- App might not be sending requests correctly
+- App might not be handling responses correctly
+
+**If curl also fails:**
+- Problem is in the backend
+- Check backend logs for errors
+
+### Step 8: Check iOS Console Logs
+
+**Open Xcode and check console output:**
+
+1. **Open Xcode Console:**
+   - Cmd+Shift+2 while simulator is running
+   - Or: Window → Devices and Simulators → Select simulator → Open Console
+
+2. **Look for network errors:**
+   ```
+   Error: Cannot connect to host
+   URLSession error
+   Network request failed
+   ```
+
+3. **Look for API_BASE_URL:**
+   ```
+   API Base URL: http://192.168.10.217:8085
+   ```
+   If it shows `http://127.0.0.1:8085`, you don't have the fix!
+
+### Common Causes and Solutions
+
+| Symptom | Cause | Solution |
+|---------|-------|----------|
+| Stuck on any loading screen | Old commit, Info.plist not updated | `git pull` then rebuild |
+| curl works, iOS doesn't | Info.plist has wrong URL | Verify Info.plist shows 192.168.10.217:8085 |
+| Backend not receiving requests | iOS app using wrong URL | Check Xcode console for API_BASE_URL |
+| Backend receives but returns error | Backend bug or database issue | Check backend logs for errors |
+| "Connection refused" in iOS logs | Backend not running or wrong IP | Verify backend is on 192.168.10.217:8085 |
+
+### What to Report Back
+
+**When reporting the issue, please provide:**
+
+1. **Git commit:** Output of `git log --oneline -1`
+2. **Info.plist URL:** Output of PlistBuddy command above
+3. **Where it's stuck:** Which button causes infinite loading?
+4. **Backend logs:** Last 30 lines when you trigger the stuck loading
+5. **iOS console:** Any errors in Xcode console
+6. **curl test results:** Do the curl commands work?
+
+**Example report:**
+```
+Git commit: bc96d99
+Info.plist: http://192.168.10.217:8085
+Stuck after: Entering OTP and tapping Continue
+Backend logs: Shows OTP sent, but no verify request
+iOS console: No errors visible
+curl test: All curl commands work fine
+```
+
+---
+
 ## ⚠️ CRITICAL: PORT CONFIGURATION FIX (December 31, 2025)
 
 **WE DISCOVERED AND FIXED A MAJOR PORT MISMATCH BUG!**
