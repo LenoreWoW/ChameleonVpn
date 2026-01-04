@@ -127,14 +127,27 @@ struct ContentView: View {
                     onCreate: { password in
                         isPasswordLoading = true
                         passwordErrorMessage = nil
-                        
+
                         authManager.createAccount(email: currentEmail, password: password) { result in
-                            isPasswordLoading = false
-                            
                             switch result {
                             case .success:
-                                onboardingState = .authenticated
+                                // Download and configure VPN automatically
+                                NSLog("[ONBOARDING] Registration successful, downloading VPN config")
+                                authManager.downloadAndConfigureVPN { vpnResult in
+                                    isPasswordLoading = false
+
+                                    switch vpnResult {
+                                    case .success:
+                                        NSLog("[ONBOARDING] VPN configured successfully")
+                                        onboardingState = .authenticated
+                                    case .failure(let error):
+                                        NSLog("[ONBOARDING] VPN config failed (non-critical): \(error.localizedDescription)")
+                                        // Still proceed to authenticated state even if VPN config fails
+                                        onboardingState = .authenticated
+                                    }
+                                }
                             case .failure(let error):
+                                isPasswordLoading = false
                                 passwordErrorMessage = error.localizedDescription
                                 NSLog("[PASSWORD] Account creation failed: \(error.localizedDescription)")
                             }
@@ -151,14 +164,29 @@ struct ContentView: View {
                         loginErrorMessage = nil
 
                         authManager.login(email: email, password: password) { result in
-                            isLoginLoading = false
-
                             switch result {
                             case .success:
                                 currentEmail = email
-                                onboardingState = .authenticated
-                                loginErrorMessage = nil
+
+                                // Download and configure VPN automatically
+                                NSLog("[ONBOARDING] Login successful, downloading VPN config")
+                                authManager.downloadAndConfigureVPN { vpnResult in
+                                    isLoginLoading = false
+
+                                    switch vpnResult {
+                                    case .success:
+                                        NSLog("[ONBOARDING] VPN configured successfully")
+                                        onboardingState = .authenticated
+                                        loginErrorMessage = nil
+                                    case .failure(let error):
+                                        NSLog("[ONBOARDING] VPN config failed (non-critical): \(error.localizedDescription)")
+                                        // Still proceed to authenticated state even if VPN config fails
+                                        onboardingState = .authenticated
+                                        loginErrorMessage = nil
+                                    }
+                                }
                             case .failure(let error):
+                                isLoginLoading = false
                                 loginErrorMessage = error.localizedDescription
                                 NSLog("[LOGIN] Failed: \(error.localizedDescription)")
                             }

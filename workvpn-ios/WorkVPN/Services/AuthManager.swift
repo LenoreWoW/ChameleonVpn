@@ -211,4 +211,33 @@ class AuthManager: ObservableObject {
             }
         }
     }
+
+    /// Download VPN configuration and import it
+    func downloadAndConfigureVPN(completion: @escaping (Result<Void, Error>) -> Void) {
+        NSLog("[AuthManager] Downloading VPN configuration")
+
+        apiClient.fetchVPNConfig { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let config):
+                    NSLog("[AuthManager] VPN config received - Server: \(config.serverID)")
+
+                    // Import the OVPN configuration into VPN manager
+                    let vpnManager = VPNManager.shared
+                    do {
+                        try vpnManager.importFromString(config.ovpnContent, filename: "\(config.username).ovpn")
+                        NSLog("[AuthManager] VPN configuration imported successfully")
+                        completion(.success(()))
+                    } catch {
+                        NSLog("[AuthManager] Failed to import VPN config: \(error.localizedDescription)")
+                        completion(.failure(error))
+                    }
+
+                case .failure(let error):
+                    NSLog("[AuthManager] Failed to download VPN config: \(error.localizedDescription)")
+                    completion(.failure(error))
+                }
+            }
+        }
+    }
 }

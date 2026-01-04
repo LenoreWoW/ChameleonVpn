@@ -22,15 +22,17 @@ type AuthHandler struct {
 	otpService  shared.OTPService // Use shared OTPService interface
 	blacklist   *shared.TokenBlacklist
 	rateLimiter *shared.RateLimiter
+	auditLogger *shared.AuditLogger
 }
 
 // NewAuthHandler creates a new authentication handler
-func NewAuthHandler(db *sql.DB, otpService shared.OTPService, rateLimiter *shared.RateLimiter) *AuthHandler {
+func NewAuthHandler(db *sql.DB, otpService shared.OTPService, rateLimiter *shared.RateLimiter, auditLogger *shared.AuditLogger) *AuthHandler {
 	return &AuthHandler{
 		db:          db,
 		otpService:  otpService,
 		blacklist:   shared.NewTokenBlacklist(db),
 		rateLimiter: rateLimiter,
+		auditLogger: auditLogger,
 	}
 }
 
@@ -530,14 +532,15 @@ func (h *AuthHandler) HandleVerifyOTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verify OTP
-	if !h.otpService.Verify(req.Email, req.OTP) {
+	// Check OTP without consuming it (use Check instead of Verify)
+	// This allows the OTP to be used again during registration
+	if !h.otpService.Check(req.Email, req.OTP) {
 		h.sendError(w, "Invalid or expired OTP", http.StatusBadRequest)
 		h.logAuditEvent("OTP_VERIFY_FAILED", req.Email, "Invalid OTP provided", r.RemoteAddr)
 		return
 	}
 
-	// OTP verified successfully
+	// OTP verified successfully (but not consumed)
 	h.logAuditEvent("OTP_VERIFIED", req.Email, "OTP verified successfully", r.RemoteAddr)
 
 	// Return success - the OTP has been verified and can be used for registration
@@ -865,11 +868,13 @@ func (h *AuthHandler) getClientIP(r *http.Request) string {
 
 // logAuditEvent logs an authentication event to the audit log
 func (h *AuthHandler) logAuditEvent(action, username, details, ipAddress string) {
-	_, err := h.db.Exec(`
-		INSERT INTO audit_log (created_at, action, username, details, ip_address, server_id)
-		VALUES ($1, $2, $3, $4, $5, $6)
-	`, time.Now(), action, username, details, ipAddress, "management-server")
+	if h.auditLogger == nil {
+		log.Printf("[AUTH] Warning: AuditLogger is nil, skipping audit log")
+		return
+	}
 
+	// Use AuditLogger which properly handles JSON formatting
+	err := h.auditLogger.LogAudit("auth-audit.log", action, username, details, ipAddress, "management-server")
 	if err != nil {
 		log.Printf("[AUTH] Failed to log audit event: %v", err)
 	}

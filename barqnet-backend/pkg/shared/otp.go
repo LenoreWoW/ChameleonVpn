@@ -22,7 +22,13 @@ type OTPService interface {
 
 	// Verify checks if the provided code matches the stored OTP for the email address
 	// Returns true if valid and not expired, false otherwise
+	// IMPORTANT: This method CONSUMES the OTP (deletes it after successful verification)
 	Verify(email, code string) bool
+
+	// Check validates the OTP without consuming it
+	// Returns true if valid and not expired, false otherwise
+	// Use this for intermediate verification steps (e.g., before password creation)
+	Check(email, code string) bool
 
 	// GenerateOTP creates a new 6-digit OTP code
 	// This is exposed for testing purposes and custom implementations
@@ -137,8 +143,35 @@ func (s *LocalOTPService) Send(email string) error {
 	return nil
 }
 
+// Check validates the OTP without consuming it (non-destructive verification)
+// This is used for intermediate verification steps where the OTP needs to remain valid
+// Returns true if code matches and hasn't expired, false otherwise
+func (s *LocalOTPService) Check(email, code string) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	entry, exists := s.otpStore[email]
+	if !exists {
+		return false
+	}
+
+	// Check if OTP has expired
+	if time.Since(entry.CreatedAt) > s.OTPExpiry {
+		return false
+	}
+
+	// Check if max attempts already exceeded
+	if entry.Attempts >= s.MaxVerifyAttempts {
+		return false
+	}
+
+	// Verify code (don't delete or increment attempts)
+	return entry.Code == code
+}
+
 // Verify checks if the provided OTP code is valid for the email address
 // Returns true if code matches and hasn't expired
+// IMPORTANT: This method CONSUMES the OTP (deletes it after successful verification)
 func (s *LocalOTPService) Verify(email, code string) bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()

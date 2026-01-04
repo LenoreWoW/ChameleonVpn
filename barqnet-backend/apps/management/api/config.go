@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"barqnet-backend/pkg/shared"
@@ -357,7 +358,7 @@ func (api *ManagementAPI) getOVPNContent(username, serverID string) (string, err
 	}
 
 	client := &http.Client{
-		Timeout: 5 * time.Second, // Short timeout for testing
+		Timeout: 10 * time.Second,
 	}
 
 	resp, err := client.Do(req)
@@ -368,8 +369,37 @@ func (api *ManagementAPI) getOVPNContent(username, serverID string) (string, err
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode == http.StatusNotFound {
+		// OVPN file doesn't exist - create it automatically
+		fmt.Printf("[VPN] OVPN file not found for %s, creating it now...\n", username)
+
+		if createErr := api.createOVPNFileOnEndNode(username, server); createErr != nil {
+			fmt.Printf("[VPN] Failed to create OVPN file: %v, falling back to template\n", createErr)
+			return api.generateOVPNTemplate(username, server), nil
+		}
+
+		// Retry fetching the OVPN file after creation
+		resp2, err := client.Do(req)
+		if err != nil || resp2.StatusCode != http.StatusOK {
+			fmt.Printf("[VPN] Failed to fetch OVPN after creation, falling back to template\n")
+			if resp2 != nil {
+				resp2.Body.Close()
+			}
+			return api.generateOVPNTemplate(username, server), nil
+		}
+		defer resp2.Body.Close()
+
+		body, err := io.ReadAll(resp2.Body)
+		if err != nil {
+			return api.generateOVPNTemplate(username, server), nil
+		}
+
+		fmt.Printf("[VPN] Successfully created and fetched OVPN file for %s\n", username)
+		return string(body), nil
+	}
+
 	if resp.StatusCode != http.StatusOK {
-		// Fall back to template
+		// Other error - fall back to template
 		return api.generateOVPNTemplate(username, server), nil
 	}
 
@@ -380,6 +410,47 @@ func (api *ManagementAPI) getOVPNContent(username, serverID string) (string, err
 	}
 
 	return string(body), nil
+}
+
+// createOVPNFileOnEndNode creates an OVPN file for a user on the specified end-node
+func (api *ManagementAPI) createOVPNFileOnEndNode(username string, server *shared.Server) error {
+	// Prepare the request payload for OVPN creation
+	payload := map[string]interface{}{
+		"username":  username,
+		"server_id": server.Name,
+	}
+
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal payload: %v", err)
+	}
+
+	// Call the endnode's /api/ovpn/create endpoint
+	url := fmt.Sprintf("http://%s:%d/api/ovpn/create", server.Host, server.Port)
+
+	req, err := http.NewRequest("POST", url, strings.NewReader(string(payloadBytes)))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %v", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{
+		Timeout: 30 * time.Second, // Longer timeout for file creation
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to call endnode: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("endnode returned error %d: %s", resp.StatusCode, string(body))
+	}
+
+	return nil
 }
 
 // generateOVPNTemplate creates a basic OVPN configuration template

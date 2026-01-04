@@ -81,6 +81,26 @@ struct OTPVerificationData: Codable {
     }
 }
 
+struct VPNConfig: Codable {
+    let username: String
+    let serverID: String
+    let serverHost: String
+    let serverPort: Int
+    let protocol: String
+    let ovpnContent: String
+    let recommendedServers: [String]
+
+    enum CodingKeys: String, CodingKey {
+        case username
+        case serverID = "server_id"
+        case serverHost = "server_host"
+        case serverPort = "server_port"
+        case `protocol`
+        case ovpnContent = "ovpn_content"
+        case recommendedServers = "recommended_servers"
+    }
+}
+
 // MARK: - API Errors
 
 enum APIError: Error, LocalizedError {
@@ -685,6 +705,31 @@ class APIClient: NSObject, URLSessionDelegate {
             case .failure(let error):
                 NSLog("[APIClient] Logout API call failed (tokens cleared anyway): \(error.localizedDescription)")
                 completion(.success(())) // Still succeed since tokens are cleared
+            }
+        }
+    }
+
+    /// Fetch VPN configuration for the authenticated user
+    func fetchVPNConfig(completion: @escaping (Result<VPNConfig, Error>) -> Void) {
+        NSLog("[APIClient] Fetching VPN configuration")
+
+        get("/v1/vpn/config", requiresAuth: true) { (result: Result<APIResponse<VPNConfig>, Error>) in
+            switch result {
+            case .success(let response):
+                if response.success, let config = response.data {
+                    NSLog("[APIClient] VPN config fetched successfully for server: \(config.serverID)")
+                    completion(.success(config))
+                } else {
+                    let error = NSError(
+                        domain: "APIClient",
+                        code: -1,
+                        userInfo: [NSLocalizedDescriptionKey: response.error ?? response.message ?? "Failed to fetch VPN config"]
+                    )
+                    completion(.failure(error))
+                }
+            case .failure(let error):
+                NSLog("[APIClient] Failed to fetch VPN config: \(error.localizedDescription)")
+                completion(.failure(error))
             }
         }
     }

@@ -69,10 +69,6 @@ func (api *ManagementAPI) Start(port int) error {
 		log.Println("✅ Email service initialized: Local (emails logged to console)")
 	}
 
-	// Create OTP service with email delivery
-	otpService := shared.NewLocalOTPService(emailService)
-	authHandler := NewAuthHandler(conn, otpService, api.rateLimiter)
-
 	// Initialize audit logger with dual logging (file + database)
 	auditDir := os.Getenv("AUDIT_LOG_DIR")
 	if auditDir == "" {
@@ -84,6 +80,10 @@ func (api *ManagementAPI) Start(port int) error {
 
 	auditManager := api.manager.GetAuditManager()
 	api.auditLogger = shared.NewAuditLogger(auditDir, fileEnabled, dbEnabled, auditManager)
+
+	// Create OTP service with email delivery
+	otpService := shared.NewLocalOTPService(emailService)
+	authHandler := NewAuthHandler(conn, otpService, api.rateLimiter, api.auditLogger)
 
 	// Authentication endpoints (v1 API)
 	mux.HandleFunc("/v1/auth/send-otp", authHandler.HandleSendOTP)
