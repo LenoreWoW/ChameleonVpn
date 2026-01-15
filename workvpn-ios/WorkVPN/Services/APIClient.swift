@@ -81,12 +81,12 @@ struct OTPVerificationData: Codable {
     }
 }
 
-struct VPNConfig: Codable {
+struct APIVPNConfigResponse: Codable {
     let username: String
     let serverID: String
     let serverHost: String
     let serverPort: Int
-    let protocol: String
+    let `protocol`: String
     let ovpnContent: String
     let recommendedServers: [String]
 
@@ -268,8 +268,8 @@ class APIClient: NSObject, URLSessionDelegate {
             NSLog("[APIClient] ⚠️ CRITICAL: No certificate pins configured for production!")
             NSLog("[APIClient] ⚠️ This app is vulnerable to MITM attacks!")
             NSLog("[APIClient] ⚠️ Generate pins using the openssl command above")
-            // In production, you may want to crash or refuse to start:
-            // fatalError("Certificate pins must be configured for production")
+            // In production, you MUST crash to prevent insecure deployment:
+            fatalError("Certificate pins must be configured for production")
         }
         #else
         // Development: Skip pinning for localhost
@@ -710,10 +710,10 @@ class APIClient: NSObject, URLSessionDelegate {
     }
 
     /// Fetch VPN configuration for the authenticated user
-    func fetchVPNConfig(completion: @escaping (Result<VPNConfig, Error>) -> Void) {
+    func fetchVPNConfig(completion: @escaping (Result<APIVPNConfigResponse, Error>) -> Void) {
         NSLog("[APIClient] Fetching VPN configuration")
 
-        get("/v1/vpn/config", requiresAuth: true) { (result: Result<APIResponse<VPNConfig>, Error>) in
+        get("/v1/vpn/config", requiresAuth: true) { (result: Result<APIResponse<APIVPNConfigResponse>, Error>) in
             switch result {
             case .success(let response):
                 if response.success, let config = response.data {

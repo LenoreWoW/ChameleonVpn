@@ -22,6 +22,21 @@
 
 ---
 
+## 📋 Port Configuration Reference
+
+**IMPORTANT:** All services use the following ports:
+
+| Component | Port | Purpose |
+|-----------|------|---------|
+| **Management Server** | 8085 | API, authentication, VPN management |
+| **Endnode Server** | 8081 | VPN server health checks |
+| **PostgreSQL** | 5432 | Database |
+| **Redis** | 6379 | Cache (optional) |
+
+**Note:** The staging server at `192.168.10.217` uses port **8080** for the management server (different from local development). All local development and documentation commands use port **8085** for the management server.
+
+---
+
 ## 🎯 What You Need to Test
 
 ### Backend (20 min)

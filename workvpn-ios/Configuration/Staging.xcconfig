@@ -1,6 +1,8 @@
 // Staging Environment Configuration
 // Use this for testing with network servers
 
+#include "../Pods/Target Support Files/Pods-WorkVPN/Pods-WorkVPN.release.xcconfig"
+
 API_BASE_URL = http:/$()/192.168.10.217:8080
 ENVIRONMENT_NAME = Staging
 ENABLE_DEBUG_LOGGING = YES

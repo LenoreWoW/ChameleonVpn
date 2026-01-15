@@ -1,7 +1,9 @@
 // Production Environment Configuration
 // Use this for App Store releases
 
-API_BASE_URL = https:/$()/api.barqnet.com
+#include "../Pods/Target Support Files/Pods-WorkVPN/Pods-WorkVPN.release.xcconfig"
+
+API_BASE_URL = https://api.barqnet.com
 ENVIRONMENT_NAME = Production
 ENABLE_DEBUG_LOGGING = NO
 ENABLE_CERTIFICATE_PINNING = YES

@@ -225,7 +225,7 @@ class AuthManager: ObservableObject {
                     // Import the OVPN configuration into VPN manager
                     let vpnManager = VPNManager.shared
                     do {
-                        try vpnManager.importFromString(config.ovpnContent, filename: "\(config.username).ovpn")
+                        try vpnManager.importConfig(content: config.ovpnContent, name: "\(config.username).ovpn")
                         NSLog("[AuthManager] VPN configuration imported successfully")
                         completion(.success(()))
                     } catch {

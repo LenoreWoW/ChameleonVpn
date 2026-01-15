@@ -72,7 +72,7 @@ sudo systemctl status vpnmanager-management
 **✅ Test 1.1: Management Server Health Check**
 
 ```bash
-curl http://localhost:8080/health
+curl http://localhost:8085/health
 ```
 
 **Expected Output:**
@@ -82,7 +82,7 @@ curl http://localhost:8080/health
 
 **❌ If it fails:**
 - Check logs: `sudo journalctl -u vpnmanager-management -n 50`
-- Check if port is in use: `sudo netstat -tlnp | grep 8080`
+- Check if port is in use: `sudo netstat -tlnp | grep 8085`
 - Restore backup: `sudo cp /opt/barqnet/bin/management.backup /opt/barqnet/bin/management && sudo systemctl restart vpnmanager-management`
 
 ---
@@ -123,7 +123,7 @@ sudo systemctl status vpnmanager-endnode
 **✅ Test 1.2: End-Node Health Check (Local)**
 
 ```bash
-curl http://localhost:8080/health
+curl http://localhost:8081/health
 ```
 
 **Expected Output:**
@@ -173,7 +173,7 @@ Dec 04 10:00:30 management: POST /api/endnodes-health/server-1 200
 
 ```bash
 # On management server, test the new endpoint
-curl -X POST http://localhost:8080/api/endnodes-health/test-server \
+curl -X POST http://localhost:8085/api/endnodes-health/test-server \
   -H "Content-Type: application/json" \
   -d '{"server_id":"test-server","status":"healthy","timestamp":1733277600}'
 ```
@@ -191,7 +191,7 @@ curl -X POST http://localhost:8080/api/endnodes-health/test-server \
 
 ```bash
 # On management server
-curl -X POST http://localhost:8080/v1/auth/send-otp \
+curl -X POST http://localhost:8085/v1/auth/send-otp \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com"}'
 ```
@@ -201,7 +201,7 @@ curl -X POST http://localhost:8080/v1/auth/send-otp \
 **✅ Test 1.4B: Protected Endpoints Still Require Auth**
 
 ```bash
-curl http://localhost:8080/api/users
+curl http://localhost:8085/api/users
 ```
 
 **Expected Output:**
@@ -212,7 +212,7 @@ curl http://localhost:8080/api/users
 **✅ Test 1.4C: API Root Endpoint**
 
 ```bash
-curl http://localhost:8080/api
+curl http://localhost:8085/api
 ```
 
 **Expected:** JSON response with endpoints list
@@ -312,7 +312,7 @@ cd ~/ChameleonVpn/barqnet-backend/apps/management
 ```
 🚀 Starting local management server for iOS development...
 📦 Building management server...
-▶️  Starting server on http://127.0.0.1:8080
+▶️  Starting server on http://127.0.0.1:8085
 [Management server startup logs...]
 ```
 
@@ -320,7 +320,7 @@ cd ~/ChameleonVpn/barqnet-backend/apps/management
 
 ```bash
 # In a new terminal
-curl http://127.0.0.1:8080/health
+curl http://127.0.0.1:8085/health
 ```
 
 **Expected:**
@@ -339,7 +339,7 @@ curl http://127.0.0.1:8080/health
 ```
 [APIClient] ═══════════════════════════════════════
 [APIClient] Environment: Development
-[APIClient] Base URL: http://127.0.0.1:8080
+[APIClient] Base URL: http://127.0.0.1:8085
 [APIClient] Debug Logging: Enabled
 [APIClient] Certificate Pinning: Disabled
 [APIClient] ═══════════════════════════════════════
@@ -353,7 +353,7 @@ curl http://127.0.0.1:8080/health
 1. App should launch successfully (not hang!)
 2. Try to register/login
 3. Check console for API requests
-4. Should see network requests to `http://127.0.0.1:8080`
+4. Should see network requests to `http://127.0.0.1:8085`
 
 ---
 
@@ -435,7 +435,7 @@ curl http://192.168.10.217:8080/health
 - [ ] Local server health check responds
 - [ ] iOS app builds without errors
 - [ ] Console shows "Environment: Development"
-- [ ] Console shows "Base URL: http://127.0.0.1:8080"
+- [ ] Console shows "Base URL: http://127.0.0.1:8085"
 - [ ] App launches without hanging
 - [ ] App can make API requests to localhost
 
