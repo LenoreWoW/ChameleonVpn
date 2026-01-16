@@ -404,6 +404,12 @@ func (api *EndNodeAPI) validateCertData(certData struct {
 	Key  string `json:"key"`
 	TA   string `json:"ta"`
 }) error {
+	// If all cert data fields are empty, skip validation (will auto-generate)
+	if certData.CA == "" && certData.Cert == "" && certData.Key == "" && certData.TA == "" {
+		return nil
+	}
+
+	// If any field is provided, validate all fields
 	// Validate CA certificate
 	if !strings.Contains(certData.CA, "BEGIN CERTIFICATE") || !strings.Contains(certData.CA, "END CERTIFICATE") {
 		return fmt.Errorf("invalid CA certificate format")

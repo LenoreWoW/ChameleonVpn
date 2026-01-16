@@ -414,10 +414,20 @@ func (api *ManagementAPI) getOVPNContent(username, serverID string) (string, err
 
 // createOVPNFileOnEndNode creates an OVPN file for a user on the specified end-node
 func (api *ManagementAPI) createOVPNFileOnEndNode(username string, server *shared.Server) error {
-	// Prepare the request payload for OVPN creation
+	// Prepare the request payload for OVPN creation with all required fields
+	// End-node will generate certificates automatically if cert_data is empty
 	payload := map[string]interface{}{
 		"username":  username,
+		"port":      1194,        // Default OpenVPN port
+		"protocol":  "udp",       // Default protocol
 		"server_id": server.Name,
+		"server_ip": server.Host, // Use server host as IP
+		"cert_data": map[string]string{
+			"ca":   "", // Empty - end-node will generate
+			"cert": "",
+			"key":  "",
+			"ta":   "",
+		},
 	}
 
 	payloadBytes, err := json.Marshal(payload)
