@@ -47,9 +47,9 @@ func (api *EndNodeAPI) Start(port int) error {
 	// Health check endpoint
 	mux.HandleFunc("/health", api.handleHealth)
 
-	// User management endpoints (removed - users managed by management server)
-	// mux.HandleFunc("/api/users", api.handleUsers)
-	// mux.HandleFunc("/api/users/", api.handleUserByID)
+	// User management endpoints (re-enabled for sync from management server)
+	mux.HandleFunc("/api/users", api.handleUsers)
+	mux.HandleFunc("/api/users/", api.handleUserByID)
 
 	// Management server communication endpoints
 	mux.HandleFunc("/api/sync/users", api.handleSyncUsers)
@@ -122,7 +122,7 @@ func (api *EndNodeAPI) handleListUsers(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// handleCreateUser handles user creation
+// handleCreateUser handles user creation sync from management server
 func (api *EndNodeAPI) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Username string `json:"username"`
@@ -130,6 +130,7 @@ func (api *EndNodeAPI) handleCreateUser(w http.ResponseWriter, r *http.Request) 
 		Checksum string `json:"checksum"`
 		Port     int    `json:"port"`
 		Protocol string `json:"protocol"`
+		ServerID string `json:"server_id"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -137,9 +138,24 @@ func (api *EndNodeAPI) handleCreateUser(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// End-nodes no longer create users directly - this endpoint is disabled
-	http.Error(w, "User creation is now handled by management server", http.StatusMethodNotAllowed)
-	return
+	// Validate username
+	if err := api.validateUsername(req.Username); err != nil {
+		http.Error(w, fmt.Sprintf("Invalid username: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	// Acknowledge sync from management server
+	// OVPN file creation happens via separate /api/ovpn/create endpoint
+	log.Printf("[ENDNODE] User sync received for %s on server %s", req.Username, req.ServerID)
+
+	response := shared.APIResponse{
+		Success:   true,
+		Message:   fmt.Sprintf("User %s synced successfully", req.Username),
+		Timestamp: time.Now().Unix(),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
 
 // handleUserByID handles individual user operations

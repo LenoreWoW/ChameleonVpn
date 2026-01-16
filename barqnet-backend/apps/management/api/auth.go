@@ -114,8 +114,8 @@ func (h *AuthHandler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verify OTP using shared.OTPService
-	verified := h.otpService.Verify(req.Email, req.OTP)
+	// Verify OTP using shared.OTPService (Check doesn't consume the OTP)
+	verified := h.otpService.Check(req.Email, req.OTP)
 	if !verified {
 		h.sendError(w, "Invalid OTP", http.StatusUnauthorized)
 		return
@@ -159,6 +159,9 @@ func (h *AuthHandler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 		h.sendError(w, "Failed to create user", http.StatusInternalServerError)
 		return
 	}
+
+	// Consume the OTP to prevent reuse now that user is successfully created
+	_ = h.otpService.Verify(req.Email, req.OTP)
 
 	// Generate access and refresh tokens
 	accessToken, err := shared.GenerateJWT(req.Email, userID)
